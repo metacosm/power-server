@@ -15,11 +15,17 @@ public class PowerResource {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     @Path("{pid}")
-    public Multi<String> hello(@PathParam("pid") String pid) throws Exception {
+    public Multi<String> powerFor(@PathParam("pid") String pid) throws Exception {
         try {
             return measurer.startTracking(pid).map(Arrays::toString);
         } catch (IllegalArgumentException e) {
             throw new NotFoundException("Unknown process: " + pid);
         }
+    }
+
+    @GET
+    @Path("metadata")
+    public SensorMetadata metadata() {
+        return measurer.metadata();
     }
 }
