@@ -3,8 +3,10 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.metacosm</groupId>
-  <artifactId>power-server</artifactId>
+  <artifactId>power-server-parent</artifactId>
   <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
   <properties>
     <compiler-plugin.version>3.11.0</compiler-plugin.version>
     <maven.compiler.release>21</maven.compiler.release>
@@ -16,6 +18,12 @@
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.1.2</surefire-plugin.version>
   </properties>
+
+  <modules>
+    <module>server</module>
+    <module>metadata</module>
+  </modules>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
