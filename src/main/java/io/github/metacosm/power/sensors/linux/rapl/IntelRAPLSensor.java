@@ -30,25 +30,30 @@ public class IntelRAPLSensor implements PowerSensor {
             throw new RuntimeException("Failed to get RAPL energy readings, probably due to lack of read access ");
 
         raplFiles = files.values().toArray(new RAPLFile[0]);
-        final var metadata = new HashMap<String, Integer>(files.size());
+        final var metadata = new HashMap<String, SensorMetadata.ComponentMetadata>(files.size());
         int fileNb = 0;
         for (String name : files.keySet()) {
-            metadata.put(name, fileNb++);
+            metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb++, name, false, "µJ"));
         }
         this.metadata = new SensorMetadata() {
 
             @Override
             public ComponentMetadata metadataFor(String component) {
-                final var index = metadata.get(component);
-                if (index == null) {
+                final var componentMetadata = metadata.get(component);
+                if (componentMetadata == null) {
                     throw new IllegalArgumentException("Unknown component: " + component);
                 }
-                return new ComponentMetadata(component, index, component, false, "µJ");
+                return componentMetadata;
             }
 
             @Override
             public int componentCardinality() {
                 return metadata.size();
+            }
+
+            @Override
+            public Map<String, ComponentMetadata> getComponents() {
+                return metadata;
             }
         };
         lastMeasuredSensorValues = new double[raplFiles.length];

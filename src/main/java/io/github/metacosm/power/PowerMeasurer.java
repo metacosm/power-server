@@ -37,4 +37,8 @@ public class PowerMeasurer {
         return periodicSensorCheck.map(registeredPIDMap -> registeredPIDMap.get(registeredPID))
                 .onCancellation().invoke(() -> sensor.unregister(registeredPID));
     }
+
+    public SensorMetadata metadata() {
+        return sensor.metadata();
+    }
 }

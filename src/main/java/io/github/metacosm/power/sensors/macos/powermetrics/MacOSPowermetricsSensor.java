@@ -40,6 +40,11 @@ public class MacOSPowermetricsSensor implements PowerSensor {
         public int componentCardinality() {
             return 4;
         }
+
+        @Override
+        public Map<String, ComponentMetadata> getComponents() {
+            return Map.of(cpu.name(), cpu, gpu.name(), gpu, ane.name(), ane, cpuShare.name(), cpuShare);
+        }
     };
 
     @Override
