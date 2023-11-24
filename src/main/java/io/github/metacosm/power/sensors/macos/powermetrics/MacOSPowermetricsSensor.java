@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MacOSPowermetricsSensor implements PowerSensor {
     public static final String CPU = "cpu";
@@ -21,7 +22,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     private final SensorMetadata.ComponentMetadata gpu = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
     private final SensorMetadata.ComponentMetadata ane = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
     private final SensorMetadata.ComponentMetadata cpuShare = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
-    private final Map<String, RegisteredPID> trackedPIDs = new HashMap<>();
+    private final Map<String, RegisteredPID> trackedPIDs = new ConcurrentHashMap<>();
 
     private final SensorMetadata metadata = new SensorMetadata() {
         @Override
