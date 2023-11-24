@@ -3,11 +3,14 @@ package io.github.metacosm.power;
 import io.github.metacosm.power.sensors.PowerSensor;
 import io.github.metacosm.power.sensors.RegisteredPID;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
 public class PowerMeasurer {
@@ -16,7 +19,7 @@ public class PowerMeasurer {
     @Inject
     PowerSensor sensor;
     
-    private Multi<Map<RegisteredPID, double[]>> stream;
+    private Multi<Map<RegisteredPID, double[]>> periodicSensorCheck;
 
     public Multi<double[]> startTracking(String pid) throws Exception {
         // first make sure that the process with that pid exists
@@ -25,10 +28,13 @@ public class PowerMeasurer {
 
         if(!sensor.isStarted()) {
             sensor.start(SAMPLING_FREQUENCY_IN_MILLIS);
-            stream = Multi.createFrom().ticks().every(Duration.ofMillis(SAMPLING_FREQUENCY_IN_MILLIS)).map(sensor::update);
+            periodicSensorCheck = Multi.createFrom().ticks()
+                    .every(Duration.ofMillis(SAMPLING_FREQUENCY_IN_MILLIS))
+                    .emitOn(Infrastructure.getDefaultWorkerPool())
+                    .map(sensor::update);
         }
         final var registeredPID = sensor.register(parsedPID);
-        return stream.map(registeredPIDMap -> registeredPIDMap.get(registeredPID))
+        return periodicSensorCheck.map(registeredPIDMap -> registeredPIDMap.get(registeredPID))
                 .onCancellation().invoke(() -> sensor.unregister(registeredPID));
     }
 }
