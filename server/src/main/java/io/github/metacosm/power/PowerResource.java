@@ -17,7 +17,13 @@ public class PowerResource {
     @Path("{pid}")
     public Multi<String> powerFor(@PathParam("pid") String pid) throws Exception {
         try {
-            return measurer.startTracking(pid).map(Arrays::toString);
+            return measurer.startTracking(pid).map(array -> {
+                String result = "\n";
+                for (double v : array) {
+                    result += v + " ";
+                }
+                return result;
+            });
         } catch (IllegalArgumentException e) {
             throw new NotFoundException("Unknown process: " + pid);
         }
