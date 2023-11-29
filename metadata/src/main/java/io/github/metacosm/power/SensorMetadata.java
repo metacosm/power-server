@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.Map;
 
 public class SensorMetadata {
-    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit){};
+    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit){}
 
     @JsonCreator
     public SensorMetadata(Map<String, ComponentMetadata> components, String documentation) {

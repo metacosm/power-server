@@ -1,13 +1,12 @@
 package io.github.metacosm.power.sensors.macos.powermetrics;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import io.github.metacosm.power.SensorMetadata;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MacOSPowermetricsSensorTest {
 
