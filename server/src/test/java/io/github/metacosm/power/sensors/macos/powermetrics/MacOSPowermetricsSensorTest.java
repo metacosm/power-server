@@ -1,26 +1,65 @@
 package io.github.metacosm.power.sensors.macos.powermetrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import io.github.metacosm.power.SensorMetadata;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 class MacOSPowermetricsSensorTest {
 
     @Test
-    void checkMetadata() {
-        final var sensor = new MacOSPowermetricsSensor();
-        final var metadata = sensor.metadata();
-        assertEquals("cpu", metadata.metadataFor(MacOSPowermetricsSensor.CPU).name());
+    void checkMetadata() throws IOException {
+        var metadata = loadMetadata("sonoma-m1max.txt");
+        assertEquals(4, metadata.componentCardinality());
+        checkComponent(metadata, "CPU", 0);
+        checkComponent(metadata, "GPU", 1);
+        checkComponent(metadata, "ANE", 2);
+        checkComponent(metadata, "cpuShare", 3);
+
+        metadata = loadMetadata("monterey-m2.txt");
+        assertEquals(7, metadata.componentCardinality());
+        checkComponent(metadata, "CPU", 0);
+        checkComponent(metadata, "GPU", 1);
+        checkComponent(metadata, "ANE", 2);
+        checkComponent(metadata, "cpuShare", 3);
+        checkComponent(metadata, "DRAM", 4);
+        checkComponent(metadata, "DCS", 5);
+        checkComponent(metadata, "Package", 6);
+    }
+
+    private static SensorMetadata loadMetadata(String fileName) throws IOException {
+        try (var in = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName)) {
+            return loadMetadata(in);
+        }
+    }
+
+    private static SensorMetadata loadMetadata(InputStream in) {
+        final var sensor = new MacOSPowermetricsSensor(in);
+        return sensor.metadata();
+    }
+
+    private static void checkComponent(SensorMetadata metadata, String name, int index) {
+        // check string instead of constants to ensure "API" compatibility as these keys will be published
+        final var component = metadata.metadataFor(name);
+        assertEquals(name, component.name());
+        assertEquals(index, component.index());
     }
 
     @Test
     void extractPowerMeasure() {
-        final var sensor = new MacOSPowermetricsSensor();
+        var in = Thread.currentThread().getContextClassLoader().getResourceAsStream("sonoma-m1max.txt");
+        final var sensor = new MacOSPowermetricsSensor(in);
+        final var metadata = sensor.metadata();
         final var pid1 = sensor.register(29419);
         final var pid2 = sensor.register(391);
-        final var measure = sensor
-                .extractPowerMeasure(Thread.currentThread().getContextClassLoader().getResourceAsStream("sonoma-m1max.txt"));
-        final var metadata = sensor.metadata();
+
+        // re-open the stream to read the measure this time
+        in = Thread.currentThread().getContextClassLoader().getResourceAsStream("sonoma-m1max.txt");
+        final var measure = sensor.extractPowerMeasure(in);
         assertEquals(((23.88 / 1222.65) * 211), measure.get(pid1)[metadata.metadataFor(MacOSPowermetricsSensor.CPU).index()]);
         assertEquals(((283.25 / 1222.65) * 211), measure.get(pid2)[metadata.metadataFor(MacOSPowermetricsSensor.CPU).index()]);
     }

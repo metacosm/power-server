@@ -35,27 +35,7 @@ public class IntelRAPLSensor implements PowerSensor {
         for (String name : files.keySet()) {
             metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb++, name, false, "µJ"));
         }
-        this.metadata = new SensorMetadata() {
-
-            @Override
-            public ComponentMetadata metadataFor(String component) {
-                final var componentMetadata = metadata.get(component);
-                if (componentMetadata == null) {
-                    throw new IllegalArgumentException("Unknown component: " + component);
-                }
-                return componentMetadata;
-            }
-
-            @Override
-            public int componentCardinality() {
-                return metadata.size();
-            }
-
-            @Override
-            public Map<String, ComponentMetadata> getComponents() {
-                return metadata;
-            }
-        };
+        this.metadata = new SensorMetadata(metadata);
         lastMeasuredSensorValues = new double[raplFiles.length];
     }
 
