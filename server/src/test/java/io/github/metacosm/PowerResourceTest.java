@@ -34,6 +34,7 @@ public class PowerResourceTest {
                 .statusCode(200)
                 .extract().body().as(SensorMetadata.class);
         assertEquals(4, metadata.componentCardinality());
+        assertTrue(metadata.documentation().contains("powermetrics"));
         assertTrue(metadata.components().keySet().containsAll(Set.of("CPU", "GPU", "ANE", "cpuShare")));
 
         final var cpu = metadata.metadataFor("CPU");
@@ -57,6 +58,7 @@ public class PowerResourceTest {
                 .then()
                 .statusCode(200)
                 .extract().body().as(SensorMetadata.class);
+        assertTrue(metadata.documentation().contains("RAPL"));
     }
 
 }

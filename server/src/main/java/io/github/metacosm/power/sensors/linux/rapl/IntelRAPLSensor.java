@@ -35,7 +35,7 @@ public class IntelRAPLSensor implements PowerSensor {
         for (String name : files.keySet()) {
             metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb++, name, false, "µJ"));
         }
-        this.metadata = new SensorMetadata(metadata);
+        this.metadata = new SensorMetadata(metadata, "Linux RAPL derived information, see https://www.kernel.org/doc/html/latest/power/powercap/powercap.html");
         lastMeasuredSensorValues = new double[raplFiles.length];
     }
 
