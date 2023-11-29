@@ -5,47 +5,98 @@ import io.github.metacosm.power.sensors.PowerSensor;
 import io.github.metacosm.power.sensors.RegisteredPID;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class MacOSPowermetricsSensor implements PowerSensor {
-    public static final String CPU = "cpu";
-    public static final String GPU = "gpu";
-    public static final String ANE = "ane";
+    public static final String CPU = "CPU";
+    public static final String GPU = "GPU";
+    public static final String ANE = "ANE";
+    public static final String DRAM = "DRAM";
+    public static final String DCS = "DCS";
+    public static final String PACKAGE = "Package";
+    private static final String COMBINED = "Combined";
     public static final String CPU_SHARE = "cpuShare";
     private Process powermetrics;
-    private final SensorMetadata.ComponentMetadata cpu = new SensorMetadata.ComponentMetadata(CPU, 0, "CPU power", true, "mW");
-    private final SensorMetadata.ComponentMetadata gpu = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
-    private final SensorMetadata.ComponentMetadata ane = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
-    private final SensorMetadata.ComponentMetadata cpuShare = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
+    private static final SensorMetadata.ComponentMetadata cpu = new SensorMetadata.ComponentMetadata(CPU, 0, "CPU power", true, "mW");
+    private static final SensorMetadata.ComponentMetadata gpu = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
+    private static final SensorMetadata.ComponentMetadata ane = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
+    private static final SensorMetadata.ComponentMetadata cpuShare = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
     private final Map<String, RegisteredPID> trackedPIDs = new ConcurrentHashMap<>();
 
-    private final SensorMetadata metadata = new SensorMetadata() {
-        @Override
-        public ComponentMetadata metadataFor(String component) {
-            return switch (component) {
-                case CPU -> cpu;
-                case GPU -> gpu;
-                case ANE -> ane;
-                case CPU_SHARE -> cpuShare;
-                default -> throw new IllegalArgumentException("Unknown component: '" + component + "'");
-            };
+    private final SensorMetadata metadata;
+
+    public MacOSPowermetricsSensor() {
+        // extract metadata
+        try {
+            final var exec = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 10 -n 1");
+            exec.waitFor(20, TimeUnit.MILLISECONDS);
+            this.metadata = initMetadata(exec.getInputStream());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    MacOSPowermetricsSensor(InputStream inputStream) {
+        this.metadata = initMetadata(inputStream);
+    }
+
+    SensorMetadata initMetadata(InputStream inputStream) {
+        // init map with known components
+        Map<String, SensorMetadata.ComponentMetadata> components = new HashMap<>();
+        components.put(CPU, cpu);
+        components.put(GPU, gpu);
+        components.put(ANE, ane);
+        components.put(CPU_SHARE, cpuShare);
+
+        int headerLinesToSkip = 10;
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = input.readLine()) != null) {
+                if (headerLinesToSkip != 0) {
+                    headerLinesToSkip--;
+                    continue;
+                }
+
+                // skip empty / header lines
+                if (line.isEmpty() || line.startsWith("*")) {
+                    continue;
+                }
+
+                // looking for line fitting the: "<name> Power: xxx mW" pattern, where "name" will be a considered metadata component
+                final var powerIndex = line.indexOf(" Power");
+                // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the metadata pattern but shouldn't be considered
+                if (powerIndex >= 0 && '-' != line.charAt(1)) {
+                    addComponentTo(line.substring(0, powerIndex), components);
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
-        @Override
-        public int componentCardinality() {
-            return 4;
-        }
+        return new SensorMetadata(components);
+    }
 
-        @Override
-        public Map<String, ComponentMetadata> getComponents() {
-            return Map.of(cpu.name(), cpu, gpu.name(), gpu, ane.name(), ane, cpuShare.name(), cpuShare);
+
+    private static void addComponentTo(String name, Map<String, SensorMetadata.ComponentMetadata> components) {
+        switch (name) {
+            case CPU, GPU, ANE:
+                // already pre-added
+                break;
+            case COMBINED:
+                // should be ignored
+                break;
+            default:
+                components.put(name, new SensorMetadata.ComponentMetadata(name, components.size(), name, false, "mW"));
         }
-    };
+    }
 
     @Override
     public SensorMetadata metadata() {
