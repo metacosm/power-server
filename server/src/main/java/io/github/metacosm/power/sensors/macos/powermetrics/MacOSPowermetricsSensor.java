@@ -23,6 +23,8 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     public static final String PACKAGE = "Package";
     private static final String COMBINED = "Combined";
     public static final String CPU_SHARE = "cpuShare";
+    private static final String POWER_INDICATOR = " Power: ";
+    private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
     private Process powermetrics;
     private static final SensorMetadata.ComponentMetadata cpu = new SensorMetadata.ComponentMetadata(CPU, 0, "CPU power", true, "mW");
     private static final SensorMetadata.ComponentMetadata gpu = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
@@ -137,14 +139,12 @@ public class MacOSPowermetricsSensor implements PowerSensor {
 
             double totalSampledCPU = -1;
             double totalSampledGPU = -1;
-            double totalCPUPower = 0;
-            double totalGPUPower = 0;
-            double totalANEPower = 0;
-            int headerLinesToSkip = 6;
+            int headerLinesToSkip = 10;
             // copy the pids so that we can remove them as soon as we've processed them
             final var pidsToProcess = new HashSet<>(trackedPIDs.keySet());
             // start measure
             final var measures = new HashMap<RegisteredPID, ProcessRecord>(trackedPIDs.size());
+            final var powerComponents = new HashMap<String, Integer>(metadata.componentCardinality());
             while ((line = input.readLine()) != null) {
                 if (headerLinesToSkip != 0) {
                     headerLinesToSkip--;
@@ -176,40 +176,37 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                     continue;
                 }
 
-                if (totalCPUPower == 0) {
-                    // look for line that contains CPU power measure
-                    if (line.startsWith("CPU Power")) {
-                        totalCPUPower = extractMeasure(line);
-                    }
-                    continue;
-                }
+                extractPowerComponents(line, powerComponents);
 
-                if (line.startsWith("GPU Power")) {
-                    totalGPUPower = extractMeasure(line);
-                    continue;
-                }
-
-                if (line.startsWith("ANE Power")) {
-                    totalANEPower = extractMeasure(line);
+                // we need an exit condition to break out of the loop, otherwise we'll just keep looping forever since there are always new lines since the process is periodical
+                // so break out once we've found all the extracted components (in this case, only cpuShare is not extracted)
+                // fixme: perhaps we should relaunch the process on each update loop instead of keeping it running? Not sure which is more efficient
+                if(powerComponents.size() == metadata.componentCardinality() - 1) {
                     break;
                 }
             }
 
-            final var noGPU = totalSampledGPU == 0;
+            final var hasGPU = totalSampledGPU != 0;
             double finalTotalSampledGPU = totalSampledGPU;
-            double finalTotalGPUPower = totalGPUPower;
             double finalTotalSampledCPU = totalSampledCPU;
-            double finalTotalCPUPower = totalCPUPower;
-            double finalTotalANEPower = totalANEPower;
             final var results = new HashMap<RegisteredPID, double[]>(measures.size());
             measures.forEach((pid, record) -> {
-                final var attributedGPU = noGPU ? 0.0 : record.gpu / finalTotalSampledGPU * finalTotalGPUPower;
                 final var cpuShare = record.cpu / finalTotalSampledCPU;
-                results.put(pid, new double[]{
-                        cpuShare * finalTotalCPUPower,
-                        attributedGPU,
-                        finalTotalANEPower,
-                        cpuShare});
+                final var measure = new double[metadata.componentCardinality()];
+
+                metadata.components().forEach((name, cm) -> {
+                    final var index = cm.index();
+                    final var value = CPU_SHARE.equals(name) ? cpuShare : powerComponents.getOrDefault(name, 0);
+
+                    if (cm.isAttributed()) {
+                        final var attributionFactor = hasGPU && GPU.equals(name) ? record.gpu / finalTotalSampledGPU : cpuShare;
+                        measure[index] = value * attributionFactor;
+                    } else {
+                        measure[index] = value;
+                    }
+
+                    results.put(pid, measure);
+                });
             });
             return results;
         } catch (Exception exception) {
@@ -217,10 +214,23 @@ public class MacOSPowermetricsSensor implements PowerSensor {
         }
     }
 
-    private static double extractMeasure(String line) {
-        final var powerValue = line.split(":")[1];
-        final var powerInMilliwatts = powerValue.split("m")[0];
-        return Double.parseDouble(powerInMilliwatts);
+    private static void extractPowerComponents(String line, HashMap<String, Integer> powerComponents) {
+        // looking for line fitting the: "<name> Power: xxx mW" pattern and add all of the associated values together
+        final var powerIndex = line.indexOf(POWER_INDICATOR);
+        // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the pattern but shouldn't be considered
+        // also ignore Combined Power if available since it is the sum of the other components
+        if (powerIndex >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
+            // get component name
+            final var name = line.substring(0, powerIndex);
+            // extract power value
+            final int value;
+            try {
+                value = Integer.parseInt(line.substring(powerIndex + POWER_INDICATOR_LENGTH, line.indexOf('m') - 1));
+            } catch (Exception e) {
+                throw new IllegalStateException("Cannot parse power value from line '" + line + "'", e);
+            }
+            powerComponents.put(name, value);
+        }
     }
 
     public void start(long frequency) throws Exception {
