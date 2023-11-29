@@ -10,12 +10,16 @@ public class SensorMetadata {
     public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit){};
 
     @JsonCreator
-    public SensorMetadata(Map<String, ComponentMetadata> components) {
+    public SensorMetadata(Map<String, ComponentMetadata> components, String documentation) {
         this.components = components;
+        this.documentation = documentation;
     }
 
     @JsonProperty("metadata")
     private final Map<String, ComponentMetadata> components;
+
+    @JsonProperty("documentation")
+    private final String documentation;
 
     public ComponentMetadata metadataFor(String component) {
         final var componentMetadata = components.get(component);
@@ -31,5 +35,9 @@ public class SensorMetadata {
 
     public Map<String, ComponentMetadata> components() {
         return Collections.unmodifiableMap(components);
+    }
+
+    public String documentation() {
+        return documentation;
     }
 }

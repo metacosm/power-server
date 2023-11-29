@@ -81,7 +81,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
             throw new RuntimeException(e);
         }
 
-        return new SensorMetadata(components);
+        return new SensorMetadata(components, "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
     }
 
 
