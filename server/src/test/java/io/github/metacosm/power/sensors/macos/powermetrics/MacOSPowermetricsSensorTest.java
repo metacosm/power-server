@@ -59,7 +59,14 @@ class MacOSPowermetricsSensorTest {
         // re-open the stream to read the measure this time
         in = Thread.currentThread().getContextClassLoader().getResourceAsStream("sonoma-m1max.txt");
         final var measure = sensor.extractPowerMeasure(in);
-        assertEquals(((23.88 / 1222.65) * 211), measure.get(pid1)[metadata.metadataFor(MacOSPowermetricsSensor.CPU).index()]);
-        assertEquals(((283.25 / 1222.65) * 211), measure.get(pid2)[metadata.metadataFor(MacOSPowermetricsSensor.CPU).index()]);
+        final var cpuIndex = metadata.metadataFor(MacOSPowermetricsSensor.CPU).index();
+        final var pid1CPUShare = 23.88 / 1222.65;
+        assertEquals((pid1CPUShare * 211), measure.get(pid1)[cpuIndex]);
+        final var pid2CPUShare = 283.25 / 1222.65;
+        assertEquals((pid2CPUShare * 211), measure.get(pid2)[cpuIndex]);
+        // check cpu share
+        final var cpuShareIndex = metadata.metadataFor(MacOSPowermetricsSensor.CPU_SHARE).index();
+        assertEquals(pid1CPUShare, measure.get(pid1)[cpuShareIndex]);
+        assertEquals(pid2CPUShare, measure.get(pid2)[cpuShareIndex]);
     }
 }
