@@ -11,6 +11,7 @@ public class SensorMetadata {
         this.components = components;
     }
 
+    @JsonProperty("metadata")
     private final Map<String, ComponentMetadata> components;
 
     public ComponentMetadata metadataFor(String component) {
