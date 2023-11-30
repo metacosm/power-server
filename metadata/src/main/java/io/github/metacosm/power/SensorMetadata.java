@@ -10,7 +10,7 @@ public class SensorMetadata {
     public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit){}
 
     @JsonCreator
-    public SensorMetadata(Map<String, ComponentMetadata> components, String documentation) {
+    public SensorMetadata(@JsonProperty("metadata") Map<String, ComponentMetadata> components, @JsonProperty("documentation") String documentation) {
         this.components = components;
         this.documentation = documentation;
     }
