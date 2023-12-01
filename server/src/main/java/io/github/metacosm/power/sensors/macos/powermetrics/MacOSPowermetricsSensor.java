@@ -37,7 +37,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     public MacOSPowermetricsSensor() {
         // extract metadata
         try {
-            final var exec = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 10 -n 1");
+            final var exec = new ProcessBuilder().command("sudo", "powermetrics", "--samplers cpu_power", "-i 10", "-n 1").start();
             exec.waitFor(20, TimeUnit.MILLISECONDS);
             this.metadata = initMetadata(exec.getInputStream());
         } catch (Exception e) {
@@ -237,8 +237,10 @@ public class MacOSPowermetricsSensor implements PowerSensor {
         if (!isStarted()) {
             // it takes some time for the external process in addition to the sampling time so adjust the sampling frequency to account for this so that at most one measure occurs during the sampling time window
             final var freq = Long.toString(frequency - 50);
+//            powermetrics = new ProcessBuilder().command("sudo", "powermetrics", "--samplers cpu_power,tasks", "--show-process-samp-norm", "--show-process-gpu", "-i " + freq).start(); // for some reason this doesn't work
             powermetrics = Runtime.getRuntime()
                     .exec("sudo powermetrics --samplers cpu_power,tasks --show-process-samp-norm --show-process-gpu -i " + freq);
+
         }
     }
 
@@ -249,6 +251,8 @@ public class MacOSPowermetricsSensor implements PowerSensor {
 
     @Override
     public Map<RegisteredPID, double[]> update(Long tick) {
+        System.out.println("tick = " + tick);
+        System.out.println("trackedPIDs = " + trackedPIDs);
         return extractPowerMeasure(powermetrics.getInputStream());
     }
 
