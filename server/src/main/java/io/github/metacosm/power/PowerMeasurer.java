@@ -33,7 +33,10 @@ public class PowerMeasurer {
                     .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
         }
         final var registeredPID = sensor.register(parsedPID);
-        return periodicSensorCheck.map(registeredPIDMap -> registeredPIDMap.get(registeredPID))
+        // todo: the timing of things could make it so that the pid has been removed before the map operation occurs so
+        //  currently return -1 instead of null but this needs to be properly addressed
+        return periodicSensorCheck
+                .map(registeredPIDMap -> registeredPIDMap.getOrDefault(registeredPID, new double[]{-1.0}))
                 .onCancellation().invoke(() -> sensor.unregister(registeredPID));
     }
 
