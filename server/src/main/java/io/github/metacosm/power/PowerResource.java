@@ -5,15 +5,13 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
-import java.util.Arrays;
-
 @Path("/power")
 public class PowerResource {
     @Inject
     PowerMeasurer measurer;
 
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.SERVER_SENT_EVENTS)
     @Path("{pid}")
     public Multi<String> powerFor(@PathParam("pid") String pid) throws Exception {
         try {
