@@ -237,10 +237,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
         if (!isStarted()) {
             // it takes some time for the external process in addition to the sampling time so adjust the sampling frequency to account for this so that at most one measure occurs during the sampling time window
             final var freq = Long.toString(frequency - 50);
-//            powermetrics = new ProcessBuilder().command("sudo", "powermetrics", "--samplers cpu_power,tasks", "--show-process-samp-norm", "--show-process-gpu", "-i " + freq).start(); // for some reason this doesn't work
-            powermetrics = Runtime.getRuntime()
-                    .exec("sudo powermetrics --samplers cpu_power,tasks --show-process-samp-norm --show-process-gpu -i " + freq);
-
+            powermetrics = new ProcessBuilder().command("sudo", "powermetrics", "--samplers", "cpu_power,tasks", "--show-process-samp-norm", "--show-process-gpu", "-i", freq).start();
         }
     }
 
