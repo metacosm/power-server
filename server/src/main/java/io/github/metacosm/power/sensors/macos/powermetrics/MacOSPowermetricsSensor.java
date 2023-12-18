@@ -209,9 +209,9 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                     } else {
                         measure[index] = value;
                     }
-
-                    results.put(pid, measure);
                 });
+                
+                results.put(pid, measure);
             });
             return results;
         } catch (Exception exception) {
