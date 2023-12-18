@@ -68,5 +68,9 @@ class MacOSPowermetricsSensorTest {
         final var cpuShareIndex = metadata.metadataFor(MacOSPowermetricsSensor.CPU_SHARE).index();
         assertEquals(pid1CPUShare, measure.get(pid1)[cpuShareIndex]);
         assertEquals(pid2CPUShare, measure.get(pid2)[cpuShareIndex]);
+        // check that gpu should be 0
+        final var gpuIndex = metadata.metadataFor(MacOSPowermetricsSensor.GPU).index();
+        assertEquals(0.0, measure.get(pid1)[gpuIndex]);
+        assertEquals(0.0, measure.get(pid2)[gpuIndex]);
     }
 }

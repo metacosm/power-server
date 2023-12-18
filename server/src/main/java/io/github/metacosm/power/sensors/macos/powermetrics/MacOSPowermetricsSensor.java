@@ -199,7 +199,12 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                     final var value = CPU_SHARE.equals(name) ? cpuShare : powerComponents.getOrDefault(name, 0);
 
                     if (cm.isAttributed()) {
-                        final var attributionFactor = hasGPU && GPU.equals(name) ? record.gpu / finalTotalSampledGPU : cpuShare;
+                        final double attributionFactor;
+                        if (GPU.equals(name)) {
+                            attributionFactor = hasGPU ? record.gpu / finalTotalSampledGPU : 0.0;
+                        } else {
+                            attributionFactor = cpuShare;
+                        }
                         measure[index] = value * attributionFactor;
                     } else {
                         measure[index] = value;
