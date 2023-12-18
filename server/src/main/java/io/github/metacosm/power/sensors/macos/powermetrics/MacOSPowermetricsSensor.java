@@ -248,8 +248,6 @@ public class MacOSPowermetricsSensor implements PowerSensor {
 
     @Override
     public Map<RegisteredPID, double[]> update(Long tick) {
-        System.out.println("tick = " + tick);
-        System.out.println("trackedPIDs = " + trackedPIDs);
         return extractPowerMeasure(powermetrics.getInputStream());
     }
 
