@@ -2,14 +2,12 @@ package io.github.metacosm.power;
 
 import io.github.metacosm.power.sensors.Measures;
 import io.github.metacosm.power.sensors.PowerSensor;
-import io.github.metacosm.power.sensors.RegisteredPID;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.Duration;
-import java.util.Map;
 
 @ApplicationScoped
 public class PowerMeasurer {
@@ -30,7 +28,9 @@ public class PowerMeasurer {
             periodicSensorCheck = Multi.createFrom().ticks()
                     .every(Duration.ofMillis(SAMPLING_FREQUENCY_IN_MILLIS))
                     .map(sensor::update)
-                    .broadcast().toAllSubscribers()
+                    .broadcast()
+                    .withCancellationAfterLastSubscriberDeparture()
+                    .toAtLeast(1)
                     .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
         }
         final var registeredPID = sensor.register(parsedPID);
