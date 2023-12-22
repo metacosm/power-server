@@ -1,6 +1,8 @@
 package io.github.metacosm.power.sensors.linux.rapl;
 
+import io.github.metacosm.power.SensorMeasure;
 import io.github.metacosm.power.SensorMetadata;
+import io.github.metacosm.power.sensors.Measures;
 import io.github.metacosm.power.sensors.PowerSensor;
 import io.github.metacosm.power.sensors.RegisteredPID;
 
@@ -15,7 +17,7 @@ public class IntelRAPLSensor implements PowerSensor {
     private final SensorMetadata metadata;
     private final double[] lastMeasuredSensorValues;
     private long frequency;
-    private final Set<RegisteredPID> trackedPIDs = new HashSet<>();
+    private final SingleMeasureMeasures measures = new SingleMeasureMeasures();
 
     public IntelRAPLSensor() {
         // if we total system energy is not available, read package and DRAM if possible
@@ -89,13 +91,11 @@ public class IntelRAPLSensor implements PowerSensor {
 
     @Override
     public RegisteredPID register(long pid) {
-        final var registeredPID = new RegisteredPID(pid);
-        trackedPIDs.add(registeredPID);
-        return registeredPID;
+        return measures.register(pid);
     }
 
     @Override
-    public Map<RegisteredPID, double[]> update(Long tick) {
+    public Measures update(Long tick) {
         final var measure = new double[raplFiles.length];
         for (int i = 0; i < raplFiles.length; i++) {
             final var value = raplFiles[i].extractPowerMeasure();
@@ -103,13 +103,12 @@ public class IntelRAPLSensor implements PowerSensor {
             measure[i] = newComponentValue;
             lastMeasuredSensorValues[i] = newComponentValue;
         }
-        final var result = new HashMap<RegisteredPID, double[]>(trackedPIDs.size());
-        trackedPIDs.forEach(registeredPID -> result.put(registeredPID, measure));
-        return result;
+        measures.singleMeasure(new SensorMeasure(measure, tick));
+        return measures;
     }
 
     @Override
     public void unregister(RegisteredPID registeredPID) {
-        trackedPIDs.remove(registeredPID);
+        measures.unregister(registeredPID);
     }
 }

@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Multi;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.jboss.resteasy.reactive.RestStreamElementType;
 
 @Path("/power")
 public class PowerResource {
@@ -11,17 +12,11 @@ public class PowerResource {
     PowerMeasurer measurer;
 
     @GET
-    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
     @Path("{pid}")
-    public Multi<String> powerFor(@PathParam("pid") String pid) throws Exception {
+    public Multi<SensorMeasure> powerFor(@PathParam("pid") String pid) throws Exception {
         try {
-            return measurer.startTracking(pid).map(array -> {
-                String result = "\n";
-                for (double v : array) {
-                    result += v + " ";
-                }
-                return result;
-            });
+            return measurer.startTracking(pid);
         } catch (IllegalArgumentException e) {
             throw new NotFoundException("Unknown process: " + pid);
         }
