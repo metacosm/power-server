@@ -1,5 +1,6 @@
 package io.github.metacosm.power;
 
+import io.github.metacosm.power.sensors.Measures;
 import io.github.metacosm.power.sensors.PowerSensor;
 import io.github.metacosm.power.sensors.RegisteredPID;
 import io.smallrye.mutiny.Multi;
@@ -17,9 +18,9 @@ public class PowerMeasurer {
     @Inject
     PowerSensor sensor;
 
-    private Multi<Map<RegisteredPID, double[]>> periodicSensorCheck;
+    private Multi<Measures> periodicSensorCheck;
 
-    public Multi<double[]> startTracking(String pid) throws Exception {
+    public Multi<SensorMeasure> startTracking(String pid) throws Exception {
         // first make sure that the process with that pid exists
         final var parsedPID = Long.parseLong(pid);
         ProcessHandle.of(parsedPID).orElseThrow(() -> new IllegalArgumentException("Unknown process: " + pid));
@@ -36,7 +37,7 @@ public class PowerMeasurer {
         // todo: the timing of things could make it so that the pid has been removed before the map operation occurs so
         //  currently return -1 instead of null but this needs to be properly addressed
         return periodicSensorCheck
-                .map(registeredPIDMap -> registeredPIDMap.getOrDefault(registeredPID, new double[]{-1.0}))
+                .map(measures -> measures.getOrDefault(registeredPID))
                 .onCancellation().invoke(() -> sensor.unregister(registeredPID));
     }
 

@@ -1,6 +1,8 @@
 package io.github.metacosm.power.sensors.macos.powermetrics;
 
+import io.github.metacosm.power.SensorMeasure;
 import io.github.metacosm.power.SensorMetadata;
+import io.github.metacosm.power.sensors.Measures;
 import io.github.metacosm.power.sensors.PowerSensor;
 import io.github.metacosm.power.sensors.RegisteredPID;
 
@@ -11,7 +13,6 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class MacOSPowermetricsSensor implements PowerSensor {
@@ -30,7 +31,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     private static final SensorMetadata.ComponentMetadata gpu = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
     private static final SensorMetadata.ComponentMetadata ane = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
     private static final SensorMetadata.ComponentMetadata cpuShare = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
-    private final Map<String, RegisteredPID> trackedPIDs = new ConcurrentHashMap<>();
+    private final Measures measures = new MapMeasures();
 
     private final SensorMetadata metadata;
 
@@ -125,13 +126,10 @@ public class MacOSPowermetricsSensor implements PowerSensor {
 
     @Override
     public RegisteredPID register(long pid) {
-        final var key = RegisteredPID.prepare(pid);
-        final var registeredPID = new RegisteredPID(key);
-        trackedPIDs.put(key, registeredPID);
-        return registeredPID;
+        return measures.register(pid);
     }
 
-    Map<RegisteredPID, double[]> extractPowerMeasure(InputStream powerMeasureInput) {
+    Measures extractPowerMeasure(InputStream powerMeasureInput, Long tick) {
         try {
             // Should not be closed since it closes the process
             BufferedReader input = new BufferedReader(new InputStreamReader(powerMeasureInput));
@@ -141,9 +139,9 @@ public class MacOSPowermetricsSensor implements PowerSensor {
             double totalSampledGPU = -1;
             int headerLinesToSkip = 10;
             // copy the pids so that we can remove them as soon as we've processed them
-            final var pidsToProcess = new HashSet<>(trackedPIDs.keySet());
+            final var pidsToProcess = new HashSet<>(measures.trackedPIDs());
             // start measure
-            final var measures = new HashMap<RegisteredPID, ProcessRecord>(trackedPIDs.size());
+            final var pidMeasures = new HashMap<RegisteredPID, ProcessRecord>(measures.numberOfTrackerPIDs());
             final var powerComponents = new HashMap<String, Integer>(metadata.componentCardinality());
             while ((line = input.readLine()) != null) {
                 if (headerLinesToSkip != 0) {
@@ -157,10 +155,12 @@ public class MacOSPowermetricsSensor implements PowerSensor {
 
                 // first, look for process line detailing share
                 if (!pidsToProcess.isEmpty()) {
-                    if (pidsToProcess.stream().anyMatch(line::contains)) {
-                        final var procInfo = new ProcessRecord(line);
-                        measures.put(trackedPIDs.get(procInfo.pid), procInfo);
-                        pidsToProcess.remove(procInfo.pid);
+                    for (RegisteredPID pid : pidsToProcess) {
+                        if(line.contains(pid.stringForMatching())) {
+                            pidMeasures.put(pid, new ProcessRecord(line));
+                            pidsToProcess.remove(pid);
+                            break;
+                        }
                     }
                     continue;
                 }
@@ -189,8 +189,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
             final var hasGPU = totalSampledGPU != 0;
             double finalTotalSampledGPU = totalSampledGPU;
             double finalTotalSampledCPU = totalSampledCPU;
-            final var results = new HashMap<RegisteredPID, double[]>(measures.size());
-            measures.forEach((pid, record) -> {
+            pidMeasures.forEach((pid, record) -> {
                 final var cpuShare = record.cpu / finalTotalSampledCPU;
                 final var measure = new double[metadata.componentCardinality()];
 
@@ -211,12 +210,12 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                     }
                 });
                 
-                results.put(pid, measure);
+                measures.record(pid, new SensorMeasure(measure, tick));
             });
-            return results;
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
+        return measures;
     }
 
     private static void extractPowerComponents(String line, HashMap<String, Integer> powerComponents) {
@@ -252,8 +251,8 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     }
 
     @Override
-    public Map<RegisteredPID, double[]> update(Long tick) {
-        return extractPowerMeasure(powermetrics.getInputStream());
+    public Measures update(Long tick) {
+        return extractPowerMeasure(powermetrics.getInputStream(), tick);
     }
 
     @Override
@@ -263,9 +262,9 @@ public class MacOSPowermetricsSensor implements PowerSensor {
 
     @Override
     public void unregister(RegisteredPID registeredPID) {
-        trackedPIDs.remove(registeredPID.stringForMatching());
+        measures.unregister(registeredPID);
         // if we're not tracking any processes anymore, stop powermetrics as well
-        if (trackedPIDs.isEmpty()) {
+        if (measures.numberOfTrackerPIDs() == 0) {
             stop();
         }
     }
