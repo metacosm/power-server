@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class MacOSPowermetricsSensor implements PowerSensor {
     public static final String CPU = "CPU";
@@ -110,11 +111,12 @@ public class MacOSPowermetricsSensor implements PowerSensor {
         final double cpu;
         final double gpu;
         final String pid;
+        private static final Pattern spaces = Pattern.compile("\\s+");
 
         public ProcessRecord(String line) throws IllegalArgumentException {
             //Name                               ID     CPU ms/s  samp ms/s  User%  Deadlines (<2 ms, 2-5 ms)  Wakeups (Intr, Pkg idle)  GPU ms/s
             //iTerm2                             1008   46.66     46.91      83.94  0.00    0.00               30.46   0.00              0.00
-            final var processData = line.split("\\s+");
+            final var processData = spaces.split(line, 10);
             if (processData.length != 10) {
                 throw new IllegalArgumentException("Received line doesn't conform to expected format: " + line);
             }
@@ -149,7 +151,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                     continue;
                 }
 
-                if (line.isEmpty() || line.startsWith("*")) {
+                if (line.isEmpty() || line.charAt(0) == '*') {
                     continue;
                 }
 
