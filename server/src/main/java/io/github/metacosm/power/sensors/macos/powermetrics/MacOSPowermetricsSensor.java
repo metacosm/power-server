@@ -28,10 +28,10 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     private static final String POWER_INDICATOR = " Power: ";
     private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
     private Process powermetrics;
-    private static final SensorMetadata.ComponentMetadata cpu = new SensorMetadata.ComponentMetadata(CPU, 0, "CPU power", true, "mW");
-    private static final SensorMetadata.ComponentMetadata gpu = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
-    private static final SensorMetadata.ComponentMetadata ane = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
-    private static final SensorMetadata.ComponentMetadata cpuShare = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
+    private static final SensorMetadata.ComponentMetadata cpuComponent = new SensorMetadata.ComponentMetadata(CPU, 0, "CPU power", true, "mW");
+    private static final SensorMetadata.ComponentMetadata gpuComponent = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
+    private static final SensorMetadata.ComponentMetadata aneComponent = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
+    private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
     private final Measures measures = new MapMeasures();
 
     private final SensorMetadata metadata;
@@ -54,10 +54,10 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     SensorMetadata initMetadata(InputStream inputStream) {
         // init map with known components
         Map<String, SensorMetadata.ComponentMetadata> components = new HashMap<>();
-        components.put(CPU, cpu);
-        components.put(GPU, gpu);
-        components.put(ANE, ane);
-        components.put(CPU_SHARE, cpuShare);
+        components.put(CPU, cpuComponent);
+        components.put(GPU, gpuComponent);
+        components.put(ANE, aneComponent);
+        components.put(CPU_SHARE, cpuShareComponent);
 
         int headerLinesToSkip = 10;
         try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
