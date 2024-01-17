@@ -69,7 +69,7 @@ public class PowerResourceTest {
         assertTrue(cpu.isAttributed());
 
         final var cpuShare = metadata.metadataFor("cpuShare");
-        assertEquals(3, cpuShare.index());
+        assertEquals(1, cpuShare.index());
         assertEquals("cpuShare", cpuShare.name());
         assertEquals("decimal percentage", cpuShare.unit());
         assertFalse(cpuShare.isAttributed());
