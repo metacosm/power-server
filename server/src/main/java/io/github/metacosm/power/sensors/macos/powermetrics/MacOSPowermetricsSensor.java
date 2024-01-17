@@ -32,14 +32,12 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     public MacOSPowermetricsSensor() {
         // extract metadata
         try {
-            final var exec = new ProcessBuilder().command("sudo", "powermetrics", "--samplers cpu_power", "-i 10", "-n 1").start();
-            if (exec.waitFor(20, TimeUnit.MILLISECONDS)) {
-                this.cpu = initMetadata(exec.getInputStream());
-            } else {
-                throw new IllegalStateException("Couldn't execute powermetrics to extract metadata");
-            }
+            final var exec = new ProcessBuilder()
+                    .command("sudo", "powermetrics", "--samplers", "cpu_power", "-i", "10", "-n", "1")
+                    .start();
+            this.cpu = initMetadata(exec.getInputStream());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Couldn't execute powermetrics to extract metadata", e);
         }
     }
 
