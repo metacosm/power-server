@@ -5,6 +5,16 @@ Boot time: Mon Oct  2 10:37:21 2023
 
 
 
+*** Sampled system activity (Mon Oct 23 16:51:12 2023 +0200) (1012.07ms elapsed) ***
+
+*** Running tasks ***
+
+Name                               ID     CPU ms/s  samp ms/s  User%  Deadlines (<2 ms, 2-5 ms)  Wakeups (Intr, Pkg idle)  GPU ms/s
+WindowServer                       391    281.98    283.25     82.97  1.97    0.00               428.87  8.85              0.00
+mdworker_shared                    29420  183.26    112.83     65.49  0.00    0.00               0.00    0.00              0.00
+powermetrics                       29419  23.78     23.88      6.05   0.00    0.00               0.98    0.00              0.00
+ALL_TASKS                          -2     1222.65   1222.65    65.70  1161.97 15.81              2875.29 132.40            0.00  
+
 *** Sampled system activity (Tue Nov 28 11:28:55 2023 +0100) (1002.80ms elapsed) ***
 
 
