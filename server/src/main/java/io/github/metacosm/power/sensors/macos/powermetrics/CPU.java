@@ -8,9 +8,11 @@ import java.util.Map;
 abstract class CPU {
     private SensorMetadata metadata;
 
-    abstract void addComponentIfFound(String line, Map<String, SensorMetadata.ComponentMetadata> components);
+    void addComponentIfFound(String line, Map<String, SensorMetadata.ComponentMetadata> components) {
+        throw new IllegalStateException("Shouldn't be called as this processing is unneeded for this implementation");
+    }
 
-    abstract void extractPowerComponents(String line, HashMap<String, Integer> powerComponents);
+    abstract boolean doneExtractingPowerComponents(String line, HashMap<String, Number> powerComponents);
 
     SensorMetadata metadata() {
         return metadata;
@@ -20,6 +22,5 @@ abstract class CPU {
         this.metadata = metadata;
     }
 
-    void initComponents(Map<String, SensorMetadata.ComponentMetadata> components) {
-    }
+    abstract boolean doneAfterComponentsInitialization(Map<String, SensorMetadata.ComponentMetadata> components);
 }

@@ -24,8 +24,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     public static final String DCS = "DCS";
     public static final String PACKAGE = "Package";
     public static final String CPU_SHARE = "cpuShare";
-    private static final String POWER_INDICATOR = " Power: ";
-    private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
+
     private Process powermetrics;
     private final Measures measures = new MapMeasures();
     private final CPU cpu;
@@ -34,7 +33,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
         // extract metadata
         try {
             final var exec = new ProcessBuilder().command("sudo", "powermetrics", "--samplers cpu_power", "-i 10", "-n 1").start();
-            if(exec.waitFor(20, TimeUnit.MILLISECONDS)) {
+            if (exec.waitFor(20, TimeUnit.MILLISECONDS)) {
                 this.cpu = initMetadata(exec.getInputStream());
             } else {
                 throw new IllegalStateException("Couldn't execute powermetrics to extract metadata");
@@ -58,13 +57,12 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                     // if we reached the OS line while cpu is still null, we're looking at an Apple Silicon CPU
                     if (line.startsWith("OS ")) {
                         cpu = new AppleSiliconCPU();
-                        cpu.initComponents(components);
-                        continue;
+                    } else if (line.startsWith("EFI ")) {
+                        cpu = new IntelCPU();
                     }
 
-                    if (line.startsWith("EFI ")) {
-                        cpu = new IntelCPU();
-                        cpu.initComponents(components);
+                    if (cpu != null && cpu.doneAfterComponentsInitialization(components)) {
+                        break;
                     }
                 } else {
                     // skip empty / header lines
@@ -131,7 +129,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
             // start measure
             final var pidMeasures = new HashMap<RegisteredPID, ProcessRecord>(measures.numberOfTrackerPIDs());
             final var metadata = cpu.metadata();
-            final var powerComponents = new HashMap<String, Integer>(metadata.componentCardinality());
+            final var powerComponents = new HashMap<String, Number>(metadata.componentCardinality());
             while ((line = input.readLine()) != null) {
                 if (headerLinesToSkip != 0) {
                     headerLinesToSkip--;
@@ -165,12 +163,9 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                     continue;
                 }
 
-                extractPowerComponents(line, powerComponents);
-
                 // we need an exit condition to break out of the loop, otherwise we'll just keep looping forever since there are always new lines since the process is periodical
-                // so break out once we've found all the extracted components (in this case, only cpuShare is not extracted)
                 // fixme: perhaps we should relaunch the process on each update loop instead of keeping it running? Not sure which is more efficient
-                if (powerComponents.size() == metadata.componentCardinality() - 1) {
+                if(cpu.doneExtractingPowerComponents(line, powerComponents)) {
                     break;
                 }
             }
@@ -184,7 +179,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
 
                 metadata.components().forEach((name, cm) -> {
                     final var index = cm.index();
-                    final var value = CPU_SHARE.equals(name) ? cpuShare : powerComponents.getOrDefault(name, 0);
+                    final var value = CPU_SHARE.equals(name) ? cpuShare : powerComponents.getOrDefault(name, 0).doubleValue();
 
                     if (cm.isAttributed()) {
                         final double attributionFactor;
@@ -205,25 +200,6 @@ public class MacOSPowermetricsSensor implements PowerSensor {
             throw new RuntimeException(exception);
         }
         return measures;
-    }
-
-    private static void extractPowerComponents(String line, HashMap<String, Integer> powerComponents) {
-        // looking for line fitting the: "<name> Power: xxx mW" pattern and add all of the associated values together
-        final var powerIndex = line.indexOf(POWER_INDICATOR);
-        // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the pattern but shouldn't be considered
-        // also ignore Combined Power if available since it is the sum of the other components
-        if (powerIndex >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
-            // get component name
-            final var name = line.substring(0, powerIndex);
-            // extract power value
-            final int value;
-            try {
-                value = Integer.parseInt(line.substring(powerIndex + POWER_INDICATOR_LENGTH, line.indexOf('m') - 1));
-            } catch (Exception e) {
-                throw new IllegalStateException("Cannot parse power value from line '" + line + "'", e);
-            }
-            powerComponents.put(name, value);
-        }
     }
 
     public void start(long frequency) throws Exception {

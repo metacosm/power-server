@@ -21,6 +21,10 @@ public class SensorMetadata {
     @JsonProperty("documentation")
     private final String documentation;
 
+    public boolean exists(String component) {
+        return components.containsKey(component);
+    }
+
     public ComponentMetadata metadataFor(String component) {
         final var componentMetadata = components.get(component);
         if (componentMetadata == null) {

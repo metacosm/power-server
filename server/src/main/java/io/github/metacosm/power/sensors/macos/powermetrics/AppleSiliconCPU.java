@@ -13,6 +13,8 @@ class AppleSiliconCPU extends io.github.metacosm.power.sensors.macos.powermetric
     private static final SensorMetadata.ComponentMetadata aneComponent = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
     private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
     private static final String COMBINED = "Combined";
+    private static final String POWER_INDICATOR = " Power: ";
+    private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
 
     public AppleSiliconCPU() {
 
@@ -42,16 +44,35 @@ class AppleSiliconCPU extends io.github.metacosm.power.sensors.macos.powermetric
     }
 
     @Override
-    public void extractPowerComponents(String line, HashMap<String, Integer> powerComponents) {
+    public boolean doneExtractingPowerComponents(String line, HashMap<String, Number> powerComponents) {
+        // looking for line fitting the: "<name> Power: xxx mW" pattern and add all of the associated values together
+        final var powerIndex = line.indexOf(POWER_INDICATOR);
+        // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the pattern but shouldn't be considered
+        // also ignore Combined Power if available since it is the sum of the other components
+        if (powerIndex >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
+            // get component name
+            final var name = line.substring(0, powerIndex);
+            // extract power value
+            final int value;
+            try {
+                value = Integer.parseInt(line.substring(powerIndex + POWER_INDICATOR_LENGTH, line.indexOf('m') - 1));
+            } catch (Exception e) {
+                throw new IllegalStateException("Cannot parse power value from line '" + line + "'", e);
+            }
+            powerComponents.put(name, value);
+        }
 
+        // we break out once we 've found all the extracted components (in this case, only cpuShare is not extracted)
+        return powerComponents.size() == metadata().componentCardinality() - 1;
     }
 
     @Override
-    void initComponents(Map<String, SensorMetadata.ComponentMetadata> components) {
+    boolean doneAfterComponentsInitialization(Map<String, SensorMetadata.ComponentMetadata> components) {
         // init map with known components
         components.put(MacOSPowermetricsSensor.CPU, cpuComponent);
         components.put(GPU, gpuComponent);
         components.put(ANE, aneComponent);
         components.put(CPU_SHARE, cpuShareComponent);
+        return false;
     }
 }
