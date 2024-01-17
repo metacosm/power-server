@@ -23,88 +23,74 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     public static final String DRAM = "DRAM";
     public static final String DCS = "DCS";
     public static final String PACKAGE = "Package";
-    private static final String COMBINED = "Combined";
     public static final String CPU_SHARE = "cpuShare";
     private static final String POWER_INDICATOR = " Power: ";
     private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
     private Process powermetrics;
-    private static final SensorMetadata.ComponentMetadata cpuComponent = new SensorMetadata.ComponentMetadata(CPU, 0, "CPU power", true, "mW");
-    private static final SensorMetadata.ComponentMetadata gpuComponent = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
-    private static final SensorMetadata.ComponentMetadata aneComponent = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
-    private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
     private final Measures measures = new MapMeasures();
-
-    private final SensorMetadata metadata;
+    private final CPU cpu;
 
     public MacOSPowermetricsSensor() {
         // extract metadata
         try {
             final var exec = new ProcessBuilder().command("sudo", "powermetrics", "--samplers cpu_power", "-i 10", "-n 1").start();
-            exec.waitFor(20, TimeUnit.MILLISECONDS);
-            this.metadata = initMetadata(exec.getInputStream());
+            if(exec.waitFor(20, TimeUnit.MILLISECONDS)) {
+                this.cpu = initMetadata(exec.getInputStream());
+            } else {
+                throw new IllegalStateException("Couldn't execute powermetrics to extract metadata");
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     MacOSPowermetricsSensor(InputStream inputStream) {
-        this.metadata = initMetadata(inputStream);
+        this.cpu = initMetadata(inputStream);
     }
 
-    SensorMetadata initMetadata(InputStream inputStream) {
-        // init map with known components
-        Map<String, SensorMetadata.ComponentMetadata> components = new HashMap<>();
-        components.put(CPU, cpuComponent);
-        components.put(GPU, gpuComponent);
-        components.put(ANE, aneComponent);
-        components.put(CPU_SHARE, cpuShareComponent);
-
-        int headerLinesToSkip = 10;
+    CPU initMetadata(InputStream inputStream) {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
+            CPU cpu = null;
+            Map<String, SensorMetadata.ComponentMetadata> components = new HashMap<>();
             while ((line = input.readLine()) != null) {
-                if (headerLinesToSkip != 0) {
-                    headerLinesToSkip--;
-                    continue;
-                }
+                if (cpu == null) {
+                    // if we reached the OS line while cpu is still null, we're looking at an Apple Silicon CPU
+                    if (line.startsWith("OS ")) {
+                        cpu = new AppleSiliconCPU();
+                        cpu.initComponents(components);
+                        continue;
+                    }
 
-                // skip empty / header lines
-                if (line.isEmpty() || line.startsWith("*")) {
-                    continue;
-                }
+                    if (line.startsWith("EFI ")) {
+                        cpu = new IntelCPU();
+                        cpu.initComponents(components);
+                    }
+                } else {
+                    // skip empty / header lines
+                    if (line.isEmpty() || line.startsWith("*")) {
+                        continue;
+                    }
 
-                // looking for line fitting the: "<name> Power: xxx mW" pattern, where "name" will be a considered metadata component
-                final var powerIndex = line.indexOf(" Power");
-                // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the metadata pattern but shouldn't be considered
-                if (powerIndex >= 0 && '-' != line.charAt(1)) {
-                    addComponentTo(line.substring(0, powerIndex), components);
+                    cpu.addComponentIfFound(line, components);
                 }
             }
 
+            if (cpu == null) {
+                throw new IllegalStateException("Couldn't determine CPU family from powermetrics output");
+            }
+
+            final var metadata = new SensorMetadata(components, "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
+            cpu.setMetadata(metadata);
+            return cpu;
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-
-        return new SensorMetadata(components, "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
-    }
-
-
-    private static void addComponentTo(String name, Map<String, SensorMetadata.ComponentMetadata> components) {
-        switch (name) {
-            case CPU, GPU, ANE:
-                // already pre-added
-                break;
-            case COMBINED:
-                // should be ignored
-                break;
-            default:
-                components.put(name, new SensorMetadata.ComponentMetadata(name, components.size(), name, false, "mW"));
         }
     }
 
     @Override
     public SensorMetadata metadata() {
-        return metadata;
+        return cpu.metadata();
     }
 
     private static class ProcessRecord {
@@ -144,6 +130,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
             final var pidsToProcess = new HashSet<>(measures.trackedPIDs());
             // start measure
             final var pidMeasures = new HashMap<RegisteredPID, ProcessRecord>(measures.numberOfTrackerPIDs());
+            final var metadata = cpu.metadata();
             final var powerComponents = new HashMap<String, Integer>(metadata.componentCardinality());
             while ((line = input.readLine()) != null) {
                 if (headerLinesToSkip != 0) {
@@ -158,7 +145,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                 // first, look for process line detailing share
                 if (!pidsToProcess.isEmpty()) {
                     for (RegisteredPID pid : pidsToProcess) {
-                        if(line.contains(pid.stringForMatching())) {
+                        if (line.contains(pid.stringForMatching())) {
                             pidMeasures.put(pid, new ProcessRecord(line));
                             pidsToProcess.remove(pid);
                             break;
@@ -183,7 +170,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                 // we need an exit condition to break out of the loop, otherwise we'll just keep looping forever since there are always new lines since the process is periodical
                 // so break out once we've found all the extracted components (in this case, only cpuShare is not extracted)
                 // fixme: perhaps we should relaunch the process on each update loop instead of keeping it running? Not sure which is more efficient
-                if(powerComponents.size() == metadata.componentCardinality() - 1) {
+                if (powerComponents.size() == metadata.componentCardinality() - 1) {
                     break;
                 }
             }
@@ -211,7 +198,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                         measure[index] = value;
                     }
                 });
-                
+
                 measures.record(pid, new SensorMeasure(measure, tick));
             });
         } catch (Exception exception) {
