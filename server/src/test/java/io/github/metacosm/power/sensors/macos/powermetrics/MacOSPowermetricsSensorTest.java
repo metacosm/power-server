@@ -1,14 +1,15 @@
 package io.github.metacosm.power.sensors.macos.powermetrics;
 
-import io.github.metacosm.power.SensorMetadata;
-import io.github.metacosm.power.sensors.Measures;
-import io.github.metacosm.power.sensors.RegisteredPID;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import io.github.metacosm.power.SensorMetadata;
+import io.github.metacosm.power.sensors.Measures;
+import io.github.metacosm.power.sensors.RegisteredPID;
 
 class MacOSPowermetricsSensorTest {
 
@@ -59,10 +60,12 @@ class MacOSPowermetricsSensorTest {
     void extractPowerMeasureForM1Max() {
         checkPowerMeasure("sonoma-m1max.txt", 211, MacOSPowermetricsSensor.CPU);
     }
+
     @Test
     void extractPowerMeasureForM2() {
         checkPowerMeasure("monterey-m2.txt", 10, MacOSPowermetricsSensor.CPU);
     }
+
     @Test
     void extractPowerMeasureForIntel() {
         checkPowerMeasure("sonoma-intel.txt", 8.53f, MacOSPowermetricsSensor.PACKAGE);

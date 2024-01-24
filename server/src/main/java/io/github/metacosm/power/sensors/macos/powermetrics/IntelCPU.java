@@ -1,23 +1,25 @@
 package io.github.metacosm.power.sensors.macos.powermetrics;
 
-import io.github.metacosm.power.SensorMetadata;
+import static io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.CPU_SHARE;
+import static io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.PACKAGE;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.CPU_SHARE;
-import static io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.PACKAGE;
+import io.github.metacosm.power.SensorMetadata;
 
 class IntelCPU extends CPU {
 
-    private static final SensorMetadata.ComponentMetadata packageComponent = new SensorMetadata.ComponentMetadata(PACKAGE, 0, "Intel energy model derived package power (CPUs+GT+SA)", true, "W");
-    private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 1, "Computed share of CPU", false, "decimal percentage");
+    private static final SensorMetadata.ComponentMetadata packageComponent = new SensorMetadata.ComponentMetadata(PACKAGE, 0,
+            "Intel energy model derived package power (CPUs+GT+SA)", true, "W");
+    private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 1,
+            "Computed share of CPU", false, "decimal percentage");
 
     @Override
     public boolean doneExtractingPowerComponents(String line, HashMap<String, Number> powerComponents) {
         // line should look like: Intel energy model derived package power (CPUs+GT+SA): 8.53W
         final var powerIndex = line.indexOf("Intel ");
-        if(powerIndex >= 0) {
+        if (powerIndex >= 0) {
             final var powerStartIndex = line.indexOf(':') + 1;
             final float value;
             try {

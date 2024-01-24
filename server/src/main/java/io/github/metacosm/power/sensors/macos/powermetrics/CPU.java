@@ -1,9 +1,9 @@
 package io.github.metacosm.power.sensors.macos.powermetrics;
 
-import io.github.metacosm.power.SensorMetadata;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import io.github.metacosm.power.SensorMetadata;
 
 abstract class CPU {
     private SensorMetadata metadata;

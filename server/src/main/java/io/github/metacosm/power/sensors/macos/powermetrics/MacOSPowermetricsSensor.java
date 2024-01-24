@@ -1,11 +1,5 @@
 package io.github.metacosm.power.sensors.macos.powermetrics;
 
-import io.github.metacosm.power.SensorMeasure;
-import io.github.metacosm.power.SensorMetadata;
-import io.github.metacosm.power.sensors.Measures;
-import io.github.metacosm.power.sensors.PowerSensor;
-import io.github.metacosm.power.sensors.RegisteredPID;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,8 +7,13 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
+import io.github.metacosm.power.SensorMeasure;
+import io.github.metacosm.power.SensorMetadata;
+import io.github.metacosm.power.sensors.Measures;
+import io.github.metacosm.power.sensors.PowerSensor;
+import io.github.metacosm.power.sensors.RegisteredPID;
 
 public class MacOSPowermetricsSensor implements PowerSensor {
     public static final String CPU = "CPU";
@@ -76,7 +75,8 @@ public class MacOSPowermetricsSensor implements PowerSensor {
                 throw new IllegalStateException("Couldn't determine CPU family from powermetrics output");
             }
 
-            final var metadata = new SensorMetadata(components, "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
+            final var metadata = new SensorMetadata(components,
+                    "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
             cpu.setMetadata(metadata);
             return cpu;
         } catch (IOException e) {
@@ -163,7 +163,7 @@ public class MacOSPowermetricsSensor implements PowerSensor {
 
                 // we need an exit condition to break out of the loop, otherwise we'll just keep looping forever since there are always new lines since the process is periodical
                 // fixme: perhaps we should relaunch the process on each update loop instead of keeping it running? Not sure which is more efficient
-                if(cpu.doneExtractingPowerComponents(line, powerComponents)) {
+                if (cpu.doneExtractingPowerComponents(line, powerComponents)) {
                     break;
                 }
             }
@@ -204,7 +204,8 @@ public class MacOSPowermetricsSensor implements PowerSensor {
         if (!isStarted()) {
             // it takes some time for the external process in addition to the sampling time so adjust the sampling frequency to account for this so that at most one measure occurs during the sampling time window
             final var freq = Long.toString(frequency - 50);
-            powermetrics = new ProcessBuilder().command("sudo", "powermetrics", "--samplers", "cpu_power,tasks", "--show-process-samp-norm", "--show-process-gpu", "-i", freq).start();
+            powermetrics = new ProcessBuilder().command("sudo", "powermetrics", "--samplers", "cpu_power,tasks",
+                    "--show-process-samp-norm", "--show-process-gpu", "-i", freq).start();
         }
     }
 
