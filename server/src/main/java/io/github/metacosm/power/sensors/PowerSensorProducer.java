@@ -1,9 +1,10 @@
 package io.github.metacosm.power.sensors;
 
-import io.github.metacosm.power.sensors.linux.rapl.IntelRAPLSensor;
-import io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
+
+import io.github.metacosm.power.sensors.linux.rapl.IntelRAPLSensor;
+import io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor;
 
 @Singleton
 public class PowerSensorProducer {

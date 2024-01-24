@@ -1,15 +1,16 @@
 package io.github.metacosm.power.sensors.linux.rapl;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import io.github.metacosm.power.SensorMeasure;
 import io.github.metacosm.power.sensors.Measures;
 import io.github.metacosm.power.sensors.RegisteredPID;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class SingleMeasureMeasures implements Measures {
     private final Set<RegisteredPID> trackedPIDs = new HashSet<>();
     private SensorMeasure measure;
+
     void singleMeasure(SensorMeasure sensorMeasure) {
         this.measure = sensorMeasure;
     }
@@ -38,7 +39,7 @@ public class SingleMeasureMeasures implements Measures {
 
     @Override
     public void record(RegisteredPID pid, SensorMeasure sensorMeasure) {
-       throw new UnsupportedOperationException("Shouldn't be needed");
+        throw new UnsupportedOperationException("Shouldn't be needed");
     }
 
     @Override

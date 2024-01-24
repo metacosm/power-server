@@ -1,16 +1,17 @@
 package io.github.metacosm;
 
-import io.github.metacosm.power.SensorMetadata;
-import io.quarkus.test.junit.QuarkusTest;
+import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
-import java.util.Set;
-
-import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.*;
+import io.github.metacosm.power.SensorMetadata;
+import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 public class PowerResourceTest {

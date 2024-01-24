@@ -1,16 +1,15 @@
 package io.github.metacosm.power.sensors.linux.rapl;
 
-import io.github.metacosm.power.SensorMeasure;
-import io.github.metacosm.power.SensorMetadata;
-import io.github.metacosm.power.sensors.Measures;
-import io.github.metacosm.power.sensors.PowerSensor;
-import io.github.metacosm.power.sensors.RegisteredPID;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import io.github.metacosm.power.SensorMeasure;
+import io.github.metacosm.power.SensorMetadata;
+import io.github.metacosm.power.sensors.Measures;
+import io.github.metacosm.power.sensors.PowerSensor;
+import io.github.metacosm.power.sensors.RegisteredPID;
 
 public class IntelRAPLSensor implements PowerSensor {
     private final RAPLFile[] raplFiles;
@@ -37,7 +36,8 @@ public class IntelRAPLSensor implements PowerSensor {
         for (String name : files.keySet()) {
             metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb++, name, false, "µJ"));
         }
-        this.metadata = new SensorMetadata(metadata, "Linux RAPL derived information, see https://www.kernel.org/doc/html/latest/power/powercap/powercap.html");
+        this.metadata = new SensorMetadata(metadata,
+                "Linux RAPL derived information, see https://www.kernel.org/doc/html/latest/power/powercap/powercap.html");
         lastMeasuredSensorValues = new double[raplFiles.length];
     }
 
@@ -65,7 +65,6 @@ public class IntelRAPLSensor implements PowerSensor {
     private static boolean isReadable(Path file) {
         return Files.exists(file) && Files.isReadable(file);
     }
-
 
     @Override
     public void start(long frequency) throws Exception {

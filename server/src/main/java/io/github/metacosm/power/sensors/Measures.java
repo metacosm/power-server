@@ -1,11 +1,12 @@
 package io.github.metacosm.power.sensors;
 
-import io.github.metacosm.power.SensorMeasure;
-
 import java.util.Set;
 
+import io.github.metacosm.power.SensorMeasure;
+
 public interface Measures {
-    SensorMeasure missing = new SensorMeasure(new double[]{-1.0}, -1);
+    SensorMeasure missing = new SensorMeasure(new double[] { -1.0 }, -1);
+
     RegisteredPID register(long pid);
 
     void unregister(RegisteredPID registeredPID);

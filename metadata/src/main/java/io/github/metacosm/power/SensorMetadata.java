@@ -1,16 +1,18 @@
 package io.github.metacosm.power;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Collections;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class SensorMetadata {
-    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit){}
+    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit) {
+    }
 
     @JsonCreator
-    public SensorMetadata(@JsonProperty("metadata") Map<String, ComponentMetadata> components, @JsonProperty("documentation") String documentation) {
+    public SensorMetadata(@JsonProperty("metadata") Map<String, ComponentMetadata> components,
+            @JsonProperty("documentation") String documentation) {
         this.components = components;
         this.documentation = documentation;
     }

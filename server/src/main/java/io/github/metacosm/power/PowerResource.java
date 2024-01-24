@@ -1,10 +1,12 @@
 package io.github.metacosm.power;
 
-import io.smallrye.mutiny.Multi;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+
 import org.jboss.resteasy.reactive.RestStreamElementType;
+
+import io.smallrye.mutiny.Multi;
 
 @Path("/power")
 public class PowerResource {

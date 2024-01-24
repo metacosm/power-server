@@ -1,17 +1,21 @@
 package io.github.metacosm.power.sensors.macos.powermetrics;
 
-import io.github.metacosm.power.SensorMetadata;
+import static io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.*;
+import io.github.metacosm.power.SensorMetadata;
 
 class AppleSiliconCPU extends io.github.metacosm.power.sensors.macos.powermetrics.CPU {
-    private static final SensorMetadata.ComponentMetadata cpuComponent = new SensorMetadata.ComponentMetadata(CPU, 0, "CPU power", true, "mW");
-    private static final SensorMetadata.ComponentMetadata gpuComponent = new SensorMetadata.ComponentMetadata(GPU, 1, "GPU power", true, "mW");
-    private static final SensorMetadata.ComponentMetadata aneComponent = new SensorMetadata.ComponentMetadata(ANE, 2, "Apple Neural Engine power", false, "mW");
-    private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3, "Computed share of CPU", false, "decimal percentage");
+    private static final SensorMetadata.ComponentMetadata cpuComponent = new SensorMetadata.ComponentMetadata(CPU, 0,
+            "CPU power", true, "mW");
+    private static final SensorMetadata.ComponentMetadata gpuComponent = new SensorMetadata.ComponentMetadata(GPU, 1,
+            "GPU power", true, "mW");
+    private static final SensorMetadata.ComponentMetadata aneComponent = new SensorMetadata.ComponentMetadata(ANE, 2,
+            "Apple Neural Engine power", false, "mW");
+    private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3,
+            "Computed share of CPU", false, "decimal percentage");
     private static final String COMBINED = "Combined";
     private static final String POWER_INDICATOR = " Power: ";
     private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
