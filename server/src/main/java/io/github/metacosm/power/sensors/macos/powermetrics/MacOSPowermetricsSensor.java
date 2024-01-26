@@ -15,7 +15,7 @@ import io.github.metacosm.power.sensors.Measures;
 import io.github.metacosm.power.sensors.PowerSensor;
 import io.github.metacosm.power.sensors.RegisteredPID;
 
-public class MacOSPowermetricsSensor implements PowerSensor {
+public abstract class MacOSPowermetricsSensor implements PowerSensor {
     public static final String CPU = "CPU";
     public static final String GPU = "GPU";
     public static final String ANE = "ANE";
@@ -24,30 +24,19 @@ public class MacOSPowermetricsSensor implements PowerSensor {
     public static final String PACKAGE = "Package";
     public static final String CPU_SHARE = "cpuShare";
 
-    private Process powermetrics;
     private final Measures measures = new MapMeasures();
-    private final CPU cpu;
+    protected CPU cpu;
 
-    public MacOSPowermetricsSensor() {
-        // extract metadata
-        try {
-            final var exec = new ProcessBuilder()
-                    .command("sudo", "powermetrics", "--samplers", "cpu_power", "-i", "10", "-n", "1")
-                    .start();
-            this.cpu = initMetadata(exec.getInputStream());
-        } catch (Exception e) {
-            throw new RuntimeException("Couldn't execute powermetrics to extract metadata", e);
-        }
+    protected MacOSPowermetricsSensor() {
     }
 
     MacOSPowermetricsSensor(InputStream inputStream) {
-        this.cpu = initMetadata(inputStream);
+        initMetadata(inputStream);
     }
 
-    CPU initMetadata(InputStream inputStream) {
+    void initMetadata(InputStream inputStream) {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
-            CPU cpu = null;
             Map<String, SensorMetadata.ComponentMetadata> components = new HashMap<>();
             while ((line = input.readLine()) != null) {
                 if (cpu == null) {
@@ -78,7 +67,6 @@ public class MacOSPowermetricsSensor implements PowerSensor {
             final var metadata = new SensorMetadata(components,
                     "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
             cpu.setMetadata(metadata);
-            return cpu;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -200,29 +188,12 @@ public class MacOSPowermetricsSensor implements PowerSensor {
         return measures;
     }
 
-    public void start(long frequency) throws Exception {
-        if (!isStarted()) {
-            // it takes some time for the external process in addition to the sampling time so adjust the sampling frequency to account for this so that at most one measure occurs during the sampling time window
-            final var freq = Long.toString(frequency - 50);
-            powermetrics = new ProcessBuilder().command("sudo", "powermetrics", "--samplers", "cpu_power,tasks",
-                    "--show-process-samp-norm", "--show-process-gpu", "-i", freq).start();
-        }
-    }
-
-    @Override
-    public boolean isStarted() {
-        return powermetrics != null && powermetrics.isAlive();
-    }
-
     @Override
     public Measures update(Long tick) {
-        return extractPowerMeasure(powermetrics.getInputStream(), tick);
+        return extractPowerMeasure(getInputStream(), tick);
     }
 
-    @Override
-    public void stop() {
-        powermetrics.destroy();
-    }
+    protected abstract InputStream getInputStream();
 
     @Override
     public void unregister(RegisteredPID registeredPID) {

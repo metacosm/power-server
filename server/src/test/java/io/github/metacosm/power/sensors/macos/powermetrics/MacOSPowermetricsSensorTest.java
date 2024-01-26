@@ -2,8 +2,7 @@ package io.github.metacosm.power.sensors.macos.powermetrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,14 +38,7 @@ class MacOSPowermetricsSensorTest {
     }
 
     private static SensorMetadata loadMetadata(String fileName) throws IOException {
-        try (var in = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName)) {
-            return loadMetadata(in);
-        }
-    }
-
-    private static SensorMetadata loadMetadata(InputStream in) {
-        final var sensor = new MacOSPowermetricsSensor(in);
-        return sensor.metadata();
+        return new ResourceMacOSPowermetricsSensor(fileName).metadata();
     }
 
     private static void checkComponent(SensorMetadata metadata, String name, int index) {
@@ -72,15 +64,13 @@ class MacOSPowermetricsSensorTest {
     }
 
     private static void checkPowerMeasure(String testFileName, float total, String totalMeasureName) {
-        var in = Thread.currentThread().getContextClassLoader().getResourceAsStream(testFileName);
-        final var sensor = new MacOSPowermetricsSensor(in);
+        final var sensor = new ResourceMacOSPowermetricsSensor(testFileName);
         final var metadata = sensor.metadata();
         final var pid1 = sensor.register(29419);
         final var pid2 = sensor.register(391);
 
         // re-open the stream to read the measure this time
-        in = Thread.currentThread().getContextClassLoader().getResourceAsStream(testFileName);
-        final var measure = sensor.extractPowerMeasure(in, 0L);
+        final var measure = sensor.update(0L);
         final var totalMeasureMetadata = metadata.metadataFor(totalMeasureName);
         final var pid1CPUShare = 23.88 / 1222.65;
         assertEquals((pid1CPUShare * total), getComponent(measure, pid1, totalMeasureMetadata));

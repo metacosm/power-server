@@ -10,7 +10,6 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
-import io.github.metacosm.power.SensorMetadata;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest

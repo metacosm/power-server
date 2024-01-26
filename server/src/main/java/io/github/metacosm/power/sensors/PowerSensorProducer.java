@@ -4,7 +4,7 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
 import io.github.metacosm.power.sensors.linux.rapl.IntelRAPLSensor;
-import io.github.metacosm.power.sensors.macos.powermetrics.MacOSPowermetricsSensor;
+import io.github.metacosm.power.sensors.macos.powermetrics.ProcessMacOSPowermetricsSensor;
 
 @Singleton
 public class PowerSensorProducer {
@@ -17,7 +17,7 @@ public class PowerSensorProducer {
 
     public static PowerSensor determinePowerSensor() {
         if (OS_NAME.contains("mac os x")) {
-            return new MacOSPowermetricsSensor();
+            return new ProcessMacOSPowermetricsSensor();
         }
 
         if (!OS_NAME.contains("linux")) {
