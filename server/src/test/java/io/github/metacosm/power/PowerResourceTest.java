@@ -17,11 +17,15 @@ public class PowerResourceTest {
 
     @Test
     public void testPowerEndpoint() {
-        final var pid = ProcessHandle.current().pid();
+        final var pid = getPid();
         given()
                 .when().get("/power/" + pid)
                 .then()
                 .statusCode(200);
+    }
+
+    protected long getPid() {
+        return ProcessHandle.current().pid();
     }
 
     @Test
