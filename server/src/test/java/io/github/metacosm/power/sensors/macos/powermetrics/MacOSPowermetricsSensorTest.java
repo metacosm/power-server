@@ -2,8 +2,6 @@ package io.github.metacosm.power.sensors.macos.powermetrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.*;
-
 import org.junit.jupiter.api.Test;
 
 import io.github.metacosm.power.SensorMetadata;
@@ -13,7 +11,7 @@ import io.github.metacosm.power.sensors.RegisteredPID;
 class MacOSPowermetricsSensorTest {
 
     @Test
-    void checkMetadata() throws IOException {
+    void checkMetadata() {
         var metadata = loadMetadata("sonoma-m1max.txt");
         assertEquals(4, metadata.componentCardinality());
         checkComponent(metadata, "CPU", 0);
@@ -37,7 +35,7 @@ class MacOSPowermetricsSensorTest {
         checkComponent(metadata, "cpuShare", 1);
     }
 
-    private static SensorMetadata loadMetadata(String fileName) throws IOException {
+    private static SensorMetadata loadMetadata(String fileName) {
         return new ResourceMacOSPowermetricsSensor(fileName).metadata();
     }
 
@@ -90,7 +88,6 @@ class MacOSPowermetricsSensorTest {
 
     private static double getComponent(Measures measure, RegisteredPID pid1, SensorMetadata.ComponentMetadata metadata) {
         final var index = metadata.index();
-        final boolean isInWatt = metadata.unit().equals("W");
         return measure.getOrDefault(pid1).components()[index];
     }
 }

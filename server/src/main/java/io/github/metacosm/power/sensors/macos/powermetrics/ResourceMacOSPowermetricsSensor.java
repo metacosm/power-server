@@ -22,7 +22,7 @@ public class ResourceMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     }
 
     @Override
-    public void start(long samplingFrequencyInMillis) throws Exception {
+    public void start(long samplingFrequencyInMillis) {
         if (!started) {
             started = true;
         }

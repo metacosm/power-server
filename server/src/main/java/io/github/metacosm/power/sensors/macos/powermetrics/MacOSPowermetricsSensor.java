@@ -19,20 +19,15 @@ public abstract class MacOSPowermetricsSensor implements PowerSensor {
     public static final String CPU = "CPU";
     public static final String GPU = "GPU";
     public static final String ANE = "ANE";
+    @SuppressWarnings("unused")
     public static final String DRAM = "DRAM";
+    @SuppressWarnings("unused")
     public static final String DCS = "DCS";
     public static final String PACKAGE = "Package";
     public static final String CPU_SHARE = "cpuShare";
 
     private final Measures measures = new MapMeasures();
-    protected CPU cpu;
-
-    protected MacOSPowermetricsSensor() {
-    }
-
-    MacOSPowermetricsSensor(InputStream inputStream) {
-        initMetadata(inputStream);
-    }
+    private CPU cpu;
 
     void initMetadata(InputStream inputStream) {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
