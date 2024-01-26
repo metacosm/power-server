@@ -1,4 +1,4 @@
-package io.github.metacosm;
+package io.github.metacosm.power;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
