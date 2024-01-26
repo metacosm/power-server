@@ -21,8 +21,7 @@ public class PowerMeasurer {
 
     public Multi<SensorMeasure> startTracking(String pid) throws Exception {
         // first make sure that the process with that pid exists
-        final var parsedPID = Long.parseLong(pid);
-        ProcessHandle.of(parsedPID).orElseThrow(() -> new IllegalArgumentException("Unknown process: " + pid));
+        final var parsedPID = validPIDOrFail(pid);
 
         if (!sensor.isStarted()) {
             sensor.start(SAMPLING_FREQUENCY_IN_MILLIS);
@@ -40,6 +39,12 @@ public class PowerMeasurer {
         return periodicSensorCheck
                 .map(measures -> measures.getOrDefault(registeredPID))
                 .onCancellation().invoke(() -> sensor.unregister(registeredPID));
+    }
+
+    protected long validPIDOrFail(String pid) {
+        final var parsedPID = Long.parseLong(pid);
+        ProcessHandle.of(parsedPID).orElseThrow(() -> new IllegalArgumentException("Unknown process: " + pid));
+        return parsedPID;
     }
 
     public SensorMetadata metadata() {

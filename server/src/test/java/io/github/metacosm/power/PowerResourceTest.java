@@ -1,4 +1,4 @@
-package io.github.metacosm;
+package io.github.metacosm.power;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
@@ -10,7 +10,6 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
-import io.github.metacosm.power.SensorMetadata;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -18,11 +17,15 @@ public class PowerResourceTest {
 
     @Test
     public void testPowerEndpoint() {
-        final var pid = ProcessHandle.current().pid();
+        final var pid = getPid();
         given()
                 .when().get("/power/" + pid)
                 .then()
                 .statusCode(200);
+    }
+
+    protected long getPid() {
+        return ProcessHandle.current().pid();
     }
 
     @Test

@@ -1,4 +1,4 @@
-package io.github.metacosm;
+package io.github.metacosm.power;
 
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 
