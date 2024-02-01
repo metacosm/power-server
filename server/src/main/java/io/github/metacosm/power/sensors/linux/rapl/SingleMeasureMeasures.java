@@ -7,7 +7,7 @@ import io.github.metacosm.power.SensorMeasure;
 import io.github.metacosm.power.sensors.Measures;
 import io.github.metacosm.power.sensors.RegisteredPID;
 
-public class SingleMeasureMeasures implements Measures {
+class SingleMeasureMeasures implements Measures {
     private final Set<RegisteredPID> trackedPIDs = new HashSet<>();
     private SensorMeasure measure;
 

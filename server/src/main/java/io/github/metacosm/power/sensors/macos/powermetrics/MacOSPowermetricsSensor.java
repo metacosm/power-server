@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 import io.github.metacosm.power.SensorMeasure;
 import io.github.metacosm.power.SensorMetadata;
+import io.github.metacosm.power.sensors.MapMeasures;
 import io.github.metacosm.power.sensors.Measures;
 import io.github.metacosm.power.sensors.PowerSensor;
 import io.github.metacosm.power.sensors.RegisteredPID;

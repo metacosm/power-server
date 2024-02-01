@@ -1,14 +1,12 @@
-package io.github.metacosm.power.sensors.macos.powermetrics;
+package io.github.metacosm.power.sensors;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import io.github.metacosm.power.SensorMeasure;
-import io.github.metacosm.power.sensors.Measures;
-import io.github.metacosm.power.sensors.RegisteredPID;
 
-class MapMeasures implements Measures {
+public class MapMeasures implements Measures {
     private final ConcurrentMap<RegisteredPID, SensorMeasure> measures = new ConcurrentHashMap<>();
 
     @Override
