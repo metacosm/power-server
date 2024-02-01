@@ -67,7 +67,7 @@ public class IntelRAPLSensor implements PowerSensor {
     }
 
     @Override
-    public void start(long frequency) throws Exception {
+    public void start(long frequency) {
         this.frequency = frequency;
 
         // perform an initial measure to prime the data

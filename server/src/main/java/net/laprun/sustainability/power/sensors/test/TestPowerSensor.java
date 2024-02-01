@@ -9,6 +9,7 @@ import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
 
+@SuppressWarnings("unused")
 public class TestPowerSensor implements PowerSensor {
     public static final String CPU = "cpu";
     public static final SensorMetadata DEFAULT = new SensorMetadata(
@@ -37,7 +38,7 @@ public class TestPowerSensor implements PowerSensor {
     }
 
     @Override
-    public void start(long samplingFrequencyInMillis) throws Exception {
+    public void start(long samplingFrequencyInMillis) {
         if (!started) {
             started = true;
         }
