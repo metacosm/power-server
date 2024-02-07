@@ -14,6 +14,26 @@
     </description>
     <url>https://github.com/metacosm/power-server</url>
 
+    <licenses>
+        <license>
+            <name>Apache 2 License</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.html</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Christophe Laprun</name>
+            <email>metacosm@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/metacosm/power-server.git</connection>
+        <developerConnection>scm:git:git@github.com/metacosm/power-server.git</developerConnection>
+        <url>https://github.com/metacosm/power-server/tree/main</url>
+    </scm>
+
+
     <properties>
         <compiler-plugin.version>3.11.0</compiler-plugin.version>
         <maven.compiler.release>21</maven.compiler.release>
