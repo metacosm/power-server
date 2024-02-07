@@ -11,5 +11,7 @@
     </parent>
     
     <artifactId>build-tools</artifactId>
+    <name>power-server : code formatting support</name>
+    <description>Support to automatically format the code for the power-server project</description>
 
 </project>

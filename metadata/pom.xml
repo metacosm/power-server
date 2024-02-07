@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>power-server-metadata</artifactId>
+    <name>power-server : metadata model</name>
+    <description>Metadata model used by the power-server project, extracted to allow reuse in client projects</description>
 
     <build>
         <pluginManagement>
