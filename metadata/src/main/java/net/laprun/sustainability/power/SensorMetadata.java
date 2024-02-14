@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SensorMetadata {
     /**
      * The information associated with a recorded component
-     * 
+     *
      * @param name the name of the component (e.g. CPU)
      * @param index the index at which the measure for this component is recorded in the {@link SensorMeasure#components} array
      * @param description a short textual description of what this component is about when available (for automatically
@@ -48,7 +48,7 @@ public class SensorMetadata {
 
     /**
      * Determines whether a component with the specified name is known for this sensor
-     * 
+     *
      * @param component the name of the component
      * @return {@code true} if a component with the specified name exists for the associated sensor, {@code false} otherwise
      */
@@ -73,7 +73,7 @@ public class SensorMetadata {
 
     /**
      * Retrieves the number of known components for the associated sensor
-     * 
+     *
      * @return the cardinality of known components
      */
     public int componentCardinality() {
@@ -83,7 +83,7 @@ public class SensorMetadata {
     /**
      * Retrieves the known {@link ComponentMetadata} for the associated sensor as an unmodifiable Map keyed by the components'
      * name
-     * 
+     *
      * @return an unmodifiable Map of the known {@link ComponentMetadata}
      */
     public Map<String, ComponentMetadata> components() {
@@ -92,7 +92,7 @@ public class SensorMetadata {
 
     /**
      * Retrieves the documentation, if any, associated with this SensorMetadata
-     * 
+     *
      * @return the documentation relevant for the associated sensor
      */
     public String documentation() {

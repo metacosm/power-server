@@ -33,21 +33,21 @@ public interface Measures {
 
     /**
      * Retrieves the set of tracked process identifiers
-     * 
+     *
      * @return the set of tracked process identifiers
      */
     Set<RegisteredPID> trackedPIDs();
 
     /**
      * Retrieves the number of tracked processes
-     * 
+     *
      * @return the number of tracked processes
      */
     int numberOfTrackerPIDs();
 
     /**
      * Records the specified measure and associates it to the specified tracked process, normally called once per tick
-     * 
+     *
      * @param pid the {@link RegisteredPID} representing the tracked process with which the recorded measure needs to be
      *        associated
      * @param sensorMeasure the {@link SensorMeasure} to be recorded
@@ -56,7 +56,7 @@ public interface Measures {
 
     /**
      * Retrieves the last recorded {@link SensorMeasure} associated with the specified {@link RegisteredPID}
-     * 
+     *
      * @param pid the tracked process identifier which measure we want to retrieve
      * @return the last recorded {@link SensorMeasure} associated with the specified process or {@link #missing} if it cannot be
      *         retrieved for any reason
