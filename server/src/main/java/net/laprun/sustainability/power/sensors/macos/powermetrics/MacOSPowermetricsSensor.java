@@ -16,15 +16,36 @@ import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
 
+/**
+ * A macOS powermetrics based {@link PowerSensor} implementation.
+ */
 public abstract class MacOSPowermetricsSensor implements PowerSensor {
+    /**
+     * The Central Processing Unit component name
+     */
     public static final String CPU = "CPU";
+    /**
+     * The Graphics Procssing Unit component name
+     */
     public static final String GPU = "GPU";
+    /**
+     * The Apple Neural Engine component name
+     */
     public static final String ANE = "ANE";
+    /**
+     * The Dynamic Random Access Memory component name
+     */
     @SuppressWarnings("unused")
     public static final String DRAM = "DRAM";
     @SuppressWarnings("unused")
     public static final String DCS = "DCS";
+    /**
+     * The package component name
+     */
     public static final String PACKAGE = "Package";
+    /**
+     * The extracted CPU share component name, this represents the process' share of the measured power consumption
+     */
     public static final String CPU_SHARE = "cpuShare";
 
     private final Measures measures = new MapMeasures();
