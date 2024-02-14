@@ -11,6 +11,9 @@ import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
 
+/**
+ * A sensor using Intel's RAPL accessed via Linux' powercap system.
+ */
 public class IntelRAPLSensor implements PowerSensor {
     private final RAPLFile[] raplFiles;
     private final SensorMetadata metadata;
@@ -18,6 +21,9 @@ public class IntelRAPLSensor implements PowerSensor {
     private long frequency;
     private final SingleMeasureMeasures measures = new SingleMeasureMeasures();
 
+    /**
+     * Initializes the RAPL sensor
+     */
     public IntelRAPLSensor() {
         // if we total system energy is not available, read package and DRAM if possible
         // todo: check Intel doc
