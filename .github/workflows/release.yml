@@ -48,7 +48,6 @@ jobs:
 
       - name: Maven release ${{steps.metadata.outputs.current-version}}
         run: |
-          gpg --list-keys
           git checkout -b release
           mvn -B release:prepare -Prelease -Darguments="-DperformRelease -DskipTests" -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}}
           git checkout ${{github.base_ref}}
