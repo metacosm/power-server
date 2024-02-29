@@ -55,9 +55,9 @@ jobs:
           git rebase release
           mvn -B release:perform -Darguments="-DperformRelease -DskipTests" -DperformRelease -Prelease
         env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_USERNAME: "${{ secrets.OSSRH_USERNAME }}"
+          MAVEN_PASSWORD: "${{ secrets.OSSRH_TOKEN }}"
+          MAVEN_GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
 
       - name: Push tags
         run: git push && git push --tags
