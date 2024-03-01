@@ -384,6 +384,7 @@
                         <version>${central-maven-publishing-plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
+                            <autoPublish>true</autoPublish>
                             <tokenAuth>true</tokenAuth>
                             <excludeArtifacts>build-tools</excludeArtifacts>
                         </configuration>
