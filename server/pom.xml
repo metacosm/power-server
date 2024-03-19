@@ -1,44 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <parent>
-        <groupId>net.laprun.sustainability</groupId>
-        <artifactId>power-server-parent</artifactId>
-        <version>0.0.3-SNAPSHOT</version>
-    </parent>
-    <artifactId>power-server</artifactId>
-    <name>power-server : server</name>
-    <description>A RESTful endpoint to retrieve power consumption information on a per-process basis</description>
-
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-    <dependencies>
-        <dependency>
-            <groupId>net.laprun.sustainability</groupId>
-            <artifactId>power-server-metadata</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>net.revelc.code.formatter</groupId>
-                    <artifactId>formatter-maven-plugin</artifactId>
-                    <dependencies>
-                        <dependency>
-                            <groupId>net.laprun.sustainability</groupId>
-                            <artifactId>build-tools</artifactId>
-                            <version>0.0.3-SNAPSHOT</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
-
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>net.laprun.sustainability</groupId>
+    <artifactId>power-server-parent</artifactId>
+    <version>0.0.3-SNAPSHOT</version>
+  </parent>
+  <artifactId>power-server</artifactId>
+  <name>power-server : server</name>
+  <description>A RESTful endpoint to retrieve power consumption information on a per-process basis</description>
+  <properties>
+    <distribution.directory>${project.build.directory}/distributions</distribution.directory>
+    <executable-suffix />
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>net.laprun.sustainability</groupId>
+      <artifactId>power-server-metadata</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <extensions>
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>${os-maven-plugin.version}</version>
+      </extension>
+    </extensions>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>net.revelc.code.formatter</groupId>
+          <artifactId>formatter-maven-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>net.laprun.sustainability</groupId>
+              <artifactId>build-tools</artifactId>
+              <version>0.0.3-SNAPSHOT</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+  <profiles>
+    <profile>
+      <id>dist</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>${maven-assembly-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>make-distribution</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <attach>false</attach>
+              <appendAssemblyId>false</appendAssemblyId>
+              <finalName>${project.artifactId}-${project.version}-${os.detected.classifier}</finalName>
+              <outputDirectory>${distribution.directory}</outputDirectory>
+              <workDirectory>${project.build.directory}/assembly/work</workDirectory>
+              <descriptors>
+                <descriptor>src/main/assembly/assembly.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>dist-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <executable-suffix>.exe</executable-suffix>
+      </properties>
+    </profile>
+  </profiles>
 </project>

@@ -22,8 +22,12 @@
         <developer>
             <name>Christophe Laprun</name>
             <email>metacosm@gmail.com</email>
+            <roles>
+                <role>author</role>
+            </roles>
         </developer>
     </developers>
+    <inceptionYear>2023</inceptionYear>
 
     <scm>
         <connection>scm:git:git://github.com/metacosm/power-server.git</connection>
@@ -54,6 +58,9 @@
         <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
         <buildnumber-maven-plugin.version>3.2.0</buildnumber-maven-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
+        <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
+        <maven-assembly-plugin.version>3.7.0</maven-assembly-plugin.version>
+        <jreleaser.version>1.11.0</jreleaser.version>
     </properties>
 
     <modules>
@@ -242,6 +249,74 @@
             <id>release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.jreleaser</groupId>
+                        <artifactId>jreleaser-maven-plugin</artifactId>
+                        <version>${jreleaser.version}</version>
+                        <configuration>
+                            <jreleaser>
+                                <release>
+                                    <github>
+                                        <changelog>
+                                            <formatted>ALWAYS</formatted>
+                                            <preset>conventional-commits</preset>
+                                        </changelog>
+                                    </github>
+                                </release>
+                                <distributions>
+                                    <power-server>
+                                        <name>power-server</name>
+                                        <type>BINARY</type>
+                                        <brew>
+                                            <active>RELEASE</active>
+                                            <multiPlatform>true</multiPlatform>
+                                        </brew>
+                                        <sdkman>
+                                            <active>RELEASE</active>
+                                        </sdkman>
+                                        <artifacts>
+                                            <artifact>
+                                                <path>
+                                                    {{artifactsDir}}/{{distributionName}}-{{projectVersion}}-linux-x86_64.tar.gz
+                                                </path>
+                                                <transform>
+                                                    artifacts/{{distributionName}}-{{projectEffectiveVersion}}-linux-x86_64.tar.gz
+                                                </transform>
+                                                <platform>linux-x86_64</platform>
+                                            </artifact>
+                                            <!--<artifact>
+                                                <path>
+                                                    {{artifactsDir}}/{{distributionName}}-{{projectVersion}}-windows-x86_64.zip
+                                                </path>
+                                                <transform>
+                                                    artifacts/{{distributionName}}-{{projectEffectiveVersion}}-windows-x86_64.zip
+                                                </transform>
+                                                <platform>windows-x86_64</platform>
+                                            </artifact>-->
+                                            <artifact>
+                                                <path>
+                                                    {{artifactsDir}}/{{distributionName}}-{{projectVersion}}-osx-x86_64.zip
+                                                </path>
+                                                <transform>
+                                                    artifacts/{{distributionName}}-{{projectEffectiveVersion}}-osx-x86_64.zip
+                                                </transform>
+                                                <platform>osx-x86_64</platform>
+                                            </artifact>
+                                            <artifact>
+                                                <path>
+                                                    {{artifactsDir}}/{{distributionName}}-{{projectVersion}}-osx-aarch_64.zip
+                                                </path>
+                                                <transform>
+                                                    artifacts/{{distributionName}}-{{projectEffectiveVersion}}-osx-aarch_64.zip
+                                                </transform>
+                                                <platform>osx-aarch_64</platform>
+                                            </artifact>
+                                        </artifacts>
+                                    </power-server>
+                                </distributions>
+                            </jreleaser>
+                        </configuration>
+                    </plugin>
                     <!-- Set properties containing the scm revision -->
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
