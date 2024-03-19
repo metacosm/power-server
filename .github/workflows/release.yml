@@ -15,7 +15,7 @@ defaults:
     shell: bash
 
 jobs:
-  release:
+  maven-release:
     runs-on: ubuntu-latest
     name: Release power-server
     if: ${{github.event.pull_request.merged == true}}
@@ -59,3 +59,71 @@ jobs:
         run: |
           git push
           git push origin ${{steps.metadata.outputs.current-version}}
+
+  # Build native executable per runner
+  package:
+    needs: [ maven-release ]
+    name: 'Build with Graal on ${{ matrix.os }}'
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v4
+
+      - name: 'Build Native Image'
+        if: ${{ runner.os == 'Linux' }}
+        run: ./mvnw -ntp -B --file pom.xml -Pnative package -DskipTests
+
+      - name: 'Create distribution'
+        run: ./mvnw -ntp -B --file pom.xml -Pdist package -DskipTests
+
+      - name: 'Upload build artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            target/*.zip
+            target/*.tar.gz
+
+  # Collect all executables and release
+  release:
+    needs: [ maven-release, package ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # checkout will clobber downloaded artifacts
+      # we have to download them again
+      - name: 'Download all build artifacts'
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: artifacts-*
+          merge-multiple: true
+
+      - name: 'Set up Java'
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
+          cache: maven
+
+      - name: 'Release with JReleaser'
+        env:
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./mvnw -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
+
+      - name: 'JReleaser output'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jreleaser-logs
+          path: |
+            target/jreleaser/trace.log
+            target/jreleaser/output.properties
