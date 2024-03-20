@@ -59,7 +59,7 @@
         <buildnumber-maven-plugin.version>3.2.0</buildnumber-maven-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
-        <maven-assembly-plugin.version>3.7.0</maven-assembly-plugin.version>
+        <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
         <jreleaser.version>1.11.0</jreleaser.version>
     </properties>
 
