@@ -63,8 +63,5 @@ jobs:
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ls -la
-          pushd server
-          ls -la
-          mvn -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -Djreleaser.dry.run=true
-          popd server
+          ls -la artifacts
+          mvn -ntp -B --file server/pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -Djreleaser.dry.run=true
