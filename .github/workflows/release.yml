@@ -137,7 +137,7 @@ jobs:
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mvn -ntp -B --file server/pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -Djreleaser.select.current.platform
+          mvn -ntp -B --file server/pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
 
       - name: 'JReleaser output'
         if: always()
