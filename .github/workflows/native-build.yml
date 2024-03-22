@@ -1,0 +1,36 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  # Build native executable per runner
+  package:
+    needs: [ maven-release ]
+    name: 'Build with Graal on ${{ matrix.os }}'
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v4
+
+      - name: 'Build Native Image'
+        run: |
+          pushd server
+          ./mvnw -ntp -B --file pom.xml -Pnative package -DskipTests
+          popd
+
+      - name: 'Create distribution'
+        run: |
+          pushd server
+          ./mvnw -ntp -B --file pom.xml -Pdist package -DskipTests
+          popd
+
+      - name: 'Upload build artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            target/*.zip
+            target/*.tar.gz
