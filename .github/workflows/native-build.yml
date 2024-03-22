@@ -47,5 +47,5 @@ jobs:
         with:
           name: artifacts-${{ runner.os }}-${{ runner.arch }}
           path: |
-            target/*.zip
-            target/*.tar.gz
+            server/target/distributions/*.zip
+            server/target/distributions/*.tar.gz
