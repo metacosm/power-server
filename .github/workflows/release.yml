@@ -74,11 +74,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 'Build Native Image'
-        if: ${{ runner.os == 'Linux' }}
-        run: ./mvnw -ntp -B --file pom.xml -Pnative package -DskipTests
+        run: |
+          pushd server
+          ./mvnw -ntp -B --file pom.xml -Pnative package -DskipTests
+          popd
 
       - name: 'Create distribution'
-        run: ./mvnw -ntp -B --file pom.xml -Pdist package -DskipTests
+        run: |
+          pushd server
+          ./mvnw -ntp -B --file pom.xml -Pdist package -DskipTests
+          popd
 
       - name: 'Upload build artifact'
         uses: actions/upload-artifact@v4
@@ -117,7 +122,10 @@ jobs:
       - name: 'Release with JReleaser'
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./mvnw -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
+        run: |
+          pushd server
+          ./mvnw -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
+          popd server
 
       - name: 'JReleaser output'
         if: always()
