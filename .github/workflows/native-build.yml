@@ -1,10 +1,11 @@
+name: Native build test
+
 on:
   workflow_dispatch:
 
 jobs:
   # Build native executable per runner
   package:
-    needs: [ maven-release ]
     name: 'Build with Graal on ${{ matrix.os }}'
     strategy:
       fail-fast: true
