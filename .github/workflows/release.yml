@@ -73,6 +73,22 @@ jobs:
       - name: 'Check out repository'
         uses: actions/checkout@v4
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'maven'
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '17'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: 'true'
+
+      - name: 'Build project'
+        run: mvn install -DskipTests
+
       - name: 'Build Native Image'
         run: |
           pushd server
@@ -88,10 +104,8 @@ jobs:
       - name: 'Upload build artifact'
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts-${{ runner.os }}-${{ runner.arch }}
-          path: |
-            target/*.zip
-            target/*.tar.gz
+          name: power-server-${{ runner.os }}-${{ runner.arch }}
+          path: server/target/distributions/*.tar.gz
 
   # Collect all executables and release
   release:
@@ -108,8 +122,8 @@ jobs:
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
-          pattern: artifacts-*
+          path: server/artifacts
+          pattern: power-server-*
           merge-multiple: true
 
       - name: 'Set up Java'
