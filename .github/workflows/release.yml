@@ -67,7 +67,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
+        os: [ ubuntu-latest, macOS-latest, macos-14 ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: 'Check out repository'
@@ -137,9 +137,7 @@ jobs:
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pushd server
-          mvn -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
-          popd server
+          mvn -ntp -B --file server/pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -Djreleaser.select.current.platform
 
       - name: 'JReleaser output'
         if: always()
