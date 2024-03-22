@@ -24,6 +24,7 @@ jobs:
 
       - name: 'Build Native Image'
         run: |
+          mvn install -DskipTests
           pushd server
           mvn -ntp -B --file pom.xml -Pnative package -DskipTests
           popd
