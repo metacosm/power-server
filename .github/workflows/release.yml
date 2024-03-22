@@ -76,13 +76,13 @@ jobs:
       - name: 'Build Native Image'
         run: |
           pushd server
-          ./mvnw -ntp -B --file pom.xml -Pnative package -DskipTests
+          mvn -ntp -B --file pom.xml -Pnative package -DskipTests
           popd
 
       - name: 'Create distribution'
         run: |
           pushd server
-          ./mvnw -ntp -B --file pom.xml -Pdist package -DskipTests
+          mvn -ntp -B --file pom.xml -Pdist package -DskipTests
           popd
 
       - name: 'Upload build artifact'
@@ -124,7 +124,7 @@ jobs:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pushd server
-          ./mvnw -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
+          mvn -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
           popd server
 
       - name: 'JReleaser output'

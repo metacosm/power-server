@@ -19,13 +19,13 @@ jobs:
       - name: 'Build Native Image'
         run: |
           pushd server
-          ./mvnw -ntp -B --file pom.xml -Pnative package -DskipTests
+          mvn -ntp -B --file pom.xml -Pnative package -DskipTests
           popd
 
       - name: 'Create distribution'
         run: |
           pushd server
-          ./mvnw -ntp -B --file pom.xml -Pdist package -DskipTests
+          mvn -ntp -B --file pom.xml -Pdist package -DskipTests
           popd
 
       - name: 'Upload build artifact'
