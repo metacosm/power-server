@@ -129,8 +129,8 @@ jobs:
       - name: 'Set up Java'
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: ${{ env.JAVA_DISTRO }}
+          java-version: 17
+          distribution: 'temurin'
           cache: maven
 
       - name: 'Release with JReleaser'
