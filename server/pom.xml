@@ -40,7 +40,7 @@
             <dependency>
               <groupId>net.laprun.sustainability</groupId>
               <artifactId>build-tools</artifactId>
-              <version>0.0.4-SNAPSHOT</version>
+              <version>${project.version}</version>
             </dependency>
           </dependencies>
         </plugin>
