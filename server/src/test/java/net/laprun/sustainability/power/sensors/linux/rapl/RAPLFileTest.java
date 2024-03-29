@@ -24,7 +24,7 @@ public class RAPLFileTest {
         Thread.sleep(50);
 
         final var raplFile = ByteBufferRAPLFile.createFrom(file);
-        final var measure = raplFile.extractPowerMeasure();
+        final var measure = raplFile.extractEnergyInMicroJoules();
         assertEquals(value, measure);
     }
 }

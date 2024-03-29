@@ -80,7 +80,13 @@ public class IntelRAPLSensor implements PowerSensor {
         update(0L);
     }
 
-    private double computeNewComponentValue(int componentIndex, long sensorValue) {
+    /**
+     * Computes the power in mW based on the current, previous energy (in micro Joules) measures and sampling frequency.
+     * @param componentIndex the index of the component being measured
+     * @param sensorValue the micro Joules energy reading
+     * @return the power over the interval defined by the sampling frequency in mW
+     */
+    private double computePowerInMilliWatt(int componentIndex, long sensorValue) {
         return (sensorValue - lastMeasuredSensorValues[componentIndex]) / frequency / 1000;
     }
 
@@ -103,8 +109,8 @@ public class IntelRAPLSensor implements PowerSensor {
     public Measures update(Long tick) {
         final var measure = new double[raplFiles.length];
         for (int i = 0; i < raplFiles.length; i++) {
-            final var value = raplFiles[i].extractPowerMeasure();
-            final var newComponentValue = computeNewComponentValue(i, value);
+            final var value = raplFiles[i].extractEnergyInMicroJoules();
+            final var newComponentValue = computePowerInMilliWatt(i, value);
             measure[i] = newComponentValue;
             lastMeasuredSensorValues[i] = newComponentValue;
         }

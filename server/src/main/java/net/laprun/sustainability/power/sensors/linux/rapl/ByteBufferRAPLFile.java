@@ -25,7 +25,7 @@ class ByteBufferRAPLFile implements RAPLFile {
         }
     }
 
-    public long extractPowerMeasure() {
+    public long extractEnergyInMicroJoules() {
         try {
             channel.read(buffer);
         } catch (IOException e) {
