@@ -31,4 +31,22 @@ power consumption, currently:
 These files are read periodically and the read energy value is then used to compute power information based on the
 sampling frequency.
 
-This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java Framework.
+## Building and running
+
+### Building
+
+Simply run `mvn clean install` at the root of the project. If you use
+the [Quarkus CLI](https://quarkus.io/guides/cli-tooling), you can build using `quarkus build`.
+
+Once you've performed a full build, you can also compile the server to a native binary:
+
+- `cd server`
+- `mvn package -Dnative` or `quarkus build --native`
+
+### Running the server
+
+Once build, you can run the server as follows:
+
+- JVM mode: `java -jar server/target/quarkus-app/quarkus-run.jar` from the project root
+- Dev mode: `cd server; mvn quarkus:dev` or `cd server; quarkus dev`
+- Native mode: `cd server; ./target/*-runner`
