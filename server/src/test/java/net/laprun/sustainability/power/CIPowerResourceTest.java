@@ -11,7 +11,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
 @QuarkusTest
-@TestProfile(CIQuarkusTestProfile.class)
+@TestProfile(CIQuarkusTestProfile.class) // only activated when quarkus.test.profile.tags='ci', uses @Mock annotated beans
 public class CIPowerResourceTest {
 
     protected long getPid() {

@@ -25,6 +25,26 @@ public class IntelRAPLSensor implements PowerSensor {
      * Initializes the RAPL sensor
      */
     public IntelRAPLSensor() {
+        this(defaultRAPLFiles());
+    }
+
+    protected IntelRAPLSensor(String... raplFilePaths) {
+        this(fromPaths(raplFilePaths));
+    }
+
+    private static SortedMap<String, RAPLFile> fromPaths(String... raplFilePaths) {
+        if (raplFilePaths == null || raplFilePaths.length == 0) {
+            throw new IllegalArgumentException("Must provide at least one RAPL file");
+        }
+
+        final var files = new TreeMap<String, RAPLFile>();
+        for (String raplFilePath : raplFilePaths) {
+            addFileIfReadable(raplFilePath, files);
+        }
+        return files;
+    }
+
+    private static SortedMap<String, RAPLFile> defaultRAPLFiles() {
         // if we total system energy is not available, read package and DRAM if possible
         // todo: check Intel doc
         final var files = new TreeMap<String, RAPLFile>();
@@ -32,22 +52,30 @@ public class IntelRAPLSensor implements PowerSensor {
             addFileIfReadable("/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj", files);
             addFileIfReadable("/sys/class/powercap/intel-rapl/intel-rapl:0/intel-rapl:0:2/energy_uj", files);
         }
+        return files;
+    }
 
+    private IntelRAPLSensor(SortedMap<String, RAPLFile> files) {
         if (files.isEmpty())
             throw new RuntimeException("Failed to get RAPL energy readings, probably due to lack of read access ");
 
         raplFiles = files.values().toArray(new RAPLFile[0]);
-        final var metadata = new HashMap<String, SensorMetadata.ComponentMetadata>(files.size());
+        final var rawOffset = files.size();
+        final var metadata = new HashMap<String, SensorMetadata.ComponentMetadata>(rawOffset * 2);
         int fileNb = 0;
         for (String name : files.keySet()) {
-            metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb++, name, false, "µJ"));
+            metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb, name, false, "mW"));
+            final var rawName = name + "_uj";
+            metadata.put(rawName, new SensorMetadata.ComponentMetadata(rawName, fileNb + rawOffset,
+                    name + " (raw micro Joule data)", false, "µJ"));
+            fileNb++;
         }
         this.metadata = new SensorMetadata(metadata,
                 "Linux RAPL derived information, see https://www.kernel.org/doc/html/latest/power/powercap/powercap.html");
         lastMeasuredSensorValues = new double[raplFiles.length];
     }
 
-    private boolean addFileIfReadable(String raplFileAsString, SortedMap<String, RAPLFile> files) {
+    private static boolean addFileIfReadable(String raplFileAsString, SortedMap<String, RAPLFile> files) {
         final var raplFile = Path.of(raplFileAsString);
         if (isReadable(raplFile)) {
             // get metric name
@@ -82,6 +110,7 @@ public class IntelRAPLSensor implements PowerSensor {
 
     /**
      * Computes the power in mW based on the current, previous energy (in micro Joules) measures and sampling frequency.
+     *
      * @param componentIndex the index of the component being measured
      * @param sensorValue the micro Joules energy reading
      * @return the power over the interval defined by the sampling frequency in mW
