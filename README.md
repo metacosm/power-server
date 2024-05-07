@@ -67,6 +67,6 @@ Once you've performed a full build, you can also compile the server to a native 
 
 Once build, you can run the server as follows:
 
-- JVM mode: `java -jar server/target/quarkus-app/quarkus-run.jar` from the project root
-- Dev mode: `cd server; mvn quarkus:dev` or `cd server; quarkus dev`
-- Native mode: `cd server; ./target/*-runner`
+- JVM mode: `sudo java -jar server/target/quarkus-app/quarkus-run.jar` from the project root
+- Dev mode: `cd server; sudo mvn quarkus:dev` or `cd server; sudo quarkus dev` (will only work if `root` has Java properly configured)
+- Native mode: `sudo ./server/target/*-runner`
