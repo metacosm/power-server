@@ -7,19 +7,17 @@ import java.util.*;
 
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.Measures;
-import net.laprun.sustainability.power.sensors.PowerSensor;
-import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 /**
  * A sensor using Intel's RAPL accessed via Linux' powercap system.
  */
-public class IntelRAPLSensor implements PowerSensor {
+public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> {
     private final RAPLFile[] raplFiles;
     private final SensorMetadata metadata;
     private final double[] lastMeasuredSensorValues;
     private long frequency;
-    private final SingleMeasureMeasures measures = new SingleMeasureMeasures();
 
     /**
      * Initializes the RAPL sensor
@@ -56,6 +54,7 @@ public class IntelRAPLSensor implements PowerSensor {
     }
 
     private IntelRAPLSensor(SortedMap<String, RAPLFile> files) {
+        super(new SingleMeasureMeasures());
         if (files.isEmpty())
             throw new RuntimeException("Failed to get RAPL energy readings, probably due to lack of read access ");
 
@@ -130,11 +129,6 @@ public class IntelRAPLSensor implements PowerSensor {
     }
 
     @Override
-    public RegisteredPID register(long pid) {
-        return measures.register(pid);
-    }
-
-    @Override
     public Measures update(Long tick) {
         final var measure = new double[raplFiles.length];
         for (int i = 0; i < raplFiles.length; i++) {
@@ -145,10 +139,5 @@ public class IntelRAPLSensor implements PowerSensor {
         }
         measures.singleMeasure(new SensorMeasure(measure, tick));
         return measures;
-    }
-
-    @Override
-    public void unregister(RegisteredPID registeredPID) {
-        measures.unregister(registeredPID);
     }
 }

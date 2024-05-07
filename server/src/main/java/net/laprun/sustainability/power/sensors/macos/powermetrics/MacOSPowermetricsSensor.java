@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.MapMeasures;
 import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
@@ -19,7 +20,7 @@ import net.laprun.sustainability.power.sensors.RegisteredPID;
 /**
  * A macOS powermetrics based {@link PowerSensor} implementation.
  */
-public abstract class MacOSPowermetricsSensor implements PowerSensor {
+public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMeasures> {
     /**
      * The Central Processing Unit component name
      */
@@ -48,8 +49,11 @@ public abstract class MacOSPowermetricsSensor implements PowerSensor {
      */
     public static final String CPU_SHARE = "cpuShare";
 
-    private final Measures measures = new MapMeasures();
     private CPU cpu;
+
+    public MacOSPowermetricsSensor() {
+        super(new MapMeasures());
+    }
 
     void initMetadata(InputStream inputStream) {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
@@ -111,11 +115,6 @@ public abstract class MacOSPowermetricsSensor implements PowerSensor {
             cpu = Double.parseDouble(processData[3]);
             gpu = Double.parseDouble(processData[9]);
         }
-    }
-
-    @Override
-    public RegisteredPID register(long pid) {
-        return measures.register(pid);
     }
 
     Measures extractPowerMeasure(InputStream powerMeasureInput, Long tick) {
@@ -214,7 +213,7 @@ public abstract class MacOSPowermetricsSensor implements PowerSensor {
 
     @Override
     public void unregister(RegisteredPID registeredPID) {
-        measures.unregister(registeredPID);
+        super.unregister(registeredPID);
         // if we're not tracking any processes anymore, stop powermetrics as well
         if (measures.numberOfTrackerPIDs() == 0) {
             stop();
