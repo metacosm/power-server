@@ -9,4 +9,8 @@ public record RegisteredPID(String stringForMatching) {
     public static String prepare(long pid) {
         return " " + pid + " ";
     }
+
+    public long pid() {
+        return Long.parseLong(stringForMatching().trim());
+    }
 }
