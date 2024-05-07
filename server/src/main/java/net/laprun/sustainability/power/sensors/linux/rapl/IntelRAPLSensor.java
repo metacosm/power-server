@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
@@ -87,7 +88,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
                 final var name = Files.readString(nameFile).trim();
                 files.put(name, RAPLFile.createFrom(raplFile));
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.debug("Couldn't read file: " + nameFile, e);
                 return false;
             }
             return true;
