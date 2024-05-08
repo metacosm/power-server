@@ -9,4 +9,8 @@ package net.laprun.sustainability.power;
  * @param tick the ordinal tick associated with this measure
  */
 public record SensorMeasure(double[] components, long tick) {
+    /**
+     * Represents an invalid or somehow missed measure.
+     */
+    public static final SensorMeasure missing = new SensorMeasure(new double[] { -1.0 }, -1);
 }

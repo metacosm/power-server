@@ -12,7 +12,7 @@ public class MapMeasures implements Measures {
     @Override
     public RegisteredPID register(long pid) {
         final var key = new RegisteredPID(pid);
-        measures.put(key, missing);
+        measures.put(key, SensorMeasure.missing);
         return key;
     }
 
@@ -38,6 +38,6 @@ public class MapMeasures implements Measures {
 
     @Override
     public SensorMeasure getOrDefault(RegisteredPID pid) {
-        return measures.getOrDefault(pid, missing);
+        return measures.getOrDefault(pid, SensorMeasure.missing);
     }
 }

@@ -44,6 +44,6 @@ class SingleMeasureMeasures implements Measures {
 
     @Override
     public SensorMeasure getOrDefault(RegisteredPID pid) {
-        return trackedPIDs.contains(pid) && measure != null ? measure : Measures.missing;
+        return trackedPIDs.contains(pid) && measure != null ? measure : SensorMeasure.missing;
     }
 }
