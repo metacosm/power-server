@@ -8,10 +8,6 @@ import net.laprun.sustainability.power.SensorMeasure;
  * A representation of ongoing {@link PowerSensor} measures.
  */
 public interface Measures {
-    /**
-     * Represents an invalid or somehow missed measure.
-     */
-    SensorMeasure missing = new SensorMeasure(new double[] { -1.0 }, -1);
 
     /**
      * Tracks the provided process identifier (pid) in the measures. For sensors that only provide system-wide measures, this
@@ -58,7 +54,8 @@ public interface Measures {
      * Retrieves the last recorded {@link SensorMeasure} associated with the specified {@link RegisteredPID}
      *
      * @param pid the tracked process identifier which measure we want to retrieve
-     * @return the last recorded {@link SensorMeasure} associated with the specified process or {@link #missing} if it cannot be
+     * @return the last recorded {@link SensorMeasure} associated with the specified process or {@link SensorMeasure#missing} if
+     *         it cannot be
      *         retrieved for any reason
      */
     SensorMeasure getOrDefault(RegisteredPID pid);
