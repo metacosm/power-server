@@ -66,8 +66,9 @@
 
     <modules>
         <module>build-tools</module>
-        <module>server</module>
         <module>metadata</module>
+        <module>measure</module>
+        <module>server</module>
     </modules>
 
     <dependencyManagement>
