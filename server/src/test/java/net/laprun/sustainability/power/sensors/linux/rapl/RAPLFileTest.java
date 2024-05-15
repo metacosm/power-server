@@ -10,21 +10,21 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 public class RAPLFileTest {
-    @Test
-    void periodicReadingShouldWork() throws IOException, InterruptedException {
-        for (int i = 0; i < 5; i++) {
-            writeThenRead();
-        }
+  @Test
+  void periodicReadingShouldWork() throws IOException, InterruptedException {
+    for (int i = 0; i < 5; i++) {
+      writeThenRead();
     }
+  }
 
-    private static void writeThenRead() throws IOException, InterruptedException {
-        final var file = Path.of("target/test.txt");
-        final var value = Math.abs(new Random().nextLong());
-        Files.writeString(file, value + "\n");
-        Thread.sleep(50);
+  private static void writeThenRead() throws IOException, InterruptedException {
+    final var file = Path.of("target/test.txt");
+    final var value = Math.abs(new Random().nextLong());
+    Files.writeString(file, value + "\n");
+    Thread.sleep(50);
 
-        final var raplFile = ByteBufferRAPLFile.createFrom(file);
-        final var measure = raplFile.extractEnergyInMicroJoules();
-        assertEquals(value, measure);
-    }
+    final var raplFile = ByteBufferRAPLFile.createFrom(file);
+    final var measure = raplFile.extractEnergyInMicroJoules();
+    assertEquals(value, measure);
+  }
 }

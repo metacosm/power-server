@@ -3,28 +3,29 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 import java.io.InputStream;
 
 public class ResourceMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
-    private final String resourceName;
-    private boolean started;
+  private final String resourceName;
 
-    public ResourceMacOSPowermetricsSensor(String resourceName) {
-        this.resourceName = resourceName;
-        initMetadata(getInputStream());
-    }
+  private boolean started;
 
-    @Override
-    protected InputStream getInputStream() {
-        return Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
-    }
+  public ResourceMacOSPowermetricsSensor(String resourceName) {
+    this.resourceName = resourceName;
+    initMetadata(getInputStream());
+  }
 
-    @Override
-    public boolean isStarted() {
-        return started;
-    }
+  @Override
+  protected InputStream getInputStream() {
+    return Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
+  }
 
-    @Override
-    public void start(long samplingFrequencyInMillis) {
-        if (!started) {
-            started = true;
-        }
+  @Override
+  public boolean isStarted() {
+    return started;
+  }
+
+  @Override
+  public void start(long samplingFrequencyInMillis) {
+    if (!started) {
+      started = true;
     }
+  }
 }

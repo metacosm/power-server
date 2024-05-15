@@ -8,21 +8,21 @@ import net.laprun.sustainability.power.sensors.macos.powermetrics.ProcessMacOSPo
 
 @Singleton
 public class PowerSensorProducer {
-    private static final String OS_NAME = System.getProperty("os.name").toLowerCase();
+  private static final String OS_NAME = System.getProperty("os.name").toLowerCase();
 
-    @Produces
-    public PowerSensor sensor() {
-        return determinePowerSensor();
+  @Produces
+  public PowerSensor sensor() {
+    return determinePowerSensor();
+  }
+
+  public static PowerSensor determinePowerSensor() {
+    if (OS_NAME.contains("mac os x")) {
+      return new ProcessMacOSPowermetricsSensor();
     }
 
-    public static PowerSensor determinePowerSensor() {
-        if (OS_NAME.contains("mac os x")) {
-            return new ProcessMacOSPowermetricsSensor();
-        }
-
-        if (!OS_NAME.contains("linux")) {
-            throw new RuntimeException("Unsupported platform: " + System.getProperty("os.name"));
-        }
-        return new IntelRAPLSensor();
+    if (!OS_NAME.contains("linux")) {
+      throw new RuntimeException("Unsupported platform: " + System.getProperty("os.name"));
     }
+    return new IntelRAPLSensor();
+  }
 }
