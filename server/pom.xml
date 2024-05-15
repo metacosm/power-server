@@ -11,7 +11,7 @@
   <description>A RESTful endpoint to retrieve power consumption information on a per-process basis</description>
   <properties>
     <distribution.directory>${project.build.directory}/distributions</distribution.directory>
-    <executable-suffix />
+    <executable-suffix/>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -24,13 +24,6 @@
     </dependency>
   </dependencies>
   <build>
-    <extensions>
-      <extension>
-        <groupId>kr.motd.maven</groupId>
-        <artifactId>os-maven-plugin</artifactId>
-        <version>${os-maven-plugin.version}</version>
-      </extension>
-    </extensions>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -46,6 +39,13 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <extensions>
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>${os-maven-plugin.version}</version>
+      </extension>
+    </extensions>
   </build>
   <profiles>
     <profile>
@@ -55,15 +55,6 @@
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
             <version>${maven-assembly-plugin.version}</version>
-            <executions>
-              <execution>
-                <id>make-distribution</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
             <configuration>
               <attach>false</attach>
               <appendAssemblyId>false</appendAssemblyId>
@@ -74,6 +65,15 @@
                 <descriptor>src/main/assembly/assembly.xml</descriptor>
               </descriptors>
             </configuration>
+            <executions>
+              <execution>
+                <id>make-distribution</id>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <phase>package</phase>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>

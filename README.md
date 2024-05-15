@@ -4,10 +4,8 @@ This project is meant to provide a REST endpoint streaming power consumption, in
 by [JoularJX](https://github.com/joular/joularjx) but focusing on exposing power information and metadata over REST
 without further processing.
 
-This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java Framework and comprises 3 modules:
+This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java Framework and comprises 2 modules:
 
-- `build-tools`, which contains formatting configuration that you can use to set your IDE up to contribute to this
-  project
 - `metadata`, which contains the metadata API that the RESTful server uses to provide information about what is returned
   by the power sensors. This artifact contains classes that can be reused in client projects.
 - `server` contains the RESTful server, listening by default on port `20432` (as specified

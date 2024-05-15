@@ -6,8 +6,8 @@ import io.quarkus.test.Mock;
 @SuppressWarnings("unused")
 public class MockPowerMeasurer extends PowerMeasurer {
 
-    @Override
-    protected long validPIDOrFail(String pid) {
-        return Long.parseLong(pid);
-    }
+  @Override
+  protected long validPIDOrFail(String pid) {
+    return Long.parseLong(pid);
+  }
 }

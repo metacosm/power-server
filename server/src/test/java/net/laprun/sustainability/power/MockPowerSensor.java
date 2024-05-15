@@ -6,7 +6,7 @@ import net.laprun.sustainability.power.sensors.macos.powermetrics.ResourceMacOSP
 @Mock
 @SuppressWarnings("unused")
 public class MockPowerSensor extends ResourceMacOSPowermetricsSensor {
-    public MockPowerSensor() {
-        super("sonoma-m1max.txt");
-    }
+  public MockPowerSensor() {
+    super("sonoma-m1max.txt");
+  }
 }

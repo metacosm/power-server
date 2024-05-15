@@ -8,42 +8,43 @@ import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 class SingleMeasureMeasures implements Measures {
-    private final Set<RegisteredPID> trackedPIDs = new HashSet<>();
-    private SensorMeasure measure;
+  private final Set<RegisteredPID> trackedPIDs = new HashSet<>();
 
-    void singleMeasure(SensorMeasure sensorMeasure) {
-        this.measure = sensorMeasure;
-    }
+  private SensorMeasure measure;
 
-    @Override
-    public RegisteredPID register(long pid) {
-        final var registeredPID = new RegisteredPID(pid);
-        trackedPIDs.add(registeredPID);
-        return registeredPID;
-    }
+  void singleMeasure(SensorMeasure sensorMeasure) {
+    this.measure = sensorMeasure;
+  }
 
-    @Override
-    public void unregister(RegisteredPID registeredPID) {
-        trackedPIDs.remove(registeredPID);
-    }
+  @Override
+  public RegisteredPID register(long pid) {
+    final var registeredPID = new RegisteredPID(pid);
+    trackedPIDs.add(registeredPID);
+    return registeredPID;
+  }
 
-    @Override
-    public Set<RegisteredPID> trackedPIDs() {
-        return trackedPIDs;
-    }
+  @Override
+  public void unregister(RegisteredPID registeredPID) {
+    trackedPIDs.remove(registeredPID);
+  }
 
-    @Override
-    public int numberOfTrackerPIDs() {
-        return trackedPIDs.size();
-    }
+  @Override
+  public Set<RegisteredPID> trackedPIDs() {
+    return trackedPIDs;
+  }
 
-    @Override
-    public void record(RegisteredPID pid, SensorMeasure sensorMeasure) {
-        throw new UnsupportedOperationException("Shouldn't be needed");
-    }
+  @Override
+  public int numberOfTrackerPIDs() {
+    return trackedPIDs.size();
+  }
 
-    @Override
-    public SensorMeasure getOrDefault(RegisteredPID pid) {
-        return trackedPIDs.contains(pid) && measure != null ? measure : Measures.missing;
-    }
+  @Override
+  public void record(RegisteredPID pid, SensorMeasure sensorMeasure) {
+    throw new UnsupportedOperationException("Shouldn't be needed");
+  }
+
+  @Override
+  public SensorMeasure getOrDefault(RegisteredPID pid) {
+    return trackedPIDs.contains(pid) && measure != null ? measure : Measures.missing;
+  }
 }

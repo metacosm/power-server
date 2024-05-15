@@ -1,32 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>net.laprun.sustainability</groupId>
-        <artifactId>power-server-parent</artifactId>
-        <version>0.0.9-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>net.laprun.sustainability</groupId>
+    <artifactId>power-server-parent</artifactId>
+    <version>0.0.9-SNAPSHOT</version>
+  </parent>
 
-    <artifactId>power-server-metadata</artifactId>
-    <name>power-server : metadata model</name>
-    <description>Metadata model used by the power-server project, extracted to allow reuse in client projects</description>
+  <artifactId>power-server-metadata</artifactId>
+  <name>power-server : metadata model</name>
+  <description>Metadata model used by the power-server project, extracted to allow reuse in client projects</description>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>net.revelc.code.formatter</groupId>
-                    <artifactId>formatter-maven-plugin</artifactId>
-                    <dependencies>
-                        <dependency>
-                            <groupId>net.laprun.sustainability</groupId>
-                            <artifactId>build-tools</artifactId>
-                            <version>0.0.9-SNAPSHOT</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 </project>

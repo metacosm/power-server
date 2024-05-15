@@ -10,23 +10,23 @@ import io.smallrye.mutiny.Multi;
 
 @Path("/power")
 public class PowerResource {
-    @Inject
-    PowerMeasurer measurer;
+  @Inject
+  PowerMeasurer measurer;
 
-    @GET
-    @RestStreamElementType(MediaType.APPLICATION_JSON)
-    @Path("{pid}")
-    public Multi<SensorMeasure> powerFor(@PathParam("pid") String pid) throws Exception {
-        try {
-            return measurer.startTracking(pid);
-        } catch (IllegalArgumentException e) {
-            throw new NotFoundException("Unknown process: " + pid);
-        }
+  @GET
+  @RestStreamElementType(MediaType.APPLICATION_JSON)
+  @Path("{pid}")
+  public Multi<SensorMeasure> powerFor(@PathParam("pid") String pid) throws Exception {
+    try {
+      return measurer.startTracking(pid);
+    } catch (IllegalArgumentException e) {
+      throw new NotFoundException("Unknown process: " + pid);
     }
+  }
 
-    @GET
-    @Path("metadata")
-    public SensorMetadata metadata() {
-        return measurer.metadata();
-    }
+  @GET
+  @Path("metadata")
+  public SensorMetadata metadata() {
+    return measurer.metadata();
+  }
 }
