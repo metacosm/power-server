@@ -50,8 +50,10 @@ jobs:
           name: power-server-${{ runner.os }}-${{ runner.arch }}
           path: server/target/distributions/*.tar.gz
 
-      # checkout will clobber downloaded artifacts
-      # we have to download them again
+  check:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v4
         with:
