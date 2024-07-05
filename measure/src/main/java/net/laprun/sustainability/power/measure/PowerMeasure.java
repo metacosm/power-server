@@ -1,5 +1,6 @@
 package net.laprun.sustainability.power.measure;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -9,7 +10,7 @@ import net.laprun.sustainability.power.SensorMetadata;
 public interface PowerMeasure {
     int numberOfSamples();
 
-    long duration();
+    Duration duration();
 
     default double average() {
         return total() / numberOfSamples();
@@ -72,7 +73,7 @@ public interface PowerMeasure {
     }
 
     static String asString(PowerMeasure measure) {
-        final var durationInSeconds = measure.duration() / 1000;
+        final var durationInSeconds = measure.duration().getSeconds();
         final var samples = measure.numberOfSamples();
         final var measuredMilliWatts = measure.total();
         final var stdDevs = measure.standardDeviations();

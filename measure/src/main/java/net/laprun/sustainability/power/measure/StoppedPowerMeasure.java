@@ -1,7 +1,9 @@
 package net.laprun.sustainability.power.measure;
 
+import java.time.Duration;
+
 public class StoppedPowerMeasure extends AbstractPowerMeasure {
-    private final long duration;
+    private final Duration duration;
     private final double total;
     private final double min;
     private final double max;
@@ -17,7 +19,7 @@ public class StoppedPowerMeasure extends AbstractPowerMeasure {
     }
 
     @Override
-    public long duration() {
+    public Duration duration() {
         return duration;
     }
 
