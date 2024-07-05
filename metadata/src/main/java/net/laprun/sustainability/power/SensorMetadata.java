@@ -15,7 +15,8 @@ public class SensorMetadata {
      * The information associated with a recorded component
      *
      * @param name the name of the component (e.g. CPU)
-     * @param index the index at which the measure for this component is recorded in the {@link SensorMeasure#components} array
+     * @param index the index at which the measure for this component is recorded in the {@link SensorMeasure#components()}
+     *        array
      * @param description a short textual description of what this component is about when available (for automatically
      *        extracted components, this might be identical to the name)
      * @param isAttributed whether or not this component provides an attributed value i.e. whether the value is already computed
@@ -24,7 +25,7 @@ public class SensorMetadata {
      *        system-wide measures instead of on a per-process basis.
      * @param unit a textual representation of the unit used for measures associated with this component (e.g. mW)
      */
-    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit) {
+    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, SensorUnit unit) {
     }
 
     /**

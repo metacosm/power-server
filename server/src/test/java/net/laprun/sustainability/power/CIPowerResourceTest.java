@@ -41,13 +41,13 @@ public class CIPowerResourceTest {
         final var cpu = metadata.metadataFor("CPU");
         assertEquals(0, cpu.index());
         assertEquals("CPU", cpu.name());
-        assertEquals("mW", cpu.unit());
+        assertEquals(SensorUnit.mW, cpu.unit());
         assertTrue(cpu.isAttributed());
 
         final var cpuShare = metadata.metadataFor("cpuShare");
         assertEquals(3, cpuShare.index());
         assertEquals("cpuShare", cpuShare.name());
-        assertEquals("decimal percentage", cpuShare.unit());
+        assertEquals(SensorUnit.decimalPercentage, cpuShare.unit());
         assertFalse(cpuShare.isAttributed());
     }
 }

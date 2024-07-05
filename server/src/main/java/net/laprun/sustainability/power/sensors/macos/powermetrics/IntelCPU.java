@@ -1,5 +1,6 @@
 package net.laprun.sustainability.power.sensors.macos.powermetrics;
 
+import static net.laprun.sustainability.power.SensorUnit.*;
 import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.CPU_SHARE;
 import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.PACKAGE;
 
@@ -11,9 +12,9 @@ import net.laprun.sustainability.power.SensorMetadata;
 class IntelCPU extends CPU {
 
     private static final SensorMetadata.ComponentMetadata packageComponent = new SensorMetadata.ComponentMetadata(PACKAGE, 0,
-            "Intel energy model derived package power (CPUs+GT+SA)", true, "W");
+            "Intel energy model derived package power (CPUs+GT+SA)", true, W);
     private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 1,
-            "Computed share of CPU", false, "decimal percentage");
+            "Computed share of CPU", false, decimalPercentage);
 
     @Override
     public boolean doneExtractingPowerComponents(String line, HashMap<String, Number> powerComponents) {

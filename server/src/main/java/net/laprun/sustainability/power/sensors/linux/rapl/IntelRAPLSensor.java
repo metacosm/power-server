@@ -1,5 +1,7 @@
 package net.laprun.sustainability.power.sensors.linux.rapl;
 
+import static net.laprun.sustainability.power.SensorUnit.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,10 +66,10 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
         final var metadata = new HashMap<String, SensorMetadata.ComponentMetadata>(rawOffset * 2);
         int fileNb = 0;
         for (String name : files.keySet()) {
-            metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb, name, false, "mW"));
+            metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb, name, false, mW));
             final var rawName = name + "_uj";
             metadata.put(rawName, new SensorMetadata.ComponentMetadata(rawName, fileNb + rawOffset,
-                    name + " (raw micro Joule data)", false, "µJ"));
+                    name + " (raw micro Joule data)", false, µJ));
             fileNb++;
         }
         this.metadata = new SensorMetadata(metadata,

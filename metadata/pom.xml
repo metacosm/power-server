@@ -12,6 +12,14 @@
     <name>power-server : metadata model</name>
     <description>Metadata model used by the power-server project, extracted to allow reuse in client projects</description>
 
+    <dependencies>
+        <dependency>
+            <groupId>eu.hoefel</groupId>
+            <artifactId>units</artifactId>
+            <version>4.1.1</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <pluginManagement>
             <plugins>
