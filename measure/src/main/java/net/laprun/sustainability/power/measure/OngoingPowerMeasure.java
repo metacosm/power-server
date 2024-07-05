@@ -1,5 +1,6 @@
 package net.laprun.sustainability.power.measure;
 
+import java.time.Duration;
 import java.util.ArrayList;
 
 import net.laprun.sustainability.power.SensorMetadata;
@@ -46,8 +47,8 @@ public class OngoingPowerMeasure extends AbstractPowerMeasure {
         return PowerMeasure.sumOfComponents(totals);
     }
 
-    public long duration() {
-        return System.currentTimeMillis() - startedAt;
+    public Duration duration() {
+        return Duration.ofMillis(System.currentTimeMillis() - startedAt);
     }
 
     @Override
