@@ -1,5 +1,6 @@
 package net.laprun.sustainability.power.sensors.macos.powermetrics;
 
+import static net.laprun.sustainability.power.SensorUnit.*;
 import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.*;
 
 import java.util.HashMap;
@@ -9,13 +10,13 @@ import net.laprun.sustainability.power.SensorMetadata;
 
 class AppleSiliconCPU extends CPU {
     private static final SensorMetadata.ComponentMetadata cpuComponent = new SensorMetadata.ComponentMetadata(CPU, 0,
-            "CPU power", true, "mW");
+            "CPU power", true, mW);
     private static final SensorMetadata.ComponentMetadata gpuComponent = new SensorMetadata.ComponentMetadata(GPU, 1,
-            "GPU power", true, "mW");
+            "GPU power", true, mW);
     private static final SensorMetadata.ComponentMetadata aneComponent = new SensorMetadata.ComponentMetadata(ANE, 2,
-            "Apple Neural Engine power", false, "mW");
+            "Apple Neural Engine power", false, mW);
     private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3,
-            "Computed share of CPU", false, "decimal percentage");
+            "Computed share of CPU", false, decimalPercentage);
     private static final String COMBINED = "Combined";
     private static final String POWER_INDICATOR = " Power: ";
     private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
@@ -43,7 +44,7 @@ class AppleSiliconCPU extends CPU {
                 // should be ignored
                 break;
             default:
-                components.put(name, new SensorMetadata.ComponentMetadata(name, components.size(), name, false, "mW"));
+                components.put(name, new SensorMetadata.ComponentMetadata(name, components.size(), name, false, mW));
         }
     }
 

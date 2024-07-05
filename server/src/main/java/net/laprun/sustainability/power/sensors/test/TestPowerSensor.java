@@ -1,5 +1,7 @@
 package net.laprun.sustainability.power.sensors.test;
 
+import static net.laprun.sustainability.power.SensorUnit.mW;
+
 import java.util.Map;
 
 import net.laprun.sustainability.power.SensorMeasure;
@@ -12,7 +14,7 @@ import net.laprun.sustainability.power.sensors.Measures;
 public class TestPowerSensor extends AbstractPowerSensor<MapMeasures> {
     public static final String CPU = "cpu";
     public static final SensorMetadata DEFAULT = new SensorMetadata(
-            Map.of(CPU, new SensorMetadata.ComponentMetadata(CPU, 0, "CPU", true, "mW")),
+            Map.of(CPU, new SensorMetadata.ComponentMetadata(CPU, 0, "CPU", true, mW)),
             "Test PowerSensor returning random values for a single 'cpu' component");
     private final SensorMetadata metadata;
     private boolean started;
