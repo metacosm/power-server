@@ -33,7 +33,7 @@ public class OngoingPowerMeasure extends AbstractPowerMeasure {
         }
 
         // record min / max totals
-        final var recordedTotal = PowerMeasure.sumOfComponents(recorded);
+        final var recordedTotal = PowerMeasure.sumOfSelectedComponents(recorded, metadata().totalComponents());
         if (recordedTotal < minTotal) {
             minTotal = recordedTotal;
         }
@@ -44,7 +44,7 @@ public class OngoingPowerMeasure extends AbstractPowerMeasure {
 
     @Override
     public double total() {
-        return PowerMeasure.sumOfComponents(totals);
+        return PowerMeasure.sumOfSelectedComponents(totals, metadata().totalComponents());
     }
 
     public Duration duration() {
