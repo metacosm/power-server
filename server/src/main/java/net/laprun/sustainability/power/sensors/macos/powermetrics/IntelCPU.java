@@ -17,6 +17,11 @@ class IntelCPU extends CPU {
             "Computed share of CPU", false, decimalPercentage);
 
     @Override
+    int[] getTotalComponents() {
+        return new int[] { 0 };
+    }
+
+    @Override
     public boolean doneExtractingPowerComponents(String line, HashMap<String, Number> powerComponents) {
         // line should look like: Intel energy model derived package power (CPUs+GT+SA): 8.53W
         final var powerIndex = line.indexOf("Intel ");

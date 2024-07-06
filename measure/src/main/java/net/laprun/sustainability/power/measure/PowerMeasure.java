@@ -34,6 +34,17 @@ public interface PowerMeasure {
         return componentSum;
     }
 
+    static double sumOfSelectedComponents(double[] recorded, int... indices) {
+        if (indices == null || indices.length == 0) {
+            return sumOfComponents(recorded);
+        }
+        var componentSum = 0.0;
+        for (int index : indices) {
+            componentSum += recorded[index];
+        }
+        return componentSum;
+    }
+
     default StdDev standardDeviations() {
         final var cardinality = metadata().componentCardinality();
         final var stdDevs = new double[cardinality];

@@ -15,7 +15,7 @@ public class TestPowerSensor extends AbstractPowerSensor<MapMeasures> {
     public static final String CPU = "cpu";
     public static final SensorMetadata DEFAULT = new SensorMetadata(
             Map.of(CPU, new SensorMetadata.ComponentMetadata(CPU, 0, "CPU", true, mW)),
-            "Test PowerSensor returning random values for a single 'cpu' component");
+            "Test PowerSensor returning random values for a single 'cpu' component", new int[] { 0 });
     private final SensorMetadata metadata;
     private boolean started;
 

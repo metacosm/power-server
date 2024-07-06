@@ -65,15 +65,18 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
         final var rawOffset = files.size();
         final var metadata = new HashMap<String, SensorMetadata.ComponentMetadata>(rawOffset * 2);
         int fileNb = 0;
+        final int[] totalComponents = new int[rawOffset];
         for (String name : files.keySet()) {
             metadata.put(name, new SensorMetadata.ComponentMetadata(name, fileNb, name, false, mW));
+            totalComponents[fileNb] = fileNb;
             final var rawName = name + "_uj";
             metadata.put(rawName, new SensorMetadata.ComponentMetadata(rawName, fileNb + rawOffset,
                     name + " (raw micro Joule data)", false, µJ));
             fileNb++;
         }
         this.metadata = new SensorMetadata(metadata,
-                "Linux RAPL derived information, see https://www.kernel.org/doc/html/latest/power/powercap/powercap.html");
+                "Linux RAPL derived information, see https://www.kernel.org/doc/html/latest/power/powercap/powercap.html",
+                totalComponents);
         lastMeasuredSensorValues = new double[raplFiles.length];
     }
 

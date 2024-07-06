@@ -86,7 +86,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             }
 
             final var metadata = new SensorMetadata(components,
-                    "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
+                    "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html",
+                    cpu.getTotalComponents());
             cpu.setMetadata(metadata);
         } catch (IOException e) {
             throw new RuntimeException(e);

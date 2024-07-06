@@ -2,9 +2,6 @@ package net.laprun.sustainability.power;
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import eu.hoefel.unit.Unit;
 
 public class SensorUnit {
@@ -12,19 +9,33 @@ public class SensorUnit {
     private final Unit unit;
     private final String symbol;
 
-    @JsonCreator
-    public SensorUnit(String symbol) {
+    private SensorUnit(String symbol) {
         this.symbol = symbol;
         this.unit = Unit.of(symbol);
     }
 
+    public static SensorUnit of(String unit) {
+        return switch (unit) {
+            case mW -> mWUnit;
+            case W -> WUnit;
+            case µJ -> µJUnit;
+            case decimalPercentage -> decimalPercentageUnit;
+            default -> new SensorUnit(unit);
+        };
+    }
+
+    @SuppressWarnings("unused")
     public String getSymbol() {
         return symbol;
     }
 
-    @JsonIgnore
     public Unit getUnit() {
         return unit;
+    }
+
+    @Override
+    public String toString() {
+        return symbol;
     }
 
     @Override
@@ -42,8 +53,17 @@ public class SensorUnit {
         return Objects.hashCode(symbol);
     }
 
-    public static final SensorUnit mW = new SensorUnit("mW");
-    public static final SensorUnit W = new SensorUnit("W");
-    public static final SensorUnit µJ = new SensorUnit("µJ");
-    public static final SensorUnit decimalPercentage = new SensorUnit("decimal percentage");
+    public static final String mW = "mW";
+    public static final String W = "W";
+    public static final String µJ = "µJ";
+    public static final String decimalPercentage = "decimal percentage";
+
+    private static final SensorUnit mWUnit = new SensorUnit(mW);
+    private static final SensorUnit WUnit = new SensorUnit(W);
+    private static final SensorUnit µJUnit = new SensorUnit(µJ);
+    private static final SensorUnit decimalPercentageUnit = new SensorUnit(decimalPercentage);
+
+    public boolean isWattCommensurable() {
+        return equals(SensorUnit.WUnit) || unit.compatibleUnits().contains(SensorUnit.WUnit.unit);
+    }
 }
