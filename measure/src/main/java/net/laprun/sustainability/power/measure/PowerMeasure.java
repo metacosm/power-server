@@ -26,7 +26,7 @@ public interface PowerMeasure {
 
     double maxMeasuredTotal();
 
-    static double sumOfComponents(double[] recorded) {
+    private static double sumOfComponents(double[] recorded) {
         var componentSum = 0.0;
         for (double value : recorded) {
             componentSum += value;
@@ -47,6 +47,7 @@ public interface PowerMeasure {
 
     default StdDev standardDeviations() {
         final var cardinality = metadata().componentCardinality();
+        final var totalComponents = metadata().totalComponents();
         final var stdDevs = new double[cardinality];
         final var aggregate = new double[1];
         final var samples = numberOfSamples() - 1; // unbiased so we remove one sample
@@ -60,7 +61,7 @@ public interface PowerMeasure {
                 .forEach(component -> {
                     final var sumOfSquares = measures().stream().parallel().peek(m -> {
                         // compute the std dev for total measure
-                        final var total = sumOfComponents(m);
+                        final var total = sumOfSelectedComponents(m, totalComponents);
                         aggregate[0] += total * total;
                     }).mapToDouble(m -> m[component] * m[component]).sum();
                     stdDevs[component] = stdDev(sumOfSquares, sqrdAverages[component], samples);
