@@ -23,4 +23,6 @@ abstract class CPU {
     }
 
     abstract boolean doneAfterComponentsInitialization(Map<String, SensorMetadata.ComponentMetadata> components);
+
+    abstract int[] getTotalComponents();
 }

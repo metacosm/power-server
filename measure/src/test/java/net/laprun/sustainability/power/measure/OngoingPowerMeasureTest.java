@@ -2,6 +2,8 @@ package net.laprun.sustainability.power.measure;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
@@ -14,7 +16,7 @@ public class OngoingPowerMeasureTest {
         final var m1c2 = 12.0;
         final var m2c1 = 8.0;
         final var m2c2 = 17.0;
-        final var metadata = new SensorMetadata(null, null) {
+        final var metadata = new SensorMetadata(Map.of(), null, new int[0]) {
 
             @Override
             public int componentCardinality() {

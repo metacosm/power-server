@@ -3,12 +3,15 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 import static net.laprun.sustainability.power.SensorUnit.*;
 import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
 class AppleSiliconCPU extends CPU {
+    private static final List<Integer> defaultTotalComponents = List.of(0, 1, 2);
     private static final SensorMetadata.ComponentMetadata cpuComponent = new SensorMetadata.ComponentMetadata(CPU, 0,
             "CPU power", true, mW);
     private static final SensorMetadata.ComponentMetadata gpuComponent = new SensorMetadata.ComponentMetadata(GPU, 1,
@@ -20,9 +23,14 @@ class AppleSiliconCPU extends CPU {
     private static final String COMBINED = "Combined";
     private static final String POWER_INDICATOR = " Power: ";
     private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
+    private final List<Integer> totalComponents = new ArrayList<>();
 
     public AppleSiliconCPU() {
+    }
 
+    @Override
+    int[] getTotalComponents() {
+        return totalComponents.stream().mapToInt(i -> i).toArray();
     }
 
     @Override
@@ -35,7 +43,7 @@ class AppleSiliconCPU extends CPU {
         }
     }
 
-    private static void addComponentTo(String name, Map<String, SensorMetadata.ComponentMetadata> components) {
+    private void addComponentTo(String name, Map<String, SensorMetadata.ComponentMetadata> components) {
         switch (name) {
             case CPU, GPU, ANE:
                 // already pre-added
@@ -44,7 +52,9 @@ class AppleSiliconCPU extends CPU {
                 // should be ignored
                 break;
             default:
-                components.put(name, new SensorMetadata.ComponentMetadata(name, components.size(), name, false, mW));
+                final var index = components.size();
+                components.put(name, new SensorMetadata.ComponentMetadata(name, index, name, false, mW));
+                totalComponents.add(index);
         }
     }
 
@@ -78,6 +88,7 @@ class AppleSiliconCPU extends CPU {
         components.put(GPU, gpuComponent);
         components.put(ANE, aneComponent);
         components.put(CPU_SHARE, cpuShareComponent);
+        totalComponents.addAll(defaultTotalComponents);
         return false;
     }
 }
