@@ -1,31 +1,14 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
+
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
 public interface PowerMeasure {
-    int numberOfSamples();
-
-    Duration duration();
-
-    default double average() {
-        return total() / numberOfSamples();
-    }
-
-    double total();
-
-    SensorMetadata metadata();
-
-    double[] averagesPerComponent();
-
-    double minMeasuredTotal();
-
-    double maxMeasuredTotal();
-
     private static double sumOfComponents(double[] recorded) {
         var componentSum = 0.0;
         for (double value : recorded) {
@@ -45,45 +28,6 @@ public interface PowerMeasure {
         return componentSum;
     }
 
-    default StdDev standardDeviations() {
-        final var cardinality = metadata().componentCardinality();
-        final var totalComponents = metadata().totalComponents();
-        final var stdDevs = new double[cardinality];
-        final var aggregate = new double[1];
-        final var samples = numberOfSamples() - 1; // unbiased so we remove one sample
-        final var sqrdAverages = Arrays.stream(averagesPerComponent()).map(m -> m * m).toArray();
-        final var sqrdAverage = average() * average();
-        // need to compute the average of variances then square root that to get the "aggregate" standard deviation,
-        // see: https://stats.stackexchange.com/a/26647
-        // "vectorize" computation of variances: compute the variance for each component in parallel
-        IntStream.range(0, cardinality).parallel()
-                // compute variances for each component of the measure
-                .forEach(component -> {
-                    final var sumOfSquares = measures().stream().parallel().peek(m -> {
-                        // compute the std dev for total measure
-                        final var total = sumOfSelectedComponents(m, totalComponents);
-                        aggregate[0] += total * total;
-                    }).mapToDouble(m -> m[component] * m[component]).sum();
-                    stdDevs[component] = stdDev(sumOfSquares, sqrdAverages[component], samples);
-                    aggregate[0] = stdDev(aggregate[0], sqrdAverage, samples);
-                });
-        return new StdDev(aggregate[0], stdDevs);
-    }
-
-    private static double stdDev(double sumOfSquares, double squaredAvg, int samples) {
-        return Math.sqrt((sumOfSquares / samples) - (((samples + 1) * squaredAvg) / samples));
-    }
-
-    /**
-     * Records the standard deviations for the aggregated energy comsumption value (as returned by {@link #total()}) and
-     * per component
-     *
-     * @param aggregate
-     * @param perComponent
-     */
-    record StdDev(double aggregate, double[] perComponent) {
-    }
-
     static String asString(PowerMeasure measure) {
         final var durationInSeconds = measure.duration().getSeconds();
         final var samples = measure.numberOfSamples();
@@ -100,5 +44,56 @@ public interface PowerMeasure {
         return String.format("%.3f%s", power, unit);
     }
 
+    int numberOfSamples();
+
+    Duration duration();
+
+    default double average() {
+        return total() / numberOfSamples();
+    }
+
+    double total();
+
+    SensorMetadata metadata();
+
+    double[] averagesPerComponent();
+
+    double minMeasuredTotal();
+
+    double maxMeasuredTotal();
+
+    default StdDev standardDeviations() {
+        final var cardinality = metadata().componentCardinality();
+        final var totalComponents = metadata().totalComponents();
+        final DescriptiveStatistics[] perComponent = new DescriptiveStatistics[cardinality];
+        for (int i = 0; i < perComponent.length; i++) {
+            perComponent[i] = new DescriptiveStatistics();
+        }
+        final DescriptiveStatistics total = new DescriptiveStatistics();
+        IntStream.range(0, cardinality).parallel()
+                .forEach(component -> {
+                    measures().stream().parallel().forEach(measure -> {
+                        perComponent[component].addValue(measure[component]);
+                        total.addValue(sumOfSelectedComponents(measure, totalComponents));
+                    });
+                });
+
+        final var stdDevs = new double[cardinality];
+        for (int i = 0; i < perComponent.length; i++) {
+            stdDevs[i] = perComponent[i].getStandardDeviation();
+        }
+        return new StdDev(total.getStandardDeviation(), stdDevs);
+    }
+
     List<double[]> measures();
+
+    /**
+     * Records the standard deviations for the aggregated energy comsumption value (as returned by {@link #total()}) and
+     * per component
+     *
+     * @param aggregate
+     * @param perComponent
+     */
+    record StdDev(double aggregate, double[] perComponent) {
+    }
 }
