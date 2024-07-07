@@ -43,8 +43,8 @@ public class OngoingPowerMeasureTest {
         assertEquals((m1c1 + m2c1) / 2, c1Avg);
         assertEquals((m1c2 + m2c2) / 2, c2Avg);
 
-        final var stdVarForC1 = Math.sqrt(Math.pow(m1c1 - c1Avg, 2) + Math.pow(m2c1 - c1Avg, 2));
-        final var stdVarForC2 = Math.sqrt(Math.pow(m1c2 - c2Avg, 2) + Math.pow(m2c2 - c2Avg, 2));
+        final var stdVarForC1 = Math.sqrt((Math.pow(m1c1 - c1Avg, 2) + Math.pow(m2c1 - c1Avg, 2)) / (2 - 1));
+        final var stdVarForC2 = Math.sqrt((Math.pow(m1c2 - c2Avg, 2) + Math.pow(m2c2 - c2Avg, 2)) / (2 - 1));
 
         assertEquals(stdVarForC1, measure.standardDeviations().perComponent()[0], 0.0001,
                 "Standard Deviation did not match the expected value");
