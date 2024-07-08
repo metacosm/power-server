@@ -1,39 +1,59 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
-import java.util.ArrayList;
+import java.util.stream.IntStream;
+
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
-public class OngoingPowerMeasure extends AbstractPowerMeasure {
+public class OngoingPowerMeasure implements PowerMeasure {
+    private final SensorMetadata sensorMetadata;
+    private final DescriptiveStatistics[] measures;
+    private final DescriptiveStatistics total;
     private final long startedAt;
+    private final double[] averages;
     private double minTotal = Double.MAX_VALUE;
     private double maxTotal;
-    private final double[] totals;
-    private final double[] averages;
+    private int samples;
 
-    public OngoingPowerMeasure(SensorMetadata sensorMetadata, long duration, long frequency) {
-        super(sensorMetadata, new ArrayList<>((int) (duration / frequency)));
+    public OngoingPowerMeasure(SensorMetadata sensorMetadata, Duration duration, Duration frequency) {
+        this.sensorMetadata = sensorMetadata;
         startedAt = System.currentTimeMillis();
         final var numComponents = metadata().componentCardinality();
-        totals = new double[numComponents];
         averages = new double[numComponents];
+
+        final var initialWindow = (int) (duration.toMillis() / frequency.toMillis());
+        total = new DescriptiveStatistics(initialWindow);
+        this.measures = new DescriptiveStatistics[sensorMetadata.componentCardinality()];
+        for (int i = 0; i < measures.length; i++) {
+            measures[i] = new DescriptiveStatistics(initialWindow);
+        }
+    }
+
+    @Override
+    public int numberOfSamples() {
+        return samples;
+    }
+
+    @Override
+    public SensorMetadata metadata() {
+        return sensorMetadata;
     }
 
     public void recordMeasure(double[] components) {
-        final var recorded = new double[components.length];
-        System.arraycopy(components, 0, recorded, 0, components.length);
-        final var previousSize = numberOfSamples();
-        measures().add(recorded);
-
-        for (int i = 0; i < recorded.length; i++) {
-            totals[i] += recorded[i];
-            averages[i] = averages[i] == 0 ? recorded[i]
-                    : (previousSize * averages[i] + recorded[i]) / numberOfSamples();
+        final var previousSize = samples;
+        samples++;
+        for (int component = 0; component < components.length; component++) {
+            final var componentValue = components[component];
+            measures[component].addValue(componentValue);
+            averages[component] = averages[component] == 0 ? componentValue
+                    : (previousSize * averages[component] + componentValue) / samples;
         }
 
         // record min / max totals
-        final var recordedTotal = PowerMeasure.sumOfSelectedComponents(recorded, metadata().totalComponents());
+        final var recordedTotal = PowerMeasure.sumOfSelectedComponents(components, metadata().totalComponents());
+        total.addValue(recordedTotal);
         if (recordedTotal < minTotal) {
             minTotal = recordedTotal;
         }
@@ -44,7 +64,7 @@ public class OngoingPowerMeasure extends AbstractPowerMeasure {
 
     @Override
     public double total() {
-        return PowerMeasure.sumOfSelectedComponents(totals, metadata().totalComponents());
+        return total.getSum();
     }
 
     public Duration duration() {
@@ -64,5 +84,20 @@ public class OngoingPowerMeasure extends AbstractPowerMeasure {
     @Override
     public double[] averagesPerComponent() {
         return averages;
+    }
+
+    public StdDev standardDeviations() {
+        final var cardinality = sensorMetadata.componentCardinality();
+        final var stdDevs = new double[cardinality];
+        IntStream.range(0, cardinality)
+                .parallel()
+                .forEach(component -> stdDevs[component] = measures[component].getStandardDeviation());
+
+        return new StdDev(total.getStandardDeviation(), stdDevs);
+    }
+
+    @Override
+    public double[] getMeasuresFor(int component) {
+        return measures[component].getValues();
     }
 }
