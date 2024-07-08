@@ -2,6 +2,7 @@ package net.laprun.sustainability.power.measure;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.time.Duration;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ public class OngoingPowerMeasureTest {
                 return 2;
             }
         };
-        final var measure = new OngoingPowerMeasure(metadata, 1, 500);
+        final var measure = new OngoingPowerMeasure(metadata, Duration.ofSeconds(1), Duration.ofMillis(500));
 
         final var components = new double[metadata.componentCardinality()];
         components[0] = m1c1;

@@ -1,10 +1,6 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.stream.IntStream;
-
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
@@ -28,6 +24,7 @@ public interface PowerMeasure {
         return componentSum;
     }
 
+    @SuppressWarnings("unused")
     static String asString(PowerMeasure measure) {
         final var durationInSeconds = measure.duration().getSeconds();
         final var samples = measure.numberOfSamples();
@@ -62,30 +59,9 @@ public interface PowerMeasure {
 
     double maxMeasuredTotal();
 
-    default StdDev standardDeviations() {
-        final var cardinality = metadata().componentCardinality();
-        final var totalComponents = metadata().totalComponents();
-        final DescriptiveStatistics[] perComponent = new DescriptiveStatistics[cardinality];
-        for (int i = 0; i < perComponent.length; i++) {
-            perComponent[i] = new DescriptiveStatistics();
-        }
-        final DescriptiveStatistics total = new DescriptiveStatistics();
-        IntStream.range(0, cardinality).parallel()
-                .forEach(component -> {
-                    measures().stream().parallel().forEach(measure -> {
-                        perComponent[component].addValue(measure[component]);
-                        total.addValue(sumOfSelectedComponents(measure, totalComponents));
-                    });
-                });
+    StdDev standardDeviations();
 
-        final var stdDevs = new double[cardinality];
-        for (int i = 0; i < perComponent.length; i++) {
-            stdDevs[i] = perComponent[i].getStandardDeviation();
-        }
-        return new StdDev(total.getStandardDeviation(), stdDevs);
-    }
-
-    List<double[]> measures();
+    double[] getMeasuresFor(int component);
 
     /**
      * Records the standard deviations for the aggregated energy comsumption value (as returned by {@link #total()}) and
