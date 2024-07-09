@@ -4,17 +4,15 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-
 import net.laprun.sustainability.power.SensorMetadata;
 
 public class OngoingPowerMeasure implements PowerMeasure {
     private final SensorMetadata sensorMetadata;
-    private final DescriptiveStatistics[] measures;
-    private final DescriptiveStatistics total;
+    private final MeasureStore measures;
     private final long startedAt;
     private final double[] averages;
     private final Set<Integer> nonZeroComponents;
+    private final int[] totalComponents;
     private double minTotal = Double.MAX_VALUE;
     private double maxTotal;
     private int samples;
@@ -26,13 +24,10 @@ public class OngoingPowerMeasure implements PowerMeasure {
         averages = new double[numComponents];
 
         final var initialWindow = (int) (duration.toMillis() / frequency.toMillis());
-        total = new DescriptiveStatistics(initialWindow);
-        this.measures = new DescriptiveStatistics[numComponents];
-        for (int i = 0; i < measures.length; i++) {
-            measures[i] = new DescriptiveStatistics(initialWindow);
-        }
+        measures = new DescriptiveStatisticsMeasureStore(numComponents, initialWindow);
 
         nonZeroComponents = new HashSet<>(numComponents);
+        totalComponents = sensorMetadata.totalComponents();
     }
 
     @Override
@@ -54,14 +49,14 @@ public class OngoingPowerMeasure implements PowerMeasure {
             if (componentValue != 0) {
                 nonZeroComponents.add(component);
             }
-            measures[component].addValue(componentValue);
+            measures.recordComponentValue(component, componentValue);
             averages[component] = averages[component] == 0 ? componentValue
                     : (previousSize * averages[component] + componentValue) / samples;
         }
 
         // record min / max totals
-        final var recordedTotal = PowerMeasure.sumOfSelectedComponents(components, metadata().totalComponents());
-        total.addValue(recordedTotal);
+        final var recordedTotal = PowerMeasure.sumOfSelectedComponents(components, totalComponents);
+        measures.recordTotal(recordedTotal);
         if (recordedTotal < minTotal) {
             minTotal = recordedTotal;
         }
@@ -72,7 +67,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
 
     @Override
     public double total() {
-        return total.getSum();
+        return measures.getMeasuredTotal();
     }
 
     public Duration duration() {
@@ -99,13 +94,13 @@ public class OngoingPowerMeasure implements PowerMeasure {
         final var stdDevs = new double[cardinality];
         nonZeroComponents.stream()
                 .parallel()
-                .forEach(component -> stdDevs[component] = measures[component].getStandardDeviation());
+                .forEach(component -> stdDevs[component] = measures.getComponentStandardDeviation(component));
 
-        return new StdDev(total.getStandardDeviation(), stdDevs);
+        return new StdDev(measures.getTotalStandardDeviation(), stdDevs);
     }
 
     @Override
     public double[] getMeasuresFor(int component) {
-        return measures[component].getValues();
+        return measures.getComponentRawValues(component);
     }
 }
