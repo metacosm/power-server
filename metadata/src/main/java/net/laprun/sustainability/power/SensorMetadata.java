@@ -1,7 +1,9 @@
 package net.laprun.sustainability.power;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,6 +61,17 @@ public class SensorMetadata {
         if (errors.hasErrors()) {
             throw new IllegalArgumentException(errors.formatErrors());
         }
+    }
+
+    @Override
+    public String toString() {
+        final var sb = new StringBuilder();
+        components.values().stream().sorted(Comparator.comparing(ComponentMetadata::index))
+                .forEach(cm -> sb.append("- ").append(cm).append("\n"));
+        return "components:\n"
+                + sb
+                + "documentation: " + documentation + "\n"
+                + "totalComponents: " + Arrays.toString(totalComponents);
     }
 
     /**
