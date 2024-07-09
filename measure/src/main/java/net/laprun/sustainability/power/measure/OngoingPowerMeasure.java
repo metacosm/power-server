@@ -1,7 +1,8 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
-import java.util.stream.IntStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
@@ -13,6 +14,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private final DescriptiveStatistics total;
     private final long startedAt;
     private final double[] averages;
+    private final Set<Integer> nonZeroComponents;
     private double minTotal = Double.MAX_VALUE;
     private double maxTotal;
     private int samples;
@@ -25,10 +27,12 @@ public class OngoingPowerMeasure implements PowerMeasure {
 
         final var initialWindow = (int) (duration.toMillis() / frequency.toMillis());
         total = new DescriptiveStatistics(initialWindow);
-        this.measures = new DescriptiveStatistics[sensorMetadata.componentCardinality()];
+        this.measures = new DescriptiveStatistics[numComponents];
         for (int i = 0; i < measures.length; i++) {
             measures[i] = new DescriptiveStatistics(initialWindow);
         }
+
+        nonZeroComponents = new HashSet<>(numComponents);
     }
 
     @Override
@@ -46,6 +50,10 @@ public class OngoingPowerMeasure implements PowerMeasure {
         samples++;
         for (int component = 0; component < components.length; component++) {
             final var componentValue = components[component];
+            // record that the value is not zero
+            if (componentValue != 0) {
+                nonZeroComponents.add(component);
+            }
             measures[component].addValue(componentValue);
             averages[component] = averages[component] == 0 ? componentValue
                     : (previousSize * averages[component] + componentValue) / samples;
@@ -89,7 +97,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
     public StdDev standardDeviations() {
         final var cardinality = sensorMetadata.componentCardinality();
         final var stdDevs = new double[cardinality];
-        IntStream.range(0, cardinality)
+        nonZeroComponents.stream()
                 .parallel()
                 .forEach(component -> stdDevs[component] = measures[component].getStandardDeviation());
 
