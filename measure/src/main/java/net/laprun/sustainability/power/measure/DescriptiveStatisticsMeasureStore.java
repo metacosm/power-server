@@ -3,12 +3,12 @@ package net.laprun.sustainability.power.measure;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 class DescriptiveStatisticsMeasureStore implements MeasureStore {
+    private final int totalIndex;
     private final DescriptiveStatistics[] measures;
-    private final DescriptiveStatistics total;
 
     public DescriptiveStatisticsMeasureStore(int componentsNumber, int initialWindow) {
-        total = new DescriptiveStatistics(initialWindow);
-        this.measures = new DescriptiveStatistics[componentsNumber];
+        this.measures = new DescriptiveStatistics[componentsNumber + 1];
+        totalIndex = componentsNumber;
         for (int i = 0; i < measures.length; i++) {
             measures[i] = new DescriptiveStatistics(initialWindow);
         }
@@ -16,31 +16,39 @@ class DescriptiveStatisticsMeasureStore implements MeasureStore {
 
     @Override
     public void recordComponentValue(int component, double value) {
-        measures[component].addValue(value);
+        getMeasure(component).addValue(value);
+    }
+
+    private DescriptiveStatistics getMeasure(int component) {
+        return measures[component];
+    }
+
+    private DescriptiveStatistics getTotalMeasure() {
+        return getMeasure(totalIndex);
     }
 
     @Override
     public void recordTotal(double value) {
-        total.addValue(value);
+        getTotalMeasure().addValue(value);
     }
 
     @Override
     public double getMeasuredTotal() {
-        return total.getSum();
+        return getTotalMeasure().getSum();
     }
 
     @Override
     public double getComponentStandardDeviation(int component) {
-        return measures[component].getStandardDeviation();
+        return getMeasure(component).getStandardDeviation();
     }
 
     @Override
     public double getTotalStandardDeviation() {
-        return total.getStandardDeviation();
+        return getTotalMeasure().getStandardDeviation();
     }
 
     @Override
     public double[] getComponentRawValues(int component) {
-        return measures[component].getValues();
+        return getMeasure(component).getValues();
     }
 }
