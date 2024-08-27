@@ -47,7 +47,7 @@
         <quarkus.platform.version>3.14.0</quarkus.platform.version>
         <skipITs>true</skipITs>
         <maven-surefire-plugin.version>3.4.0</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.4.0</maven-failsafe-plugin.version>
+        <maven-failsafe-plugin.version>3.5.0</maven-failsafe-plugin.version>
         <formatter-plugin.version>2.24.1</formatter-plugin.version>
         <impsort-plugin.version>1.11.0</impsort-plugin.version>
         <maven-javadoc-plugin.version>3.10.0</maven-javadoc-plugin.version>
