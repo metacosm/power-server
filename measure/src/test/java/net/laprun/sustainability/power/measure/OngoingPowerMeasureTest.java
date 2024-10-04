@@ -2,31 +2,38 @@ package net.laprun.sustainability.power.measure;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
 public class OngoingPowerMeasureTest {
+    private final static SensorMetadata metadata = new SensorMetadata(Map.of(), null, new int[0]) {
 
-    @Test
-    void testStatistics() {
+        @Override
+        public int componentCardinality() {
+            return 3;
+        }
+    };
+
+    static List<ComponentMeasure.Factory<?>> factories() {
+        return List.of(DescriptiveStatisticsComponentMeasure.factory(2), HdrHistogramComponentMeasure::new);
+    }
+
+    @ParameterizedTest
+    @MethodSource("factories")
+    void testStatistics(ComponentMeasure.Factory<?> factory) {
         final var m1c1 = 10.0;
         final var m1c2 = 12.0;
         final var m1c3 = 0.0;
         final var m2c1 = 8.0;
         final var m2c2 = 17.0;
         final var m2c3 = 0.0;
-        final var metadata = new SensorMetadata(Map.of(), null, new int[0]) {
 
-            @Override
-            public int componentCardinality() {
-                return 3;
-            }
-        };
-        final var measure = new OngoingPowerMeasure(metadata, Duration.ofSeconds(1), Duration.ofMillis(500));
+        final var measure = new OngoingPowerMeasure(metadata, factory);
 
         final var components = new double[metadata.componentCardinality()];
         components[0] = m1c1;
