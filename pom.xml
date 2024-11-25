@@ -70,6 +70,7 @@
         <module>measure</module>
         <module>server</module>
         <module>analysis</module>
+        <module>if-manifest-export</module>
     </modules>
 
     <dependencyManagement>
@@ -104,6 +105,31 @@
         </dependency>
     </dependencies>
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>net.revelc.code.formatter</groupId>
+                    <artifactId>formatter-maven-plugin</artifactId>
+                    <version>${formatter-plugin.version}</version>
+                    <configuration>
+                        <configFile>eclipse-format.xml</configFile>
+                        <lineEnding>LF</lineEnding>
+                        <skip>${format.skip}</skip>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>net.revelc.code</groupId>
+                    <artifactId>impsort-maven-plugin</artifactId>
+                    <version>${impsort-plugin.version}</version>
+                    <configuration>
+                        <removeUnused>true</removeUnused>
+                        <groups>java.,javax.,jakarta.,org.,com.</groups>
+                        <staticGroups>*</staticGroups>
+                        <skip>${format.skip}</skip>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -184,27 +210,10 @@
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
-                <version>${formatter-plugin.version}</version>
-                <configuration>
-                    <!-- Setting to 17 because the plugin does not support 21 -->
-<!--                    <compilerCompliance>17</compilerCompliance>-->
-                    <configFile>eclipse-format.xml</configFile>
-                    <lineEnding>LF</lineEnding>
-                    <skip>${format.skip}</skip>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>net.revelc.code</groupId>
                 <artifactId>impsort-maven-plugin</artifactId>
-                <version>${impsort-plugin.version}</version>
-                <configuration>
-                    <!-- Setting to 17 because the plugin does not support 21 -->
-                    <compliance>17</compliance>
-                    <groups>java.,javax.,jakarta.,org.,com.</groups>
-                    <staticGroups>*</staticGroups>
-                    <skip>${format.skip}</skip>
-                    <removeUnused>true</removeUnused>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -235,9 +244,6 @@
                     <plugin>
                         <groupId>net.revelc.code</groupId>
                         <artifactId>impsort-maven-plugin</artifactId>
-                        <configuration>
-                            <removeUnused>true</removeUnused>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>sort-imports</id>

@@ -4,6 +4,9 @@ import java.time.Duration;
 import java.util.BitSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
@@ -15,13 +18,13 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private final BitSet nonZeroComponents;
     private final int[] totalComponents;
     private final int totalIndex;
+    private final double[][] measures;
+    private final ComponentProcessor[] analyzers;
     private double minTotal = Double.MAX_VALUE;
     private double maxTotal;
     private double accumulatedTotal;
     private int samples;
-    private final double[][] measures;
     private long[] timestamps;
-    private final ComponentProcessor[] analyzers;
 
     public OngoingPowerMeasure(SensorMetadata sensorMetadata, ComponentProcessor... analyzers) {
         this.sensorMetadata = sensorMetadata;
@@ -50,7 +53,6 @@ public class OngoingPowerMeasure implements PowerMeasure {
     }
 
     public void recordMeasure(double[] components) {
-        final var previousSize = samples;
         samples++;
         for (int component = 0; component < components.length; component++) {
             final var componentValue = components[component];
@@ -115,13 +117,49 @@ public class OngoingPowerMeasure implements PowerMeasure {
 
     @Override
     public Optional<double[]> getMeasuresFor(int component) {
+        return measuresFor(component, samples);
+    }
+
+    Optional<double[]> measuresFor(int component, int upToIndex) {
         if (nonZeroComponents.get(component)) {
-            final var dest = new double[samples];
-            System.arraycopy(measures[component], 0, dest, 0, samples);
+            final var dest = new double[upToIndex];
+            System.arraycopy(measures[component], 0, dest, 0, upToIndex);
             return Optional.of(dest);
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Stream<TimestampedValue> streamTimestampedMeasuresFor(int component, int upToIndex) {
+        final var componentMeasures = measures[component];
+        return indicesFor(component, upToIndex)
+                .mapToObj(index -> new TimestampedValue(timestamps[index], componentMeasures[index]));
+    }
+
+    @Override
+    public DoubleStream streamMeasuresFor(int component, int upToIndex) {
+        final var componentMeasures = measures[component];
+        return indicesFor(component, upToIndex).mapToDouble(index -> componentMeasures[index]);
+    }
+
+    IntStream indicesFor(int component, int upToIndex) {
+        upToIndex = Math.min(upToIndex, samples - 1);
+        if (upToIndex >= 0 && nonZeroComponents.get(component)) {
+            return IntStream.range(0, upToIndex);
+        } else {
+            return IntStream.empty();
+        }
+    }
+
+    @Override
+    public TimestampedMeasures getNthTimestampedMeasures(int n) {
+        n = Math.min(n, samples - 1);
+        final var result = new double[measures.length];
+        for (int i = 0; i < measures.length; i++) {
+            result[i] = measures[i][n];
+        }
+        return new TimestampedMeasures(timestamps[n], result);
     }
 
     @Override
