@@ -5,8 +5,8 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 public class DescriptiveStatisticsComponentMeasure implements ComponentMeasure {
     private final DescriptiveStatistics statistics;
 
-    public DescriptiveStatisticsComponentMeasure(int initialWindow) {
-        statistics = new DescriptiveStatistics(initialWindow);
+    public DescriptiveStatisticsComponentMeasure() {
+        statistics = new DescriptiveStatistics();
     }
 
     @Override
@@ -15,11 +15,7 @@ public class DescriptiveStatisticsComponentMeasure implements ComponentMeasure {
     }
 
     @Override
-    public double[] getComponentRawValues() {
+    public double[] getComponentValues() {
         return statistics.getValues();
-    }
-
-    public static Factory<DescriptiveStatisticsComponentMeasure> factory(int initialWindow) {
-        return () -> new DescriptiveStatisticsComponentMeasure(initialWindow);
     }
 }

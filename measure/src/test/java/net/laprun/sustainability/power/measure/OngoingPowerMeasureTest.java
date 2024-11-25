@@ -1,9 +1,11 @@
 package net.laprun.sustainability.power.measure;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -20,7 +22,7 @@ public class OngoingPowerMeasureTest {
     };
 
     static List<ComponentMeasure.Factory<?>> factories() {
-        return List.of(DescriptiveStatisticsComponentMeasure.factory(2), HdrHistogramComponentMeasure::new);
+        return List.of(DescriptiveStatisticsComponentMeasure::new, HdrHistogramComponentMeasure::new);
     }
 
     @ParameterizedTest
@@ -29,9 +31,15 @@ public class OngoingPowerMeasureTest {
         final var m1c1 = 10.0;
         final var m1c2 = 12.0;
         final var m1c3 = 0.0;
+        final var m1total = m1c1 + m1c2 + m1c3;
         final var m2c1 = 8.0;
         final var m2c2 = 17.0;
         final var m2c3 = 0.0;
+        final var m2total = m2c1 + m2c2 + m2c3;
+        final var m3c1 = 5.0;
+        final var m3c2 = 5.0;
+        final var m3c3 = 0.0;
+        final var m3total = m3c1 + m3c2 + m3c3;
 
         final var measure = new OngoingPowerMeasure(metadata, factory);
 
@@ -46,19 +54,28 @@ public class OngoingPowerMeasureTest {
         components[2] = m2c3;
         measure.recordMeasure(components);
 
-        assertEquals(m1c1 + m1c2 + m2c1 + m2c2 + m1c3 + m2c3, measure.total());
-        assertEquals((m1c1 + m1c2 + m2c1 + m2c2 + m1c3 + m2c3) / 2, measure.average());
-        assertEquals(Math.min(m1c1 + m1c2 + m1c3, m2c1 + m2c2 + m2c3), measure.minMeasuredTotal());
-        assertEquals(Math.max(m1c1 + m1c2 + m1c3, m2c1 + m2c2 + m2c3), measure.maxMeasuredTotal());
+        components[0] = m3c1;
+        components[1] = m3c2;
+        components[2] = m3c3;
+        measure.recordMeasure(components);
+
+//        assertArrayEquals(new double[] {m1c1, m2c1}, measure.getMeasuresFor(0));
+//        assertArrayEquals(new double[] {m1c2, m2c2}, measure.getMeasuresFor(1));
+//        assertArrayEquals(new double[] {m1c3, m2c3}, measure.getMeasuresFor(2));
+
+        assertEquals(m1c1 + m1c2 + m1c3 + m2c1 + m2c2 + m2c3 + m3c1 + m3c2 + m3c3, measure.total());
+        assertEquals((m1c1 + m1c2 + m1c3 + m2c1 + m2c2 + m2c3 + m3c1 + m3c2 + m3c3) / 3, measure.average());
+        assertEquals(Stream.of(m1total, m2total, m3total).min(Double::compareTo).orElseThrow(), measure.minMeasuredTotal());
+        assertEquals(Stream.of(m1total, m2total, m3total).max(Double::compareTo).orElseThrow(), measure.maxMeasuredTotal());
         final var c1Avg = measure.averagesPerComponent()[0];
         final var c2Avg = measure.averagesPerComponent()[1];
         final var c3Avg = measure.averagesPerComponent()[2];
-        assertEquals((m1c1 + m2c1) / 2, c1Avg);
-        assertEquals((m1c2 + m2c2) / 2, c2Avg);
+        assertEquals((m1c1 + m2c1 + m3c1) / 3, c1Avg);
+        assertEquals((m1c2 + m2c2 + m3c2) / 3, c2Avg);
         assertEquals(0, c3Avg);
 
-        final var stdVarForC1 = Math.sqrt((Math.pow(m1c1 - c1Avg, 2) + Math.pow(m2c1 - c1Avg, 2)) / (2 - 1));
-        final var stdVarForC2 = Math.sqrt((Math.pow(m1c2 - c2Avg, 2) + Math.pow(m2c2 - c2Avg, 2)) / (2 - 1));
+        final var stdVarForC1 = Math.sqrt((Math.pow(m1c1 - c1Avg, 2) + Math.pow(m2c1 - c1Avg, 2) + Math.pow(m3c1 - c1Avg, 2)) / (3 - 1));
+        final var stdVarForC2 = Math.sqrt((Math.pow(m1c2 - c2Avg, 2) + Math.pow(m2c2 - c2Avg, 2) + Math.pow(m3c2 - c2Avg, 2)) / (3 - 1));
 
         assertEquals(stdVarForC1, measure.standardDeviations().perComponent()[0], 0.0001,
                 "Standard Deviation did not match the expected value");
