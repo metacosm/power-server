@@ -2,6 +2,8 @@ package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
@@ -37,6 +39,18 @@ public interface PowerMeasure {
     double maxMeasuredTotal();
 
     Optional<double[]> getMeasuresFor(int component);
+
+    TimestampedMeasures getNthTimestampedMeasures(int n);
+
+    Stream<TimestampedValue> streamTimestampedMeasuresFor(int component, int upToIndex);
+
+    DoubleStream streamMeasuresFor(int component, int upToIndex);
+
+    record TimestampedValue(long timestamp, double value) {
+    }
+
+    record TimestampedMeasures(long timestamp, double[] measures) {
+    }
 
     ComponentProcessor[] analyzers();
 }

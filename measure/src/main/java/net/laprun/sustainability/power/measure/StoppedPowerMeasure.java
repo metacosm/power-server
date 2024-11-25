@@ -2,33 +2,30 @@ package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
 
 @SuppressWarnings("unused")
 public class StoppedPowerMeasure implements PowerMeasure {
-    private final SensorMetadata sensorMetadata;
+    private final OngoingPowerMeasure measure;
     private final int samples;
     private final Duration duration;
     private final double total;
     private final double min;
     private final double max;
-    private final double[][] measures;
     private final ComponentProcessor[] processors;
 
-    public StoppedPowerMeasure(PowerMeasure powerMeasure) {
-        this.sensorMetadata = powerMeasure.metadata();
+    public StoppedPowerMeasure(OngoingPowerMeasure powerMeasure) {
+        this.measure = powerMeasure;
         this.duration = powerMeasure.duration();
         this.total = powerMeasure.total();
         this.min = powerMeasure.minMeasuredTotal();
         this.max = powerMeasure.maxMeasuredTotal();
         this.samples = powerMeasure.numberOfSamples();
         final var cardinality = metadata().componentCardinality();
-        measures = new double[cardinality][samples];
-        for (int i = 0; i < cardinality; i++) {
-            measures[i] = powerMeasure.getMeasuresFor(i).orElse(null);
-        }
         processors = powerMeasure.analyzers();
     }
 
@@ -59,12 +56,34 @@ public class StoppedPowerMeasure implements PowerMeasure {
 
     @Override
     public SensorMetadata metadata() {
-        return sensorMetadata;
+        return measure.metadata();
     }
 
     @Override
     public Optional<double[]> getMeasuresFor(int component) {
-        return Optional.ofNullable(measures[component]);
+        return measure.measuresFor(component, samples);
+    }
+
+    @Override
+    public Stream<TimestampedValue> streamTimestampedMeasuresFor(int component, int upToIndex) {
+        upToIndex = ensureIndex(upToIndex);
+        return measure.streamTimestampedMeasuresFor(component, upToIndex);
+    }
+
+    @Override
+    public DoubleStream streamMeasuresFor(int component, int upToIndex) {
+        upToIndex = ensureIndex(upToIndex);
+        return measure.streamMeasuresFor(component, upToIndex);
+    }
+
+    @Override
+    public TimestampedMeasures getNthTimestampedMeasures(int n) {
+        n = ensureIndex(n);
+        return measure.getNthTimestampedMeasures(n);
+    }
+
+    private int ensureIndex(int upToIndex) {
+        return Math.min(upToIndex, samples - 1);
     }
 
     @Override
