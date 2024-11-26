@@ -9,8 +9,8 @@ import org.apache.commons.math3.util.FastMath;
 import net.laprun.sustainability.power.SensorMetadata;
 
 public class OngoingPowerMeasure implements PowerMeasure {
+    private static final int DEFAULT_SIZE = 32;
     private final SensorMetadata sensorMetadata;
-    private final ComponentMeasure[] measures;
     private final long startedAt;
     private final double[] averages;
     private final Set<Integer> nonZeroComponents;
@@ -20,18 +20,18 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private double maxTotal;
     private double accumulatedTotal;
     private int samples;
+    private final double[][] measures;
+    private long[] timestamps;
 
-    public OngoingPowerMeasure(SensorMetadata sensorMetadata, ComponentMeasure.Factory<?> componentMeasureFactory) {
+    public OngoingPowerMeasure(SensorMetadata sensorMetadata) {
         this.sensorMetadata = sensorMetadata;
         startedAt = System.currentTimeMillis();
 
         final var numComponents = sensorMetadata.componentCardinality();
         // we also record the aggregated total for each component participating in the aggregated value
         final var measuresNb = numComponents + 1;
-        measures = new ComponentMeasure[measuresNb];
-        for (int i = 0; i < measuresNb; i++) {
-            measures[i] = componentMeasureFactory.create();
-        }
+        measures = new double[measuresNb][DEFAULT_SIZE];
+        timestamps = new long[DEFAULT_SIZE];
         totalIndex = numComponents;
         averages = new double[measuresNb];
         // we don't need to record the total component as a non-zero component since it's almost never zero and we compute the std dev separately
@@ -58,14 +58,14 @@ public class OngoingPowerMeasure implements PowerMeasure {
             if (componentValue != 0) {
                 nonZeroComponents.add(component);
             }
-            measures[component].recordComponentValue(componentValue);
+            recordComponentValue(component, componentValue);
             averages[component] = averages[component] == 0 ? componentValue
                     : (previousSize * averages[component] + componentValue) / samples;
         }
 
         // record min / max totals
         final var recordedTotal = PowerMeasure.sumOfSelectedComponents(components, totalComponents);
-        measures[totalIndex].recordComponentValue(recordedTotal);
+        recordComponentValue(totalIndex, recordedTotal);
         accumulatedTotal += recordedTotal;
         averages[components.length] = averages[components.length] == 0 ? recordedTotal
                 : (previousSize * averages[components.length] + recordedTotal) / samples;
@@ -75,6 +75,23 @@ public class OngoingPowerMeasure implements PowerMeasure {
         if (recordedTotal > maxTotal) {
             maxTotal = recordedTotal;
         }
+    }
+
+    private void recordComponentValue(int component, double value) {
+        final var currentSize = measures[component].length;
+        if (currentSize <= samples) {
+            final var newSize = currentSize * 2;
+            for (int index = 0; index < measures.length; index++) {
+                final var newArray = new double[newSize];
+                System.arraycopy(measures[index], 0, newArray, 0, currentSize);
+                measures[index] = newArray;
+            }
+            final var newTimestamps = new long[newSize];
+            System.arraycopy(timestamps, 0, newTimestamps, 0, currentSize);
+            timestamps = newTimestamps;
+        }
+        timestamps[component] = System.currentTimeMillis();
+        measures[component][samples - 1] = value;
     }
 
     @Override
@@ -113,21 +130,23 @@ public class OngoingPowerMeasure implements PowerMeasure {
     }
 
     private double standardDeviation(int component) {
-        final var values = measures[component].getComponentRawValues();
+        final var values = measures[component];
         if (samples <= 1) {
             return 0.0;
         }
         final double mean = averages[component];
-        double geometric_deviation_total = 0.0;
-        for (double value : values) {
-            double deviation = value - mean;
-            geometric_deviation_total += (deviation * deviation);
+        double geometricDeviationTotal = 0.0;
+        for (int index = 0; index < samples; index++) {
+            double deviation = values[index] - mean;
+            geometricDeviationTotal += (deviation * deviation);
         }
-        return FastMath.sqrt(geometric_deviation_total / (samples - 1));
+        return FastMath.sqrt(geometricDeviationTotal / (samples - 1));
     }
 
     @Override
     public double[] getMeasuresFor(int component) {
-        return measures[component].getComponentRawValues();
+        final var dest = new double[samples];
+        System.arraycopy(measures[component], 0, dest, 0, samples);
+        return dest;
     }
 }
