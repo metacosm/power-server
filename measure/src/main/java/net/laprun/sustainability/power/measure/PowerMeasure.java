@@ -63,6 +63,8 @@ public interface PowerMeasure {
 
     double[] getMeasuresFor(int component);
 
+    Analyzer[] analyzers();
+
     /**
      * Records the standard deviations for the aggregated energy comsumption value (as returned by {@link #total()}) and
      * per component

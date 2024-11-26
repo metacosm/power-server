@@ -2,6 +2,7 @@ package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
 import java.util.BitSet;
+import java.util.Objects;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -21,8 +22,9 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private int samples;
     private final double[][] measures;
     private long[] timestamps;
+    private final Analyzer[] analyzers;
 
-    public OngoingPowerMeasure(SensorMetadata sensorMetadata) {
+    public OngoingPowerMeasure(SensorMetadata sensorMetadata, Analyzer... analyzers) {
         this.sensorMetadata = sensorMetadata;
         startedAt = System.currentTimeMillis();
 
@@ -36,6 +38,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
         // we don't need to record the total component as a non-zero component since it's almost never zero and we compute the std dev separately
         nonZeroComponents = new BitSet(numComponents);
         totalComponents = sensorMetadata.totalComponents();
+        this.analyzers = Objects.requireNonNullElseGet(analyzers, () -> new Analyzer[0]);
     }
 
     @Override
@@ -89,8 +92,12 @@ public class OngoingPowerMeasure implements PowerMeasure {
             System.arraycopy(timestamps, 0, newTimestamps, 0, currentSize);
             timestamps = newTimestamps;
         }
-        timestamps[component] = System.currentTimeMillis();
+        final var timestamp = System.currentTimeMillis();
+        timestamps[component] = timestamp;
         measures[component][samples - 1] = value;
+        for (var analyzer : analyzers) {
+            analyzer.recordComponentValue(value, timestamp);
+        }
     }
 
     @Override
@@ -147,5 +154,10 @@ public class OngoingPowerMeasure implements PowerMeasure {
         final var dest = new double[samples];
         System.arraycopy(measures[component], 0, dest, 0, samples);
         return dest;
+    }
+
+    @Override
+    public Analyzer[] analyzers() {
+        return analyzers;
     }
 }
