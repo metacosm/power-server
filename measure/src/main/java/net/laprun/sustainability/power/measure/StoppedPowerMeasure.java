@@ -15,6 +15,7 @@ public class StoppedPowerMeasure implements PowerMeasure {
     private final double[] averages;
     private final StdDev standardDeviations;
     private final double[][] measures;
+    private final Analyzer[] analyzers;
 
     public StoppedPowerMeasure(PowerMeasure powerMeasure) {
         this.sensorMetadata = powerMeasure.metadata();
@@ -30,6 +31,7 @@ public class StoppedPowerMeasure implements PowerMeasure {
         for (int i = 0; i < cardinality; i++) {
             measures[i] = powerMeasure.getMeasuresFor(i);
         }
+        analyzers = powerMeasure.analyzers();
     }
 
     @Override
@@ -75,5 +77,10 @@ public class StoppedPowerMeasure implements PowerMeasure {
     @Override
     public double[] getMeasuresFor(int component) {
         return measures[component];
+    }
+
+    @Override
+    public Analyzer[] analyzers() {
+        return analyzers;
     }
 }

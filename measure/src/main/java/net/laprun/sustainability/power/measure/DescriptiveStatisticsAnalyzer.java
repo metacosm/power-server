@@ -2,20 +2,16 @@ package net.laprun.sustainability.power.measure;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-public class DescriptiveStatisticsComponentMeasure implements ComponentMeasure {
+@SuppressWarnings("unused")
+public class DescriptiveStatisticsAnalyzer implements Analyzer {
     private final DescriptiveStatistics statistics;
 
-    public DescriptiveStatisticsComponentMeasure() {
+    public DescriptiveStatisticsAnalyzer() {
         statistics = new DescriptiveStatistics();
     }
 
     @Override
-    public void recordComponentValue(double value) {
+    public void recordComponentValue(double value, long timestamp) {
         statistics.addValue(value);
-    }
-
-    @Override
-    public double[] getComponentValues() {
-        return statistics.getValues();
     }
 }
