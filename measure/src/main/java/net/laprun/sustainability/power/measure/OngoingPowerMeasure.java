@@ -1,8 +1,7 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.BitSet;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -13,7 +12,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private final SensorMetadata sensorMetadata;
     private final long startedAt;
     private final double[] averages;
-    private final Set<Integer> nonZeroComponents;
+    private final BitSet nonZeroComponents;
     private final int[] totalComponents;
     private final int totalIndex;
     private double minTotal = Double.MAX_VALUE;
@@ -35,7 +34,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
         totalIndex = numComponents;
         averages = new double[measuresNb];
         // we don't need to record the total component as a non-zero component since it's almost never zero and we compute the std dev separately
-        nonZeroComponents = new HashSet<>(numComponents);
+        nonZeroComponents = new BitSet(numComponents);
         totalComponents = sensorMetadata.totalComponents();
     }
 
@@ -56,7 +55,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
             final var componentValue = components[component];
             // record that the value is not zero
             if (componentValue != 0) {
-                nonZeroComponents.add(component);
+                nonZeroComponents.set(component);
             }
             recordComponentValue(component, componentValue);
             averages[component] = averages[component] == 0 ? componentValue
