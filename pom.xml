@@ -69,6 +69,7 @@
         <module>metadata</module>
         <module>measure</module>
         <module>server</module>
+        <module>analysis</module>
     </modules>
 
     <dependencyManagement>

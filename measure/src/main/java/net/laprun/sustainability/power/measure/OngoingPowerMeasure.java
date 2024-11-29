@@ -3,8 +3,7 @@ package net.laprun.sustainability.power.measure;
 import java.time.Duration;
 import java.util.BitSet;
 import java.util.Objects;
-
-import org.apache.commons.math3.util.FastMath;
+import java.util.Optional;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
@@ -124,36 +123,15 @@ public class OngoingPowerMeasure implements PowerMeasure {
         return averages;
     }
 
-    public StdDev standardDeviations() {
-        final var cardinality = sensorMetadata.componentCardinality();
-        final var stdDevs = new double[cardinality];
-        nonZeroComponents.stream()
-                .parallel()
-                .forEach(component -> stdDevs[component] = standardDeviation(component));
-
-        final double aggregate = maxTotal == 0 ? 0 : standardDeviation(totalIndex);
-        return new StdDev(aggregate, stdDevs);
-    }
-
-    private double standardDeviation(int component) {
-        final var values = measures[component];
-        if (samples <= 1) {
-            return 0.0;
-        }
-        final double mean = averages[component];
-        double geometricDeviationTotal = 0.0;
-        for (int index = 0; index < samples; index++) {
-            double deviation = values[index] - mean;
-            geometricDeviationTotal += (deviation * deviation);
-        }
-        return FastMath.sqrt(geometricDeviationTotal / (samples - 1));
-    }
-
     @Override
-    public double[] getMeasuresFor(int component) {
-        final var dest = new double[samples];
-        System.arraycopy(measures[component], 0, dest, 0, samples);
-        return dest;
+    public Optional<double[]> getMeasuresFor(int component) {
+        if (nonZeroComponents.get(component)) {
+            final var dest = new double[samples];
+            System.arraycopy(measures[component], 0, dest, 0, samples);
+            return Optional.of(dest);
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
