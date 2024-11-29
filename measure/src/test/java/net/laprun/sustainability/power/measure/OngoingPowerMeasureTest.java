@@ -1,6 +1,6 @@
 package net.laprun.sustainability.power.measure;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Map;
@@ -20,7 +20,7 @@ public class OngoingPowerMeasureTest {
     };
 
     @Test
-    void testStatistics() {
+    void testBasics() {
         final var m1c1 = 10.0;
         final var m1c2 = 12.0;
         final var m1c3 = 0.0;
@@ -52,9 +52,9 @@ public class OngoingPowerMeasureTest {
         components[2] = m3c3;
         measure.recordMeasure(components);
 
-        assertArrayEquals(new double[] { m1c1, m2c1, m3c1 }, measure.getMeasuresFor(0));
-        assertArrayEquals(new double[] { m1c2, m2c2, m3c2 }, measure.getMeasuresFor(1));
-        assertArrayEquals(new double[] { m1c3, m2c3, m3c3 }, measure.getMeasuresFor(2));
+        assertThat(measure.getMeasuresFor(0)).hasValue(new double[] { m1c1, m2c1, m3c1 });
+        assertThat(measure.getMeasuresFor(1)).hasValue(new double[] { m1c2, m2c2, m3c2 });
+        assertThat(measure.getMeasuresFor(2)).isEmpty();
 
         assertEquals(m1c1 + m1c2 + m1c3 + m2c1 + m2c2 + m2c3 + m3c1 + m3c2 + m3c3, measure.total());
         assertEquals((m1c1 + m1c2 + m1c3 + m2c1 + m2c2 + m2c3 + m3c1 + m3c2 + m3c3) / 3, measure.average());
@@ -66,17 +66,5 @@ public class OngoingPowerMeasureTest {
         assertEquals((m1c1 + m2c1 + m3c1) / 3, c1Avg);
         assertEquals((m1c2 + m2c2 + m3c2) / 3, c2Avg);
         assertEquals(0, c3Avg);
-
-        final var stdVarForC1 = Math
-                .sqrt((Math.pow(m1c1 - c1Avg, 2) + Math.pow(m2c1 - c1Avg, 2) + Math.pow(m3c1 - c1Avg, 2)) / (3 - 1));
-        final var stdVarForC2 = Math
-                .sqrt((Math.pow(m1c2 - c2Avg, 2) + Math.pow(m2c2 - c2Avg, 2) + Math.pow(m3c2 - c2Avg, 2)) / (3 - 1));
-
-        assertEquals(stdVarForC1, measure.standardDeviations().perComponent()[0], 0.0001,
-                "Standard Deviation did not match the expected value");
-        assertEquals(stdVarForC2, measure.standardDeviations().perComponent()[1], 0.0001,
-                "Standard Deviation did not match the expected value");
-        assertEquals(0, measure.standardDeviations().perComponent()[2], 0.0001,
-                "Standard Deviation did not match the expected value");
     }
 }

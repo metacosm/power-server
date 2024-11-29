@@ -1,6 +1,7 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
@@ -13,7 +14,6 @@ public class StoppedPowerMeasure implements PowerMeasure {
     private final double min;
     private final double max;
     private final double[] averages;
-    private final StdDev standardDeviations;
     private final double[][] measures;
     private final Analyzer[] analyzers;
 
@@ -24,12 +24,11 @@ public class StoppedPowerMeasure implements PowerMeasure {
         this.min = powerMeasure.minMeasuredTotal();
         this.max = powerMeasure.maxMeasuredTotal();
         this.averages = powerMeasure.averagesPerComponent();
-        this.standardDeviations = powerMeasure.standardDeviations();
         this.samples = powerMeasure.numberOfSamples();
         final var cardinality = metadata().componentCardinality();
         measures = new double[cardinality][samples];
         for (int i = 0; i < cardinality; i++) {
-            measures[i] = powerMeasure.getMeasuresFor(i);
+            measures[i] = powerMeasure.getMeasuresFor(i).orElse(null);
         }
         analyzers = powerMeasure.analyzers();
     }
@@ -70,13 +69,8 @@ public class StoppedPowerMeasure implements PowerMeasure {
     }
 
     @Override
-    public StdDev standardDeviations() {
-        return standardDeviations;
-    }
-
-    @Override
-    public double[] getMeasuresFor(int component) {
-        return measures[component];
+    public Optional<double[]> getMeasuresFor(int component) {
+        return Optional.ofNullable(measures[component]);
     }
 
     @Override

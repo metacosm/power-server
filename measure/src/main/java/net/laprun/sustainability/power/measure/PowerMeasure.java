@@ -1,6 +1,7 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
@@ -29,9 +30,8 @@ public interface PowerMeasure {
         final var durationInSeconds = measure.duration().getSeconds();
         final var samples = measure.numberOfSamples();
         final var measuredMilliWatts = measure.total();
-        final var stdDevs = measure.standardDeviations();
-        return String.format("%s / avg: %s / std dev: %.3f [min: %.3f, max: %.3f] (%ds, %s samples)",
-                readableWithUnit(measuredMilliWatts), readableWithUnit(measure.average()), stdDevs.aggregate,
+        return String.format("%s / avg: %s [min: %.3f, max: %.3f] (%ds, %s samples)",
+                readableWithUnit(measuredMilliWatts), readableWithUnit(measure.average()),
                 measure.minMeasuredTotal(), measure.maxMeasuredTotal(), durationInSeconds, samples);
     }
 
@@ -59,9 +59,7 @@ public interface PowerMeasure {
 
     double maxMeasuredTotal();
 
-    StdDev standardDeviations();
-
-    double[] getMeasuresFor(int component);
+    Optional<double[]> getMeasuresFor(int component);
 
     Analyzer[] analyzers();
 
