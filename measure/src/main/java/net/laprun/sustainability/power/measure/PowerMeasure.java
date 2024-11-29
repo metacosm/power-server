@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.analysis.ComponentProcessor;
 
 public interface PowerMeasure {
     private static double sumOfComponents(double[] recorded) {
@@ -61,15 +62,5 @@ public interface PowerMeasure {
 
     Optional<double[]> getMeasuresFor(int component);
 
-    Analyzer[] analyzers();
-
-    /**
-     * Records the standard deviations for the aggregated energy comsumption value (as returned by {@link #total()}) and
-     * per component
-     *
-     * @param aggregate
-     * @param perComponent
-     */
-    record StdDev(double aggregate, double[] perComponent) {
-    }
+    ComponentProcessor[] analyzers();
 }

@@ -1,12 +1,12 @@
-package net.laprun.sustainability.power.measure;
+package net.laprun.sustainability.power.analysis;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 @SuppressWarnings("unused")
-public class DescriptiveStatisticsAnalyzer implements Analyzer {
+public class DescriptiveStatisticsComponentProcessor implements ComponentProcessor {
     private final DescriptiveStatistics statistics;
 
-    public DescriptiveStatisticsAnalyzer() {
+    public DescriptiveStatisticsComponentProcessor() {
         statistics = new DescriptiveStatistics();
     }
 

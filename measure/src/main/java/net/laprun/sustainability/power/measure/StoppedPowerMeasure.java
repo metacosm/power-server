@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.analysis.ComponentProcessor;
 
 @SuppressWarnings("unused")
 public class StoppedPowerMeasure implements PowerMeasure {
@@ -15,7 +16,7 @@ public class StoppedPowerMeasure implements PowerMeasure {
     private final double max;
     private final double[] averages;
     private final double[][] measures;
-    private final Analyzer[] analyzers;
+    private final ComponentProcessor[] processors;
 
     public StoppedPowerMeasure(PowerMeasure powerMeasure) {
         this.sensorMetadata = powerMeasure.metadata();
@@ -30,7 +31,7 @@ public class StoppedPowerMeasure implements PowerMeasure {
         for (int i = 0; i < cardinality; i++) {
             measures[i] = powerMeasure.getMeasuresFor(i).orElse(null);
         }
-        analyzers = powerMeasure.analyzers();
+        processors = powerMeasure.analyzers();
     }
 
     @Override
@@ -74,7 +75,7 @@ public class StoppedPowerMeasure implements PowerMeasure {
     }
 
     @Override
-    public Analyzer[] analyzers() {
-        return analyzers;
+    public ComponentProcessor[] analyzers() {
+        return processors;
     }
 }

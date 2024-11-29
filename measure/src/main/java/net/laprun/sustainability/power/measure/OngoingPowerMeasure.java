@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.analysis.ComponentProcessor;
 
 public class OngoingPowerMeasure implements PowerMeasure {
     private static final int DEFAULT_SIZE = 32;
@@ -21,9 +22,9 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private int samples;
     private final double[][] measures;
     private long[] timestamps;
-    private final Analyzer[] analyzers;
+    private final ComponentProcessor[] analyzers;
 
-    public OngoingPowerMeasure(SensorMetadata sensorMetadata, Analyzer... analyzers) {
+    public OngoingPowerMeasure(SensorMetadata sensorMetadata, ComponentProcessor... analyzers) {
         this.sensorMetadata = sensorMetadata;
         startedAt = System.currentTimeMillis();
 
@@ -37,7 +38,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
         // we don't need to record the total component as a non-zero component since it's almost never zero and we compute the std dev separately
         nonZeroComponents = new BitSet(numComponents);
         totalComponents = sensorMetadata.totalComponents();
-        this.analyzers = Objects.requireNonNullElseGet(analyzers, () -> new Analyzer[0]);
+        this.analyzers = Objects.requireNonNullElseGet(analyzers, () -> new ComponentProcessor[0]);
     }
 
     @Override
@@ -135,7 +136,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
     }
 
     @Override
-    public Analyzer[] analyzers() {
+    public ComponentProcessor[] analyzers() {
         return analyzers;
     }
 }
