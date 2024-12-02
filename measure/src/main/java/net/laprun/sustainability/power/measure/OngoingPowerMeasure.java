@@ -12,7 +12,6 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private static final int DEFAULT_SIZE = 32;
     private final SensorMetadata sensorMetadata;
     private final long startedAt;
-    private final double[] averages;
     private final BitSet nonZeroComponents;
     private final int[] totalComponents;
     private final int totalIndex;
@@ -34,7 +33,6 @@ public class OngoingPowerMeasure implements PowerMeasure {
         measures = new double[measuresNb][DEFAULT_SIZE];
         timestamps = new long[DEFAULT_SIZE];
         totalIndex = numComponents;
-        averages = new double[measuresNb];
         // we don't need to record the total component as a non-zero component since it's almost never zero and we compute the std dev separately
         nonZeroComponents = new BitSet(numComponents);
         totalComponents = sensorMetadata.totalComponents();
@@ -61,16 +59,12 @@ public class OngoingPowerMeasure implements PowerMeasure {
                 nonZeroComponents.set(component);
             }
             recordComponentValue(component, componentValue);
-            averages[component] = averages[component] == 0 ? componentValue
-                    : (previousSize * averages[component] + componentValue) / samples;
         }
 
         // record min / max totals
-        final var recordedTotal = PowerMeasure.sumOfSelectedComponents(components, totalComponents);
+        final var recordedTotal = Compute.sumOfSelectedComponents(components, totalComponents);
         recordComponentValue(totalIndex, recordedTotal);
         accumulatedTotal += recordedTotal;
-        averages[components.length] = averages[components.length] == 0 ? recordedTotal
-                : (previousSize * averages[components.length] + recordedTotal) / samples;
         if (recordedTotal < minTotal) {
             minTotal = recordedTotal;
         }
@@ -117,11 +111,6 @@ public class OngoingPowerMeasure implements PowerMeasure {
     @Override
     public double maxMeasuredTotal() {
         return maxTotal;
-    }
-
-    @Override
-    public double[] averagesPerComponent() {
-        return averages;
     }
 
     @Override
