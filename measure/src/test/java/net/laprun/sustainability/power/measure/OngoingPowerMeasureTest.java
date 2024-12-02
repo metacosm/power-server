@@ -57,14 +57,7 @@ public class OngoingPowerMeasureTest {
         assertThat(measure.getMeasuresFor(2)).isEmpty();
 
         assertEquals(m1c1 + m1c2 + m1c3 + m2c1 + m2c2 + m2c3 + m3c1 + m3c2 + m3c3, measure.total());
-        assertEquals((m1c1 + m1c2 + m1c3 + m2c1 + m2c2 + m2c3 + m3c1 + m3c2 + m3c3) / 3, measure.average());
         assertEquals(Stream.of(m1total, m2total, m3total).min(Double::compareTo).orElseThrow(), measure.minMeasuredTotal());
         assertEquals(Stream.of(m1total, m2total, m3total).max(Double::compareTo).orElseThrow(), measure.maxMeasuredTotal());
-        final var c1Avg = measure.averagesPerComponent()[0];
-        final var c2Avg = measure.averagesPerComponent()[1];
-        final var c3Avg = measure.averagesPerComponent()[2];
-        assertEquals((m1c1 + m2c1 + m3c1) / 3, c1Avg);
-        assertEquals((m1c2 + m2c2 + m3c2) / 3, c2Avg);
-        assertEquals(0, c3Avg);
     }
 }

@@ -14,7 +14,6 @@ public class StoppedPowerMeasure implements PowerMeasure {
     private final double total;
     private final double min;
     private final double max;
-    private final double[] averages;
     private final double[][] measures;
     private final ComponentProcessor[] processors;
 
@@ -24,7 +23,6 @@ public class StoppedPowerMeasure implements PowerMeasure {
         this.total = powerMeasure.total();
         this.min = powerMeasure.minMeasuredTotal();
         this.max = powerMeasure.maxMeasuredTotal();
-        this.averages = powerMeasure.averagesPerComponent();
         this.samples = powerMeasure.numberOfSamples();
         final var cardinality = metadata().componentCardinality();
         measures = new double[cardinality][samples];
@@ -52,11 +50,6 @@ public class StoppedPowerMeasure implements PowerMeasure {
     @Override
     public double total() {
         return total;
-    }
-
-    @Override
-    public double[] averagesPerComponent() {
-        return averages;
     }
 
     @Override
