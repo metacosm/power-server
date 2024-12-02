@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>power-server-analysis</artifactId>
+    <name>power-server : analysis</name>
+    <description>Classes that support analysis of recorded data</description>
 
     <dependencies>
         <dependency>
