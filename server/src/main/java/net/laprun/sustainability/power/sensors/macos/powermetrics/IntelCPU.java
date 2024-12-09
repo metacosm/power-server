@@ -5,21 +5,16 @@ import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPo
 import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.PACKAGE;
 
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
 class IntelCPU extends CPU {
 
     private static final SensorMetadata.ComponentMetadata packageComponent = new SensorMetadata.ComponentMetadata(PACKAGE, 0,
-            "Intel energy model derived package power (CPUs+GT+SA)", true, W);
+            "Intel energy model derived package power (CPUs+GT+SA)", true, W, true);
     private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 1,
-            "Computed share of CPU", false, decimalPercentage);
-
-    @Override
-    int[] getTotalComponents() {
-        return new int[] { 0 };
-    }
+            "Computed share of CPU", false, decimalPercentage, false);
 
     @Override
     public boolean doneExtractingPowerComponents(String line, HashMap<String, Number> powerComponents) {
@@ -41,9 +36,9 @@ class IntelCPU extends CPU {
     }
 
     @Override
-    boolean doneAfterComponentsInitialization(Map<String, SensorMetadata.ComponentMetadata> components) {
-        components.put(PACKAGE, packageComponent);
-        components.put(CPU_SHARE, cpuShareComponent);
+    boolean doneAfterComponentsInitialization(List<SensorMetadata.ComponentMetadata> components) {
+        components.add(packageComponent);
+        components.add(cpuShareComponent);
         return true;
     }
 }

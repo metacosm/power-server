@@ -15,6 +15,7 @@ public class SensorUnit {
     }
 
     public static SensorUnit of(String unit) {
+        Objects.requireNonNull(unit);
         return switch (unit) {
             case mW -> mWUnit;
             case W -> WUnit;
