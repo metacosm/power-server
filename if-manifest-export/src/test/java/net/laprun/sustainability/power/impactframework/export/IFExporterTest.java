@@ -2,8 +2,6 @@ package net.laprun.sustainability.power.impactframework.export;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
@@ -14,11 +12,11 @@ class IFExporterTest {
     public static final String COMPONENT1_NAME = "c1";
     public static final String COMPONENT2_NAME = "c2";
     public static final String COMPONENT3_NAME = "c3";
-    private final static SensorMetadata metadata = new SensorMetadata(Map.of(
-            COMPONENT1_NAME, new SensorMetadata.ComponentMetadata(COMPONENT1_NAME, 0, "component 1", true, "mW"),
-            COMPONENT2_NAME, new SensorMetadata.ComponentMetadata(COMPONENT2_NAME, 1, "component 2", true, "mW"),
-            COMPONENT3_NAME, new SensorMetadata.ComponentMetadata(COMPONENT3_NAME, 2, "always zero", false, "mW")), null,
-            new int[] { 0, 1, 2 });
+    private final static SensorMetadata metadata = SensorMetadata
+            .withNewComponent(COMPONENT1_NAME, "component 1", true, "mW", true)
+            .withNewComponent(COMPONENT2_NAME, "component 2", true, "mW", true)
+            .withNewComponent(COMPONENT3_NAME, "component 3", true, "mW", true)
+            .build();
 
     @Test
     void export() {

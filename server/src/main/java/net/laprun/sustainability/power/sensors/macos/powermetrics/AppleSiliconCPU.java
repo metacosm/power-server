@@ -3,38 +3,29 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 import static net.laprun.sustainability.power.SensorUnit.*;
 import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
 class AppleSiliconCPU extends CPU {
-    private static final List<Integer> defaultTotalComponents = List.of(0, 1, 2);
     private static final SensorMetadata.ComponentMetadata cpuComponent = new SensorMetadata.ComponentMetadata(CPU, 0,
-            "CPU power", true, mW);
+            "CPU power", true, mW, true);
     private static final SensorMetadata.ComponentMetadata gpuComponent = new SensorMetadata.ComponentMetadata(GPU, 1,
-            "GPU power", true, mW);
+            "GPU power", true, mW, true);
     private static final SensorMetadata.ComponentMetadata aneComponent = new SensorMetadata.ComponentMetadata(ANE, 2,
-            "Apple Neural Engine power", false, mW);
+            "Apple Neural Engine power", false, mW, true);
     private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3,
-            "Computed share of CPU", false, decimalPercentage);
+            "Computed share of CPU", false, decimalPercentage, false);
     private static final String COMBINED = "Combined";
     private static final String POWER_INDICATOR = " Power: ";
     private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
-    private final List<Integer> totalComponents = new ArrayList<>();
 
     public AppleSiliconCPU() {
     }
 
     @Override
-    int[] getTotalComponents() {
-        return totalComponents.stream().mapToInt(i -> i).toArray();
-    }
-
-    @Override
-    public void addComponentIfFound(String line, Map<String, SensorMetadata.ComponentMetadata> components) {
+    public void addComponentIfFound(String line, List<SensorMetadata.ComponentMetadata> components) {
         // looking for line fitting the: "<name> Power: xxx mW" pattern, where "name" will be a considered metadata component
         final var powerIndex = line.indexOf(" Power");
         // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the metadata pattern but shouldn't be considered
@@ -43,7 +34,7 @@ class AppleSiliconCPU extends CPU {
         }
     }
 
-    private void addComponentTo(String name, Map<String, SensorMetadata.ComponentMetadata> components) {
+    private void addComponentTo(String name, List<SensorMetadata.ComponentMetadata> components) {
         switch (name) {
             case CPU, GPU, ANE:
                 // already pre-added
@@ -53,8 +44,7 @@ class AppleSiliconCPU extends CPU {
                 break;
             default:
                 final var index = components.size();
-                components.put(name, new SensorMetadata.ComponentMetadata(name, index, name, false, mW));
-                totalComponents.add(index);
+                components.add(new SensorMetadata.ComponentMetadata(name, index, name, false, mW, true));
         }
     }
 
@@ -82,13 +72,12 @@ class AppleSiliconCPU extends CPU {
     }
 
     @Override
-    boolean doneAfterComponentsInitialization(Map<String, SensorMetadata.ComponentMetadata> components) {
+    boolean doneAfterComponentsInitialization(List<SensorMetadata.ComponentMetadata> components) {
         // init map with known components
-        components.put(MacOSPowermetricsSensor.CPU, cpuComponent);
-        components.put(GPU, gpuComponent);
-        components.put(ANE, aneComponent);
-        components.put(CPU_SHARE, cpuShareComponent);
-        totalComponents.addAll(defaultTotalComponents);
+        components.add(cpuComponent);
+        components.add(gpuComponent);
+        components.add(aneComponent);
+        components.add(cpuShareComponent);
         return false;
     }
 }

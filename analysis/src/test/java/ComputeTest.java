@@ -1,6 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Random;
 import java.util.random.RandomGenerator;
 
@@ -11,7 +11,7 @@ import net.laprun.sustainability.power.analysis.Compute;
 import net.laprun.sustainability.power.measure.OngoingPowerMeasure;
 
 public class ComputeTest {
-    private final static SensorMetadata metadata = new SensorMetadata(Map.of(), null, new int[0]) {
+    private final static SensorMetadata metadata = new SensorMetadata(List.of(), null) {
 
         @Override
         public int componentCardinality() {

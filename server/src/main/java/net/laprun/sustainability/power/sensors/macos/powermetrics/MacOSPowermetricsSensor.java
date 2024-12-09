@@ -4,9 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import io.quarkus.logging.Log;
@@ -59,7 +59,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
     void initMetadata(InputStream inputStream) {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
-            Map<String, SensorMetadata.ComponentMetadata> components = new HashMap<>();
+            var components = new ArrayList<SensorMetadata.ComponentMetadata>();
             while ((line = input.readLine()) != null) {
                 if (cpu == null) {
                     // if we reached the OS line while cpu is still null, we're looking at an Apple Silicon CPU
@@ -87,8 +87,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             }
 
             final var metadata = new SensorMetadata(components,
-                    "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html",
-                    cpu.getTotalComponents());
+                    "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
             cpu.setMetadata(metadata);
             Log.info("Detected metadata:\n" + metadata);
         } catch (IOException e) {

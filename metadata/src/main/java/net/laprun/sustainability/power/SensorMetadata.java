@@ -2,8 +2,10 @@ package net.laprun.sustainability.power;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,37 +32,68 @@ public class SensorMetadata {
      *
      * @param components a map describing the metadata for each component
      * @param documentation a text providing any relevant information associated with the described sensor
-     * @param totalComponents an array of indices indicating which components can be used to compute a total power consumption
-     *        metric for that sensor. Must use a unit commensurable with {@link SensorUnit#W}
      * @throws IllegalArgumentException if indices specified in {@code totalComponents} do not represent power measures
      *         expressible in Watts or are not a valid index
      */
-    @JsonCreator
-    public SensorMetadata(@JsonProperty("metadata") Map<String, ComponentMetadata> components,
-            @JsonProperty("documentation") String documentation,
-            @JsonProperty("totalComponents") int[] totalComponents) {
-        this.components = Objects.requireNonNull(components, "Must provide components");
+    public SensorMetadata(List<ComponentMetadata> components, String documentation) {
+        Objects.requireNonNull(components, "Must provide components");
+        final var cardinality = components.size();
+        this.components = new HashMap<>(cardinality);
         this.documentation = documentation;
-        this.totalComponents = Objects.requireNonNull(totalComponents, "Must provide total components");
         final var errors = new Errors();
-        for (int index : totalComponents) {
-            if (index < 0) {
-                errors.addError(index + " is not a valid index");
-                continue;
+        final var indices = new BitSet(cardinality);
+        components.forEach(component -> {
+            // check that index is valid
+            final var index = component.index;
+            if (index < 0 || index >= cardinality) {
+                errors.addError(index + " is not a valid index: must be between 0 and " + (cardinality - 1));
+            } else if (indices.get(index)) {
+                errors.addError("Multiple components are using index " + index + ": "
+                        + components.stream().filter(cm -> index == cm.index).toList());
+            } else {
+                // record index as known
+                indices.set(index);
             }
-            components.values().stream()
-                    .filter(cm -> index == cm.index)
-                    .findFirst()
-                    .ifPresentOrElse(component -> {
-                        if (!component.isWattCommensurable()) {
-                            errors.addError("Component " + component.name
-                                    + " is not commensurate with a power measure. It needs to be expressible in Watts.");
-                        }
-                    }, () -> errors.addError(index + " is not a valid index"));
+
+            // check that component's unit is commensurable to Watts if included in total
+            if (component.isIncludedInTotal && !component.isWattCommensurable()) {
+                errors.addError("Component " + component.name
+                        + " is not commensurate with a power measure. It needs to be expressible in Watts.");
+            }
+
+            if (this.components.containsKey(component.name)) {
+                errors.addError("Multiple components are named '" + component.name + "': "
+                        + components.stream().filter(cm -> cm.name.equals(component.name)).toList());
+            } else {
+                this.components.put(component.name, component);
+            }
+        });
+
+        // verify that all indices are covered
+        if (indices.cardinality() != cardinality) {
+            indices.flip(0, cardinality);
+            errors.addError(
+                    "Components' indices should cover the full range of 0 to " + (cardinality - 1) + ". Missing indices: "
+                            + indices);
         }
+
         if (errors.hasErrors()) {
             throw new IllegalArgumentException(errors.formatErrors());
         }
+
+        this.totalComponents = indices.stream().toArray();
+    }
+
+    @JsonCreator
+    SensorMetadata(Map<String, ComponentMetadata> components, String documentation, int[] totalComponents) {
+        this.components = components;
+        this.documentation = documentation;
+        this.totalComponents = totalComponents;
+    }
+
+    public static SensorMetadata.Builder withNewComponent(String name, String description, boolean isAttributed, String unit,
+            boolean participatesInTotal) {
+        return new SensorMetadata.Builder().withNewComponent(name, description, isAttributed, unit, participatesInTotal);
     }
 
     @Override
@@ -136,6 +169,27 @@ public class SensorMetadata {
         return totalComponents;
     }
 
+    public static class Builder {
+        private final List<ComponentMetadata> components = new ArrayList<>();
+        private int currentIndex = 0;
+        private String documentation;
+
+        public Builder withNewComponent(String name, String description, boolean isAttributed, String unit,
+                boolean isIncludedInTotal) {
+            components.add(new ComponentMetadata(name, currentIndex++, description, isAttributed, unit, isIncludedInTotal));
+            return this;
+        }
+
+        public Builder withDocumentation(String documentation) {
+            this.documentation = documentation;
+            return this;
+        }
+
+        public SensorMetadata build() {
+            return new SensorMetadata(components, documentation);
+        }
+    }
+
     private static class Errors {
         private List<String> errors;
 
@@ -171,8 +225,19 @@ public class SensorMetadata {
      *        attributed share for each process needs to be performed. This is needed because some sensors only provide
      *        system-wide measures instead of on a per-process basis.
      * @param unit a textual representation of the unit used for measures associated with this component (e.g. mW)
+     * @param isIncludedInTotal whether or not this component takes part in the computation to get a total power consumption
+     *        metric for that sensor. Components that take part of the total computation must use a unit commensurable with
+     *        {@link SensorUnit#W}
      */
-    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit) {
+    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit,
+            boolean isIncludedInTotal) {
+
+        public ComponentMetadata {
+            if (name == null) {
+                throw new IllegalArgumentException("Component name cannot be null");
+            }
+        }
+
         /**
          * Determines whether or not this component is measuring power (i.e. its value can be converted to Watts)
          *
@@ -180,7 +245,7 @@ public class SensorMetadata {
          */
         @JsonIgnore
         public boolean isWattCommensurable() {
-            return SensorUnit.of(unit).isWattCommensurable();
+            return unit != null && SensorUnit.of(unit).isWattCommensurable();
         }
     }
 }
