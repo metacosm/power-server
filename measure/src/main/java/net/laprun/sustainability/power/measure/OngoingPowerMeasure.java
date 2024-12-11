@@ -16,12 +16,12 @@ import net.laprun.sustainability.power.analysis.Processors;
 
 public class OngoingPowerMeasure implements PowerMeasure {
     private static final int DEFAULT_SIZE = 32;
-    private final SensorMetadata sensorMetadata;
+    private final SensorMetadata metadata;
     private final long startedAt;
     private final BitSet nonZeroComponents;
-    private final int[] totalComponents;
     private final int totalIndex;
     private final double[][] measures;
+    private final boolean shouldComputeTotals;
     private double minTotal = Double.MAX_VALUE;
     private double maxTotal;
     private double accumulatedTotal;
@@ -29,27 +29,38 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private long[] timestamps;
     private Processors processors = Processors.empty;
 
-    public OngoingPowerMeasure(SensorMetadata sensorMetadata) {
+    public OngoingPowerMeasure(SensorMetadata metadata) {
         startedAt = System.currentTimeMillis();
 
-        final var numComponents = sensorMetadata.componentCardinality();
-        // we also record the aggregated total for each component participating in the aggregated value
-        final var measuresNb = numComponents + 1;
+        final var numComponents = metadata.componentCardinality();
+
+        // check if we need to add an aggregated total component
+        final var totalComponents = metadata.totalComponents();
+        final int measuresNb;
+        if (totalComponents.length > 0) {
+            shouldComputeTotals = true;
+            measuresNb = numComponents + 1;
+
+            final var sumMsg = Arrays.stream(totalComponents)
+                    .mapToObj(i -> metadata.metadataFor(i).name())
+                    .collect(Collectors.joining("+", "Aggregated total from (", ")"));
+
+            // todo: compute total component properly (same unit, convert to base unit all components)
+            this.metadata = SensorMetadata.from(metadata)
+                    .withNewComponent("total", sumMsg, true, "mW", false)
+                    .build();
+            totalIndex = numComponents;
+        } else {
+            shouldComputeTotals = false;
+            measuresNb = numComponents;
+            this.metadata = metadata;
+            totalIndex = -1;
+        }
+
         measures = new double[measuresNb][DEFAULT_SIZE];
         timestamps = new long[DEFAULT_SIZE];
-        totalIndex = numComponents;
         // we don't need to record the total component as a non-zero component since it's almost never zero and we compute the std dev separately
         nonZeroComponents = new BitSet(numComponents);
-        totalComponents = sensorMetadata.totalComponents();
-
-        final var sumMsg = Arrays.stream(totalComponents)
-                .mapToObj(i -> sensorMetadata.metadataFor(i).name())
-                .collect(Collectors.joining("+", "Aggregated total from (", ")"));
-
-        // todo: compute total component properly (same unit, convert to base unit all components)
-        this.sensorMetadata = SensorMetadata.from(sensorMetadata)
-                .withNewComponent("total", sumMsg, true, "mW", false)
-                .build();
     }
 
     @Override
@@ -59,7 +70,7 @@ public class OngoingPowerMeasure implements PowerMeasure {
 
     @Override
     public SensorMetadata metadata() {
-        return sensorMetadata;
+        return metadata;
     }
 
     public void recordMeasure(double[] components) {
@@ -75,17 +86,20 @@ public class OngoingPowerMeasure implements PowerMeasure {
         }
 
         // record min / max totals
-        final var recordedTotal = Compute.sumOfSelectedComponents(components, totalComponents);
-        recordComponentValue(totalIndex, recordedTotal, timestamp);
-        accumulatedTotal += recordedTotal;
-        if (recordedTotal < minTotal) {
-            minTotal = recordedTotal;
-        }
-        if (recordedTotal > maxTotal) {
-            maxTotal = recordedTotal;
+        if (shouldComputeTotals) {
+            final double recordedTotal = Compute.sumOfSelectedComponents(components, metadata.totalComponents());
+            recordComponentValue(totalIndex, recordedTotal, timestamp);
+            accumulatedTotal += recordedTotal;
+            if (recordedTotal < minTotal) {
+                minTotal = recordedTotal;
+            }
+            if (recordedTotal > maxTotal) {
+                maxTotal = recordedTotal;
+            }
+            processors.recordTotal(recordedTotal, timestamp);
         }
 
-        processors.recordMeasure(components, recordedTotal, timestamp);
+        processors.recordMeasure(components, timestamp);
     }
 
     private void recordComponentValue(int component, double value, long timestamp) {
@@ -180,9 +194,19 @@ public class OngoingPowerMeasure implements PowerMeasure {
     public void registerProcessorFor(int component, ComponentProcessor processor) {
         if (processor != null) {
             if (Processors.empty == processors) {
-                processors = new DefaultProcessors(sensorMetadata.componentCardinality());
+                processors = new DefaultProcessors(metadata.componentCardinality());
             }
             processors.registerProcessorFor(component, processor);
+        }
+    }
+
+    @Override
+    public void registerTotalProcessor(ComponentProcessor processor) {
+        if (processor != null) {
+            if (Processors.empty == processors) {
+                processors = new DefaultProcessors(metadata.componentCardinality());
+            }
+            processors.registerTotalProcessor(processor);
         }
     }
 }

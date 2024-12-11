@@ -44,8 +44,12 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-        <quarkus.platform.version>3.17.4</quarkus.platform.version>
         <skipITs>true</skipITs>
+
+        <quarkus.platform.version>3.17.4</quarkus.platform.version>
+        <assertj.version>3.26.3</assertj.version>
+        <units.version>4.1.1</units.version>
+
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
         <formatter-plugin.version>2.24.1</formatter-plugin.version>
@@ -81,6 +85,17 @@
                 <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>eu.hoefel</groupId>
+                <artifactId>units</artifactId>
+                <version>${units.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

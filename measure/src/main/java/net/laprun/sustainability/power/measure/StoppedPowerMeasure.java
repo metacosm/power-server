@@ -102,4 +102,14 @@ public class StoppedPowerMeasure implements PowerMeasure {
             processors.registerProcessorFor(component, processor);
         }
     }
+
+    @Override
+    public void registerTotalProcessor(ComponentProcessor processor) {
+        if (processor != null) {
+            if (Processors.empty == processors) {
+                processors = new DefaultProcessors(metadata().componentCardinality());
+            }
+            processors.registerTotalProcessor(processor);
+        }
+    }
 }
