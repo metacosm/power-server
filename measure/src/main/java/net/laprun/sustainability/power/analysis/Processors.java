@@ -9,10 +9,20 @@ public interface Processors {
     Processors empty = new Processors() {
     };
 
-    default void recordMeasure(double[] components, double total, long timestamp) {
+    default void recordMeasure(double[] components, long timestamp) {
+    }
+
+    default void recordTotal(double total, long timestamp) {
     }
 
     default void registerProcessorFor(int componentIndex, ComponentProcessor processor) {
+    }
+
+    default void registerTotalProcessor(ComponentProcessor processor) {
+    }
+
+    default Optional<ComponentProcessor> totalProcessor() {
+        return Optional.empty();
     }
 
     default List<ComponentProcessor> processorsFor(int componentIndex) {

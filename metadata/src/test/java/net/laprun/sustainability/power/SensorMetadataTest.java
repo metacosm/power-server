@@ -1,5 +1,6 @@
 package net.laprun.sustainability.power;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -68,5 +69,27 @@ class SensorMetadataTest {
                 () -> new SensorMetadata(null, ""));
         final var message = e.getMessage();
         assertTrue(message.contains("Must provide components"));
+    }
+
+    @Test
+    void shouldProperlyRecordTotalComponents() {
+        final String COMPONENT1_NAME = "c1";
+        final String COMPONENT2_NAME = "c2";
+        final String COMPONENT3_NAME = "c3";
+        var metadata = SensorMetadata
+                .withNewComponent(COMPONENT1_NAME, "component 1", true, "mW", true)
+                .withNewComponent(COMPONENT2_NAME, "component 2", true, "mW", false)
+                .withNewComponent(COMPONENT3_NAME, "component 3", true, "mW", true)
+                .build();
+
+        assertArrayEquals(new int[] { 0, 2 }, metadata.totalComponents());
+
+        metadata = SensorMetadata
+                .withNewComponent("cp1", null, true, null, false)
+                .withNewComponent("cp2", null, true, null, false)
+                .withNewComponent("cp3", null, true, null, false)
+                .build();
+
+        assertThat(metadata.totalComponents()).isEmpty();
     }
 }

@@ -2,10 +2,10 @@ package net.laprun.sustainability.power.impactframework.export;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import net.laprun.sustainability.impactframework.manifest.Child;
 import net.laprun.sustainability.impactframework.manifest.Initialize;
@@ -14,7 +14,6 @@ import net.laprun.sustainability.impactframework.manifest.Manifest;
 import net.laprun.sustainability.impactframework.manifest.Metadata;
 import net.laprun.sustainability.impactframework.manifest.Plugin;
 import net.laprun.sustainability.impactframework.manifest.Tree;
-import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.measure.PowerMeasure;
 import net.laprun.sustainability.power.measure.StoppedPowerMeasure;
 
@@ -32,11 +31,13 @@ public enum IFExporter {
         final List<Input> inputs = new ArrayList<>(samples);
         final var sensorMetadata = measure.metadata();
         final int samplingFrequency = (int) measure.duration().dividedBy(samples).toMillis();
-
         final var components = sensorMetadata.components();
+        final String[] inputNames = new String[components.size()];
+        components.values().forEach(component -> inputNames[component.index()] = getInputValueName(component.name()));
+
         for (int i = 0; i < samples; i++) {
             final var values = measure.getNthTimestampedMeasures(i);
-            inputs.add(toInput(samplingFrequency, values, components));
+            inputs.add(toInput(samplingFrequency, values, inputNames));
         }
 
         return new Manifest(ifMetadata, defaultInitialize,
@@ -48,10 +49,12 @@ public enum IFExporter {
     }
 
     private static Input toInput(int samplingFrequency, PowerMeasure.TimestampedMeasures values,
-            Map<String, SensorMetadata.ComponentMetadata> components) {
-        final var inputValues = new TreeMap<String, Object>();
-        components.values().forEach(
-                component -> inputValues.put(getInputValueName(component.name()), values.measures()[component.index()]));
+            String[] inputNames) {
+        final var inputValues = new LinkedHashMap<String, Object>(inputNames.length);
+        final var measures = values.measures();
+        for (int i = 0; i < inputNames.length; i++) {
+            inputValues.put(inputNames[i], measures[i]);
+        }
         return new Input(Instant.ofEpochMilli(values.timestamp()), samplingFrequency, inputValues);
     }
 }

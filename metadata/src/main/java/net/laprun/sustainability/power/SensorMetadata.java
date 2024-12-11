@@ -42,23 +42,33 @@ public class SensorMetadata {
         this.documentation = documentation;
         final var errors = new Errors();
         final var indices = new BitSet(cardinality);
+        final var totalIndices = new BitSet(cardinality);
         components.forEach(component -> {
             // check that index is valid
             final var index = component.index;
+            boolean indexValid = true;
             if (index < 0 || index >= cardinality) {
                 errors.addError(index + " is not a valid index: must be between 0 and " + (cardinality - 1));
+                indexValid = false;
             } else if (indices.get(index)) {
                 errors.addError("Multiple components are using index " + index + ": "
                         + components.stream().filter(cm -> index == cm.index).toList());
+                indexValid = false;
             } else {
                 // record index as known
                 indices.set(index);
             }
 
             // check that component's unit is commensurable to Watts if included in total
-            if (component.isIncludedInTotal && !component.isWattCommensurable()) {
-                errors.addError("Component " + component.name
-                        + " is not commensurate with a power measure. It needs to be expressible in Watts.");
+            if (component.isIncludedInTotal) {
+                if (indexValid) {
+                    totalIndices.set(index);
+                }
+
+                if (!component.isWattCommensurable()) {
+                    errors.addError("Component " + component.name
+                            + " is not commensurate with a power measure. It needs to be expressible in Watts.");
+                }
             }
 
             if (this.components.containsKey(component.name)) {
@@ -81,7 +91,7 @@ public class SensorMetadata {
             throw new IllegalArgumentException(errors.formatErrors());
         }
 
-        this.totalComponents = indices.stream().toArray();
+        this.totalComponents = totalIndices.stream().toArray();
     }
 
     @JsonCreator
@@ -98,7 +108,7 @@ public class SensorMetadata {
 
     public static SensorMetadata.Builder from(SensorMetadata sensorMetadata) {
         final var builder = new Builder();
-        sensorMetadata.components.values()
+        sensorMetadata.components.values().stream().sorted(Comparator.comparing(ComponentMetadata::index))
                 .forEach(component -> builder.withNewComponent(component.name, component.description, component.isAttributed,
                         component.unit,
                         component.isIncludedInTotal));

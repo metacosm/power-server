@@ -57,4 +57,6 @@ public interface PowerMeasure {
     Processors processors();
 
     void registerProcessorFor(int component, ComponentProcessor processor);
+
+    void registerTotalProcessor(ComponentProcessor processor);
 }

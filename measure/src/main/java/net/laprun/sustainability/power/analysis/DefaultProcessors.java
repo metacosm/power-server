@@ -9,6 +9,7 @@ import net.laprun.sustainability.power.SensorMetadata;
 
 public class DefaultProcessors implements Processors {
     private final List<ComponentProcessor>[] processors;
+    private ComponentProcessor totalProcessor;
 
     @SuppressWarnings("unchecked")
     public DefaultProcessors(int componentCardinality) {
@@ -16,7 +17,7 @@ public class DefaultProcessors implements Processors {
     }
 
     @Override
-    public void recordMeasure(double[] components, double total, long timestamp) {
+    public void recordMeasure(double[] components, long timestamp) {
         for (var index = 0; index < components.length; index++) {
             final var fIndex = index;
             final var componentProcessors = processors[index];
@@ -36,6 +37,23 @@ public class DefaultProcessors implements Processors {
             }
             processorsForComponent.add(processor);
         }
+    }
+
+    @Override
+    public void registerTotalProcessor(ComponentProcessor processor) {
+        this.totalProcessor = processor;
+    }
+
+    @Override
+    public void recordTotal(double total, long timestamp) {
+        if (totalProcessor != null) {
+            totalProcessor.recordComponentValue(total, timestamp);
+        }
+    }
+
+    @Override
+    public Optional<ComponentProcessor> totalProcessor() {
+        return Optional.ofNullable(totalProcessor);
     }
 
     @Override
