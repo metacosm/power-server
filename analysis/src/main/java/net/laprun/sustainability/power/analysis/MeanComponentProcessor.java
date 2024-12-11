@@ -10,4 +10,18 @@ public class MeanComponentProcessor implements ComponentProcessor {
         count++;
         mean = mean == 0 ? value : (previousSize * mean + value) / count;
     }
+
+    public double mean() {
+        return mean;
+    }
+
+    @Override
+    public String name() {
+        return "mean";
+    }
+
+    @Override
+    public String output() {
+        return "" + mean;
+    }
 }

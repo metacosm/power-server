@@ -1,6 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.List;
 import java.util.Random;
 import java.util.random.RandomGenerator;
 
@@ -8,16 +7,16 @@ import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.Compute;
+import net.laprun.sustainability.power.analysis.MeanComponentProcessor;
 import net.laprun.sustainability.power.measure.OngoingPowerMeasure;
+import net.laprun.sustainability.power.measure.PowerMeasure;
 
 public class ComputeTest {
-    private final static SensorMetadata metadata = new SensorMetadata(List.of(), null) {
-
-        @Override
-        public int componentCardinality() {
-            return 3;
-        }
-    };
+    private final static SensorMetadata metadata = SensorMetadata
+            .withNewComponent("cp1", null, true, null, false)
+            .withNewComponent("cp2", null, true, null, false)
+            .withNewComponent("cp3", null, true, null, false)
+            .build();
 
     @Test
     void standardDeviationShouldWork() {
@@ -79,6 +78,9 @@ public class ComputeTest {
         final var m3c3 = 0.0;
 
         final var measure = new OngoingPowerMeasure(metadata);
+        measure.registerProcessorFor(0, new MeanComponentProcessor());
+        measure.registerProcessorFor(1, new MeanComponentProcessor());
+        measure.registerProcessorFor(2, new MeanComponentProcessor());
 
         final var components = new double[metadata.componentCardinality()];
         components[0] = m1c1;
@@ -102,9 +104,18 @@ public class ComputeTest {
 
         assertEquals((m1c1 + m2c1 + m3c1) / 3, c1Avg, 0.0001,
                 "Average did not match the expected value");
+        final var processors = measure.processors();
+        assertEquals(c1Avg,
+                processors.processorFor(0, MeanComponentProcessor.class).map(MeanComponentProcessor::mean).orElseThrow());
         assertEquals((m1c2 + m2c2 + m3c2) / 3, c2Avg, 0.0001,
                 "Average did not match the expected value");
+        assertEquals(c2Avg,
+                processors.processorFor(1, MeanComponentProcessor.class).map(MeanComponentProcessor::mean).orElseThrow());
         assertEquals(0, c3Avg, 0.0001,
                 "Average did not match the expected value");
+        assertEquals(0,
+                processors.processorFor(2, MeanComponentProcessor.class).map(MeanComponentProcessor::mean).orElseThrow());
+
+        System.out.println(PowerMeasure.asString(measure));
     }
 }

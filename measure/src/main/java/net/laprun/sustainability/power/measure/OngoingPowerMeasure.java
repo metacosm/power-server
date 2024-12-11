@@ -1,15 +1,18 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
+import net.laprun.sustainability.power.analysis.DefaultProcessors;
+import net.laprun.sustainability.power.analysis.Processors;
 
 public class OngoingPowerMeasure implements PowerMeasure {
     private static final int DEFAULT_SIZE = 32;
@@ -19,15 +22,14 @@ public class OngoingPowerMeasure implements PowerMeasure {
     private final int[] totalComponents;
     private final int totalIndex;
     private final double[][] measures;
-    private final ComponentProcessor[] analyzers;
     private double minTotal = Double.MAX_VALUE;
     private double maxTotal;
     private double accumulatedTotal;
     private int samples;
     private long[] timestamps;
+    private Processors processors = Processors.empty;
 
-    public OngoingPowerMeasure(SensorMetadata sensorMetadata, ComponentProcessor... analyzers) {
-        this.sensorMetadata = sensorMetadata;
+    public OngoingPowerMeasure(SensorMetadata sensorMetadata) {
         startedAt = System.currentTimeMillis();
 
         final var numComponents = sensorMetadata.componentCardinality();
@@ -39,7 +41,15 @@ public class OngoingPowerMeasure implements PowerMeasure {
         // we don't need to record the total component as a non-zero component since it's almost never zero and we compute the std dev separately
         nonZeroComponents = new BitSet(numComponents);
         totalComponents = sensorMetadata.totalComponents();
-        this.analyzers = Objects.requireNonNullElseGet(analyzers, () -> new ComponentProcessor[0]);
+
+        final var sumMsg = Arrays.stream(totalComponents)
+                .mapToObj(i -> sensorMetadata.metadataFor(i).name())
+                .collect(Collectors.joining("+", "Aggregated total from (", ")"));
+
+        // todo: compute total component properly (same unit, convert to base unit all components)
+        this.sensorMetadata = SensorMetadata.from(sensorMetadata)
+                .withNewComponent("total", sumMsg, true, "mW", false)
+                .build();
     }
 
     @Override
@@ -54,18 +64,19 @@ public class OngoingPowerMeasure implements PowerMeasure {
 
     public void recordMeasure(double[] components) {
         samples++;
+        final var timestamp = System.currentTimeMillis();
         for (int component = 0; component < components.length; component++) {
             final var componentValue = components[component];
             // record that the value is not zero
             if (componentValue != 0) {
                 nonZeroComponents.set(component);
             }
-            recordComponentValue(component, componentValue);
+            recordComponentValue(component, componentValue, timestamp);
         }
 
         // record min / max totals
         final var recordedTotal = Compute.sumOfSelectedComponents(components, totalComponents);
-        recordComponentValue(totalIndex, recordedTotal);
+        recordComponentValue(totalIndex, recordedTotal, timestamp);
         accumulatedTotal += recordedTotal;
         if (recordedTotal < minTotal) {
             minTotal = recordedTotal;
@@ -73,9 +84,11 @@ public class OngoingPowerMeasure implements PowerMeasure {
         if (recordedTotal > maxTotal) {
             maxTotal = recordedTotal;
         }
+
+        processors.recordMeasure(components, recordedTotal, timestamp);
     }
 
-    private void recordComponentValue(int component, double value) {
+    private void recordComponentValue(int component, double value, long timestamp) {
         final var currentSize = measures[component].length;
         if (currentSize <= samples) {
             final var newSize = currentSize * 2;
@@ -88,12 +101,8 @@ public class OngoingPowerMeasure implements PowerMeasure {
             System.arraycopy(timestamps, 0, newTimestamps, 0, currentSize);
             timestamps = newTimestamps;
         }
-        final var timestamp = System.currentTimeMillis();
-        timestamps[component] = timestamp;
+        timestamps[samples - 1] = timestamp;
         measures[component][samples - 1] = value;
-        for (var analyzer : analyzers) {
-            analyzer.recordComponentValue(value, timestamp);
-        }
     }
 
     @Override
@@ -163,7 +172,17 @@ public class OngoingPowerMeasure implements PowerMeasure {
     }
 
     @Override
-    public ComponentProcessor[] analyzers() {
-        return analyzers;
+    public Processors processors() {
+        return processors;
+    }
+
+    @Override
+    public void registerProcessorFor(int component, ComponentProcessor processor) {
+        if (processor != null) {
+            if (Processors.empty == processors) {
+                processors = new DefaultProcessors(sensorMetadata.componentCardinality());
+            }
+            processors.registerProcessorFor(component, processor);
+        }
     }
 }
