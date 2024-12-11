@@ -3,21 +3,23 @@ package net.laprun.sustainability.power.measure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.analysis.ComponentProcessor;
 
 public class OngoingPowerMeasureTest {
-    private final static SensorMetadata metadata = new SensorMetadata(List.of(), null) {
-
-        @Override
-        public int componentCardinality() {
-            return 3;
-        }
-    };
+    private final static SensorMetadata metadata = SensorMetadata
+            .withNewComponent("cp1", null, true, null, false)
+            .withNewComponent("cp2", null, true, null, false)
+            .withNewComponent("cp3", null, true, null, false)
+            .build();
 
     @Test
     void testBasics() {
@@ -59,5 +61,44 @@ public class OngoingPowerMeasureTest {
         assertEquals(m1c1 + m1c2 + m1c3 + m2c1 + m2c2 + m2c3 + m3c1 + m3c2 + m3c3, measure.total());
         assertEquals(Stream.of(m1total, m2total, m3total).min(Double::compareTo).orElseThrow(), measure.minMeasuredTotal());
         assertEquals(Stream.of(m1total, m2total, m3total).max(Double::compareTo).orElseThrow(), measure.maxMeasuredTotal());
+    }
+
+    @Test
+    void processorsShouldBeCalled() {
+        final var random = Random.from(RandomGenerator.getDefault());
+        final var m1c1 = random.nextDouble();
+        final var m1c2 = random.nextDouble();
+        final var m2c1 = random.nextDouble();
+        final var m2c2 = random.nextDouble();
+
+        final var measure = new OngoingPowerMeasure(metadata);
+        measure.registerProcessorFor(0, new TestComponentProcessor());
+
+        final var components = new double[metadata.componentCardinality()];
+        components[0] = m1c1;
+        components[1] = m1c2;
+        measure.recordMeasure(components);
+
+        components[0] = m2c1;
+        components[1] = m2c2;
+        measure.recordMeasure(components);
+
+        final var processors = measure.processors();
+        assertThat(processors.processorsFor(0)).hasSize(1);
+        assertThat(processors.processorsFor(1)).isEmpty();
+        final var maybeProc = processors.processorFor(0, TestComponentProcessor.class);
+        assertThat(maybeProc).isPresent();
+        final var processor = maybeProc.get();
+        assertThat(processor.values.getFirst().value()).isEqualTo(m1c1);
+        assertThat(processor.values.getLast().value()).isEqualTo(m2c1);
+    }
+
+    private static class TestComponentProcessor implements ComponentProcessor {
+        final List<PowerMeasure.TimestampedValue> values = new ArrayList<>();
+
+        @Override
+        public void recordComponentValue(double value, long timestamp) {
+            values.add(new PowerMeasure.TimestampedValue(timestamp, value));
+        }
     }
 }

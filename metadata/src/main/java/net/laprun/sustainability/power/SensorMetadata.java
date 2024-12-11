@@ -96,6 +96,15 @@ public class SensorMetadata {
         return new SensorMetadata.Builder().withNewComponent(name, description, isAttributed, unit, participatesInTotal);
     }
 
+    public static SensorMetadata.Builder from(SensorMetadata sensorMetadata) {
+        final var builder = new Builder();
+        sensorMetadata.components.values()
+                .forEach(component -> builder.withNewComponent(component.name, component.description, component.isAttributed,
+                        component.unit,
+                        component.isIncludedInTotal));
+        return builder;
+    }
+
     @Override
     public String toString() {
         final var sb = new StringBuilder();
@@ -167,6 +176,20 @@ public class SensorMetadata {
      */
     public int[] totalComponents() {
         return totalComponents;
+    }
+
+    /**
+     * Retrieves the metadata associated with the specified component index if it exists.
+     *
+     * @param componentIndex the index of the component we want to retrieve the metadata for
+     * @return the {@link ComponentMetadata} associated with the specified index if it exists
+     * @throws IllegalArgumentException if no component is associated with the specified index
+     */
+    public ComponentMetadata metadataFor(int componentIndex) {
+        return components.values().stream()
+                .filter(cm -> componentIndex == cm.index)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No component was found for index " + componentIndex));
     }
 
     public static class Builder {

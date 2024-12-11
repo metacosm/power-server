@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
+import net.laprun.sustainability.power.analysis.Processors;
 
 public interface PowerMeasure {
 
@@ -15,9 +16,10 @@ public interface PowerMeasure {
         final var durationInSeconds = measure.duration().getSeconds();
         final var samples = measure.numberOfSamples();
         final var measuredMilliWatts = measure.total();
-        return String.format("%s [min: %.3f, max: %.3f] (%ds, %s samples)",
+        return String.format("%s [min: %.3f, max: %.3f] (%ds, %s samples)\n---\n%s",
                 readableWithUnit(measuredMilliWatts),
-                measure.minMeasuredTotal(), measure.maxMeasuredTotal(), durationInSeconds, samples);
+                measure.minMeasuredTotal(), measure.maxMeasuredTotal(), durationInSeconds, samples,
+                measure.processors().output(measure.metadata()));
     }
 
     static String readableWithUnit(double milliWatts) {
@@ -52,5 +54,7 @@ public interface PowerMeasure {
     record TimestampedMeasures(long timestamp, double[] measures) {
     }
 
-    ComponentProcessor[] analyzers();
+    Processors processors();
+
+    void registerProcessorFor(int component, ComponentProcessor processor);
 }

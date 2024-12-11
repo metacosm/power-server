@@ -7,6 +7,8 @@ import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
+import net.laprun.sustainability.power.analysis.DefaultProcessors;
+import net.laprun.sustainability.power.analysis.Processors;
 
 @SuppressWarnings("unused")
 public class StoppedPowerMeasure implements PowerMeasure {
@@ -16,7 +18,7 @@ public class StoppedPowerMeasure implements PowerMeasure {
     private final double total;
     private final double min;
     private final double max;
-    private final ComponentProcessor[] processors;
+    private Processors processors;
 
     public StoppedPowerMeasure(OngoingPowerMeasure powerMeasure) {
         this.measure = powerMeasure;
@@ -26,7 +28,7 @@ public class StoppedPowerMeasure implements PowerMeasure {
         this.max = powerMeasure.maxMeasuredTotal();
         this.samples = powerMeasure.numberOfSamples();
         final var cardinality = metadata().componentCardinality();
-        processors = powerMeasure.analyzers();
+        processors = powerMeasure.processors();
     }
 
     @Override
@@ -87,7 +89,17 @@ public class StoppedPowerMeasure implements PowerMeasure {
     }
 
     @Override
-    public ComponentProcessor[] analyzers() {
+    public Processors processors() {
         return processors;
+    }
+
+    @Override
+    public void registerProcessorFor(int component, ComponentProcessor processor) {
+        if (processor != null) {
+            if (Processors.empty == processors) {
+                processors = new DefaultProcessors(metadata().componentCardinality());
+            }
+            processors.registerProcessorFor(component, processor);
+        }
     }
 }
