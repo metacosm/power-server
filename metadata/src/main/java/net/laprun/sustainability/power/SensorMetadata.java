@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,11 +37,11 @@ public class SensorMetadata {
         }
 
         final var cardinality = components.size();
-        this.components = new HashMap<>(cardinality);
+        this.components = new LinkedHashMap<>(cardinality);
         this.documentation = documentation;
         final var errors = new Errors();
         final var indices = new BitSet(cardinality);
-        components.forEach(component -> {
+        components.stream().sorted(Comparator.comparingInt(ComponentMetadata::index)).forEach(component -> {
             // check that index is valid
             final var index = component.index;
             if (index < 0 || index >= cardinality) {
