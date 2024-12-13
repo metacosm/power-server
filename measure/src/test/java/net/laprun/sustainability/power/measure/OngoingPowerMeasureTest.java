@@ -14,21 +14,10 @@ import net.laprun.sustainability.power.analysis.ComponentProcessor;
 
 public class OngoingPowerMeasureTest {
     private final static SensorMetadata metadata = SensorMetadata
-            .withNewComponent("cp1", null, true, "mW", true)
-            .withNewComponent("cp2", null, true, "mW", true)
-            .withNewComponent("cp3", null, true, "mW", true)
+            .withNewComponent("cp1", null, true, "mW")
+            .withNewComponent("cp2", null, true, "mW")
+            .withNewComponent("cp3", null, true, "mW")
             .build();
-
-    @Test
-    void checkThatTotalComponentIsProperlyAdded() {
-        final var metadata = SensorMetadata
-                .withNewComponent("cp1", null, true, "mW", false)
-                .withNewComponent("cp2", null, true, "mW", false)
-                .withNewComponent("cp3", null, true, "mW", false)
-                .build();
-        var measure = new OngoingPowerMeasure(metadata);
-        assertThat(measure.metadata().totalComponents()).isEmpty();
-    }
 
     @Test
     void testBasics() {

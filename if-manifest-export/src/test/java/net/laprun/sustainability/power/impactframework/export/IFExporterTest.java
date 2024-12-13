@@ -13,9 +13,9 @@ class IFExporterTest {
     public static final String COMPONENT2_NAME = "c2";
     public static final String COMPONENT3_NAME = "c3";
     private final static SensorMetadata metadata = SensorMetadata
-            .withNewComponent(COMPONENT1_NAME, "component 1", true, "mW", true)
-            .withNewComponent(COMPONENT2_NAME, "component 2", true, "mW", true)
-            .withNewComponent(COMPONENT3_NAME, "component 3", true, "mW", true)
+            .withNewComponent(COMPONENT1_NAME, "component 1", true, "mW")
+            .withNewComponent(COMPONENT2_NAME, "component 2", true, "mW")
+            .withNewComponent(COMPONENT3_NAME, "component 3", true, "mW")
             .build();
 
     @Test

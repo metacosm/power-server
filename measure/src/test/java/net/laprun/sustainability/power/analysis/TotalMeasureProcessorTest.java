@@ -15,8 +15,8 @@ class TotalMeasureProcessorTest {
     void totalShouldFailIfAllComponentsAreNotCommensurable() {
         final var inError = "cp2";
         final var metadata = SensorMetadata
-                .withNewComponent("cp1", null, true, "mW", true)
-                .withNewComponent(inError, null, true, "mJ", true)
+                .withNewComponent("cp1", null, true, "mW")
+                .withNewComponent(inError, null, true, "mJ")
                 .build();
 
         final var expectedResultUnit = SensorUnit.W;
@@ -29,9 +29,9 @@ class TotalMeasureProcessorTest {
     @Test
     void testTotal() {
         final var metadata = SensorMetadata
-                .withNewComponent("cp1", null, true, "mW", true)
-                .withNewComponent("cp2", null, true, "mW", true)
-                .withNewComponent("cp3", null, true, "mW", true)
+                .withNewComponent("cp1", null, true, "mW")
+                .withNewComponent("cp2", null, true, "mW")
+                .withNewComponent("cp3", null, true, "mW")
                 .build();
 
         final var m1c1 = 10.0;
