@@ -48,7 +48,6 @@
 
         <quarkus.platform.version>3.17.4</quarkus.platform.version>
         <assertj.version>3.26.3</assertj.version>
-        <units.version>4.1.1</units.version>
 
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
@@ -85,11 +84,6 @@
                 <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>eu.hoefel</groupId>
-                <artifactId>units</artifactId>
-                <version>${units.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>

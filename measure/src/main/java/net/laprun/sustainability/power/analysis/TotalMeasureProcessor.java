@@ -15,9 +15,11 @@ public class TotalMeasureProcessor implements MeasureProcessor {
     private double maxTotal;
     private double accumulatedTotal;
     private final Function<double[], Double> formula;
+    private final SensorUnit expectedResultUnit;
 
-    public TotalMeasureProcessor(SensorMetadata metadata, int... totalComponentIndices) {
+    public TotalMeasureProcessor(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
         Objects.requireNonNull(totalComponentIndices, "Must specify component indices that will aggregated in a total");
+        this.expectedResultUnit = Objects.requireNonNull(expectedResultUnit, "Must specify expected result unit");
 
         final var errors = new Errors();
         final var totalComponents = Arrays.stream(totalComponentIndices)
@@ -42,25 +44,30 @@ public class TotalMeasureProcessor implements MeasureProcessor {
     private TotalComponent toTotalComponent(SensorMetadata metadata, int index, Errors errors) {
         final var cm = metadata.metadataFor(index);
         final var name = cm.name();
-        if (!cm.isWattCommensurable()) {
+        final var unit = cm.unit();
+        if (!unit.isCommensurableWith(expectedResultUnit)) {
             errors.addError("Component " + name
-                    + " is not commensurate with a power measure. It needs to be expressible in Watts.");
+                    + " is not commensurable with the expected base unit: " + expectedResultUnit);
         }
 
-        final var factor = SensorUnit.of(cm.unit()).getUnit().factor();
+        final var factor = unit.factor();
         return new TotalComponent(name, index, factor);
     }
 
     public double total() {
-        return accumulatedTotal;
+        return convertToExpectedUnit(accumulatedTotal);
     }
 
     public double minMeasuredTotal() {
-        return minTotal;
+        return convertToExpectedUnit(minTotal);
     }
 
     public double maxMeasuredTotal() {
-        return maxTotal;
+        return convertToExpectedUnit(maxTotal);
+    }
+
+    private double convertToExpectedUnit(double value) {
+        return value * expectedResultUnit.base().conversionFactorTo(expectedResultUnit);
     }
 
     private record TotalComponent(String name, int index, double factor) {

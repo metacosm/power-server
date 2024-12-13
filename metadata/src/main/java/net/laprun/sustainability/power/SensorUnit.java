@@ -1,37 +1,105 @@
 package net.laprun.sustainability.power;
 
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
-import eu.hoefel.unit.Unit;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SensorUnit {
 
-    private final Unit unit;
+    private final static Map<String, Double> prefixesToFactors = Map.of(
+            "n", 1e-9,
+            "µ", 1e-6,
+            "m", 1e-3,
+            "c", 1e-2,
+            "d", 10.0,
+            "h", 100.0,
+            "k", 1e3,
+            "M", 1e6,
+            "G", 1e9);
+    private final static Map<String, SensorUnit> baseUnits = new HashMap<>();
+    private final static Map<String, SensorUnit> knownUnits = new HashMap<>();
+
     private final String symbol;
+    private final SensorUnit base;
+    private final double factor;
 
-    private SensorUnit(String symbol) {
-        this.symbol = symbol;
-        this.unit = Unit.of(symbol);
+    public SensorUnit(String symbol, SensorUnit base, double factor) {
+        this.symbol = Objects.requireNonNull(symbol).trim();
+        this.base = base != null ? base : this;
+        this.factor = factor < 0 ? 1 : factor;
     }
 
-    public static SensorUnit of(String unit) {
-        Objects.requireNonNull(unit);
-        return switch (unit) {
-            case mW -> mWUnit;
-            case W -> WUnit;
-            case µJ -> µJUnit;
-            case decimalPercentage -> decimalPercentageUnit;
-            default -> new SensorUnit(unit);
-        };
+    @JsonCreator
+    public static SensorUnit of(String symbol) {
+        var unit = baseUnits.get(symbol);
+        if (unit != null) {
+            return unit;
+        }
+
+        unit = knownUnits.get(symbol);
+        if (unit != null) {
+            return unit;
+        }
+
+        symbol = Objects.requireNonNull(symbol, "Unit symbol cannot be null").trim();
+        if (symbol.isBlank()) {
+            throw new IllegalArgumentException("Unit symbol cannot be blank");
+        }
+
+        if (symbol.length() == 1) {
+            // assume base unit
+            return baseUnitFor(symbol);
+        }
+
+        final var prefix = symbol.substring(0, 1);
+        final var base = symbol.substring(1);
+        var baseUnit = baseUnits.get(base);
+        if (baseUnit == null) {
+            baseUnit = baseUnitFor(base);
+        }
+        final var factor = prefixesToFactors.get(prefix);
+        if (factor == null) {
+            throw new IllegalArgumentException(
+                    "Unknown unit prefix '" + prefix + "', known prefixes: " + prefixesToFactors.entrySet().stream()
+                            .sorted(Comparator.comparingDouble(Map.Entry::getValue)).map(Map.Entry::getKey).toList());
+        }
+
+        unit = new SensorUnit(symbol, baseUnit, factor);
+        knownUnits.put(symbol, unit);
+        return unit;
     }
 
-    @SuppressWarnings("unused")
-    public String getSymbol() {
+    private static SensorUnit baseUnitFor(String symbol) {
+        return baseUnits.computeIfAbsent(symbol, s -> new SensorUnit(symbol, null, 1.0));
+    }
+
+    public boolean isCommensurableWith(SensorUnit other) {
+        return other != null && base.equals(other.base);
+    }
+
+    public double conversionFactorTo(SensorUnit other) {
+        if (other.isCommensurableWith(this)) {
+            return factor / other.factor;
+        } else {
+            throw new IllegalArgumentException("Cannot convert " + this + " to " + other);
+        }
+    }
+
+    @JsonProperty("symbol")
+    public String symbol() {
         return symbol;
     }
 
-    public Unit getUnit() {
-        return unit;
+    public SensorUnit base() {
+        return base;
+    }
+
+    public double factor() {
+        return factor;
     }
 
     @Override
@@ -54,17 +122,9 @@ public class SensorUnit {
         return Objects.hashCode(symbol);
     }
 
-    public static final String mW = "mW";
-    public static final String W = "W";
-    public static final String µJ = "µJ";
-    public static final String decimalPercentage = "decimal percentage";
-
-    private static final SensorUnit mWUnit = new SensorUnit(mW);
-    private static final SensorUnit WUnit = new SensorUnit(W);
-    private static final SensorUnit µJUnit = new SensorUnit(µJ);
-    private static final SensorUnit decimalPercentageUnit = new SensorUnit(decimalPercentage);
-
-    public boolean isWattCommensurable() {
-        return equals(SensorUnit.WUnit) || unit.compatibleUnits().contains(SensorUnit.WUnit.unit);
-    }
+    public static final SensorUnit W = baseUnitFor("W");
+    public static final SensorUnit mW = SensorUnit.of("mW");
+    public static final SensorUnit J = baseUnitFor("J");
+    public static final SensorUnit µJ = SensorUnit.of("µJ");
+    public static final SensorUnit decimalPercentage = baseUnitFor("decimal percentage");
 }

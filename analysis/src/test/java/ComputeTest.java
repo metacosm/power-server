@@ -13,9 +13,9 @@ import net.laprun.sustainability.power.measure.PowerMeasure;
 
 public class ComputeTest {
     private final static SensorMetadata metadata = SensorMetadata
-            .withNewComponent("cp1", null, true, null, false)
-            .withNewComponent("cp2", null, true, null, false)
-            .withNewComponent("cp3", null, true, null, false)
+            .withNewComponent("cp1", null, true, "mW", false)
+            .withNewComponent("cp2", null, true, "mW", false)
+            .withNewComponent("cp3", null, true, "mW", false)
             .build();
 
     @Test
