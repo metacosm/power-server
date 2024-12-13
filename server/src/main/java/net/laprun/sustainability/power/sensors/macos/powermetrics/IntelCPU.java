@@ -12,9 +12,9 @@ import net.laprun.sustainability.power.SensorMetadata;
 class IntelCPU extends CPU {
 
     private static final SensorMetadata.ComponentMetadata packageComponent = new SensorMetadata.ComponentMetadata(PACKAGE, 0,
-            "Intel energy model derived package power (CPUs+GT+SA)", true, W, true);
+            "Intel energy model derived package power (CPUs+GT+SA)", true, W);
     private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 1,
-            "Computed share of CPU", false, decimalPercentage, false);
+            "Computed share of CPU", false, decimalPercentage);
 
     @Override
     public boolean doneExtractingPowerComponents(String line, HashMap<String, Number> powerComponents) {

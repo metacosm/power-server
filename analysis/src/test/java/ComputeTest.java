@@ -3,6 +3,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Random;
 import java.util.random.RandomGenerator;
 
+import net.laprun.sustainability.power.SensorUnit;
 import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
@@ -13,9 +14,9 @@ import net.laprun.sustainability.power.measure.PowerMeasure;
 
 public class ComputeTest {
     private final static SensorMetadata metadata = SensorMetadata
-            .withNewComponent("cp1", null, true, "mW", false)
-            .withNewComponent("cp2", null, true, "mW", false)
-            .withNewComponent("cp3", null, true, "mW", false)
+            .withNewComponent("cp1", null, true, SensorUnit.mW)
+            .withNewComponent("cp2", null, true, SensorUnit.mW)
+            .withNewComponent("cp3", null, true, "mW")
             .build();
 
     @Test

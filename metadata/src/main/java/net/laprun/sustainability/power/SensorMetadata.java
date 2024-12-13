@@ -1,7 +1,6 @@
 package net.laprun.sustainability.power;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,9 +21,6 @@ public class SensorMetadata {
     private final Map<String, ComponentMetadata> components;
     @JsonProperty("documentation")
     private final String documentation;
-    // todo: remove
-    @JsonProperty("totalComponents")
-    private final int[] totalComponents;
 
     /**
      * Initializes sensor metadata information
@@ -36,24 +32,23 @@ public class SensorMetadata {
      */
     public SensorMetadata(List<ComponentMetadata> components, String documentation) {
         Objects.requireNonNull(components, "Must provide components");
+        if (components.isEmpty()) {
+            throw new IllegalArgumentException("Must provide at least one component");
+        }
+
         final var cardinality = components.size();
         this.components = new HashMap<>(cardinality);
         this.documentation = documentation;
         final var errors = new Errors();
         final var indices = new BitSet(cardinality);
-        final var totalIndices = new BitSet(cardinality);
-        final var baseUnit = new SensorUnit[1];
         components.forEach(component -> {
             // check that index is valid
             final var index = component.index;
-            boolean indexValid = true;
             if (index < 0 || index >= cardinality) {
                 errors.addError(index + " is not a valid index: must be between 0 and " + (cardinality - 1));
-                indexValid = false;
             } else if (indices.get(index)) {
                 errors.addError("Multiple components are using index " + index + ": "
                         + components.stream().filter(cm -> index == cm.index).toList());
-                indexValid = false;
             } else {
                 // record index as known
                 indices.set(index);
@@ -78,35 +73,29 @@ public class SensorMetadata {
         if (errors.hasErrors()) {
             throw new IllegalArgumentException(errors.formatErrors());
         }
-
-        this.totalComponents = totalIndices.stream().toArray();
     }
 
     @JsonCreator
-    SensorMetadata(Map<String, ComponentMetadata> components, String documentation, int[] totalComponents) {
+    SensorMetadata(Map<String, ComponentMetadata> components, String documentation) {
         this.components = components;
         this.documentation = documentation;
-        this.totalComponents = totalComponents;
     }
 
     public static SensorMetadata.Builder withNewComponent(String name, String description, boolean isAttributed,
-            String unitSymbol,
-            boolean participatesInTotal) {
-        return new SensorMetadata.Builder().withNewComponent(name, description, isAttributed, unitSymbol, participatesInTotal);
+            String unitSymbol) {
+        return new SensorMetadata.Builder().withNewComponent(name, description, isAttributed, unitSymbol);
     }
 
     public static SensorMetadata.Builder withNewComponent(String name, String description, boolean isAttributed,
-            SensorUnit unit,
-            boolean participatesInTotal) {
-        return new SensorMetadata.Builder().withNewComponent(name, description, isAttributed, unit, participatesInTotal);
+            SensorUnit unit) {
+        return new SensorMetadata.Builder().withNewComponent(name, description, isAttributed, unit);
     }
 
     public static SensorMetadata.Builder from(SensorMetadata sensorMetadata) {
         final var builder = new Builder();
         sensorMetadata.components.values().stream().sorted(Comparator.comparing(ComponentMetadata::index))
                 .forEach(component -> builder.withNewComponent(component.name, component.description, component.isAttributed,
-                        component.unit,
-                        component.isIncludedInTotal));
+                        component.unit));
         return builder;
     }
 
@@ -117,8 +106,7 @@ public class SensorMetadata {
                 .forEach(cm -> sb.append("- ").append(cm).append("\n"));
         return "components:\n"
                 + sb
-                + "documentation: " + documentation + "\n"
-                + "totalComponents: " + Arrays.toString(totalComponents);
+                + "documentation: " + documentation;
     }
 
     /**
@@ -175,15 +163,6 @@ public class SensorMetadata {
     }
 
     /**
-     * Retrieves the indices of the components that can be used to compute a total
-     *
-     * @return the indices of the components that can be used to compute a total
-     */
-    public int[] totalComponents() {
-        return totalComponents;
-    }
-
-    /**
      * Retrieves the metadata associated with the specified component index if it exists.
      *
      * @param componentIndex the index of the component we want to retrieve the metadata for
@@ -203,16 +182,14 @@ public class SensorMetadata {
         private int currentIndex = 0;
         private String documentation;
 
-        public Builder withNewComponent(String name, String description, boolean isAttributed, String unitSymbol,
-                boolean isIncludedInTotal) {
+        public Builder withNewComponent(String name, String description, boolean isAttributed, String unitSymbol) {
             components
-                    .add(new ComponentMetadata(name, currentIndex++, description, isAttributed, unitSymbol, isIncludedInTotal));
+                    .add(new ComponentMetadata(name, currentIndex++, description, isAttributed, unitSymbol));
             return this;
         }
 
-        public Builder withNewComponent(String name, String description, boolean isAttributed, SensorUnit unit,
-                boolean isIncludedInTotal) {
-            components.add(new ComponentMetadata(name, currentIndex++, description, isAttributed, unit, isIncludedInTotal));
+        public Builder withNewComponent(String name, String description, boolean isAttributed, SensorUnit unit) {
+            components.add(new ComponentMetadata(name, currentIndex++, description, isAttributed, unit));
             return this;
         }
 
@@ -239,12 +216,8 @@ public class SensorMetadata {
      *        attributed share for each process needs to be performed. This is needed because some sensors only provide
      *        system-wide measures instead of on a per-process basis.
      * @param unit a textual representation of the unit used for measures associated with this component (e.g. mW)
-     * @param isIncludedInTotal whether or not this component takes part in the computation to get a total power consumption
-     *        metric for that sensor. Components that take part of the total computation must use a unit commensurable with
-     *        {@link SensorUnit#W}
      */
-    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, SensorUnit unit,
-            boolean isIncludedInTotal) {
+    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, SensorUnit unit) {
 
         public ComponentMetadata {
             if (name == null) {
@@ -255,9 +228,8 @@ public class SensorMetadata {
             }
         }
 
-        public ComponentMetadata(String name, int index, String description, boolean isAttributed, String unitSymbol,
-                boolean isIncludedInTotal) {
-            this(name, index, description, isAttributed, SensorUnit.of(unitSymbol), isIncludedInTotal);
+        public ComponentMetadata(String name, int index, String description, boolean isAttributed, String unitSymbol) {
+            this(name, index, description, isAttributed, SensorUnit.of(unitSymbol));
         }
     }
 }

@@ -66,10 +66,10 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
         final var metadata = new ArrayList<SensorMetadata.ComponentMetadata>(rawOffset * 2);
         int fileNb = 0;
         for (String name : files.keySet()) {
-            metadata.add(new SensorMetadata.ComponentMetadata(name, fileNb, name, false, mW, true));
+            metadata.add(new SensorMetadata.ComponentMetadata(name, fileNb, name, false, mW));
             final var rawName = name + "_uj";
             metadata.add(new SensorMetadata.ComponentMetadata(rawName, fileNb + rawOffset,
-                    name + " (raw micro Joule data)", false, µJ, false));
+                    name + " (raw micro Joule data)", false, µJ));
             fileNb++;
         }
         this.metadata = new SensorMetadata(metadata,
