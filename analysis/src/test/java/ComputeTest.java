@@ -78,9 +78,12 @@ public class ComputeTest {
         final var m3c3 = 0.0;
 
         final var measure = new OngoingPowerMeasure(metadata);
-        measure.registerProcessorFor(0, new MeanComponentProcessor());
-        measure.registerProcessorFor(1, new MeanComponentProcessor());
-        measure.registerProcessorFor(2, new MeanComponentProcessor());
+        final var avgProc1 = new MeanComponentProcessor();
+        measure.registerProcessorFor(0, avgProc1);
+        final var avgProc2 = new MeanComponentProcessor();
+        measure.registerProcessorFor(1, avgProc2);
+        final var avgProc3 = new MeanComponentProcessor();
+        measure.registerProcessorFor(2, avgProc3);
 
         final var components = new double[metadata.componentCardinality()];
         components[0] = m1c1;
@@ -104,17 +107,13 @@ public class ComputeTest {
 
         assertEquals((m1c1 + m2c1 + m3c1) / 3, c1Avg, 0.0001,
                 "Average did not match the expected value");
-        final var processors = measure.processors();
-        assertEquals(c1Avg,
-                processors.processorFor(0, MeanComponentProcessor.class).map(MeanComponentProcessor::mean).orElseThrow());
+        assertEquals(c1Avg, avgProc1.mean());
         assertEquals((m1c2 + m2c2 + m3c2) / 3, c2Avg, 0.0001,
                 "Average did not match the expected value");
-        assertEquals(c2Avg,
-                processors.processorFor(1, MeanComponentProcessor.class).map(MeanComponentProcessor::mean).orElseThrow());
+        assertEquals(c2Avg, avgProc2.mean());
         assertEquals(0, c3Avg, 0.0001,
                 "Average did not match the expected value");
-        assertEquals(0,
-                processors.processorFor(2, MeanComponentProcessor.class).map(MeanComponentProcessor::mean).orElseThrow());
+        assertEquals(0, avgProc3.mean());
 
         System.out.println(PowerMeasure.asString(measure));
     }

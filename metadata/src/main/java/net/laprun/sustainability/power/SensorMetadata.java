@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -202,6 +201,7 @@ public class SensorMetadata {
                 .orElseThrow(() -> new IllegalArgumentException("No component was found for index " + componentIndex));
     }
 
+    @SuppressWarnings("unused")
     public static class Builder {
         private final List<ComponentMetadata> components = new ArrayList<>();
         private int currentIndex = 0;
@@ -220,28 +220,6 @@ public class SensorMetadata {
 
         public SensorMetadata build() {
             return new SensorMetadata(components, documentation);
-        }
-    }
-
-    private static class Errors {
-        private List<String> errors;
-
-        void addError(String error) {
-            if (errors == null) {
-                errors = new ArrayList<>();
-            }
-            errors.add(error);
-        }
-
-        boolean hasErrors() {
-            return errors != null && !errors.isEmpty();
-        }
-
-        String formatErrors() {
-            if (errors == null) {
-                return "";
-            }
-            return errors.stream().collect(Collectors.joining("\n- ", "\n- ", ""));
         }
     }
 
