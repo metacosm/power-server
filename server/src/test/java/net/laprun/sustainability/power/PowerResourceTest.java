@@ -45,6 +45,7 @@ public class PowerResourceTest {
         assertEquals(0, cpu.index());
         assertEquals("CPU", cpu.name());
         assertEquals(SensorUnit.mW, cpu.unit());
+        assertEquals(SensorUnit.W, cpu.unit().base());
         assertTrue(cpu.isAttributed());
 
         final var cpuShare = metadata.metadataFor("cpuShare");

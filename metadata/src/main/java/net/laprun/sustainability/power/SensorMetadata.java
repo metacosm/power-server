@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -23,6 +22,7 @@ public class SensorMetadata {
     private final Map<String, ComponentMetadata> components;
     @JsonProperty("documentation")
     private final String documentation;
+    // todo: remove
     @JsonProperty("totalComponents")
     private final int[] totalComponents;
 
@@ -42,6 +42,7 @@ public class SensorMetadata {
         final var errors = new Errors();
         final var indices = new BitSet(cardinality);
         final var totalIndices = new BitSet(cardinality);
+        final var baseUnit = new SensorUnit[1];
         components.forEach(component -> {
             // check that index is valid
             final var index = component.index;
@@ -56,18 +57,6 @@ public class SensorMetadata {
             } else {
                 // record index as known
                 indices.set(index);
-            }
-
-            // check that component's unit is commensurable to Watts if included in total
-            if (component.isIncludedInTotal) {
-                if (indexValid) {
-                    totalIndices.set(index);
-                }
-
-                if (!component.isWattCommensurable()) {
-                    errors.addError("Component " + component.name
-                            + " is not commensurate with a power measure. It needs to be expressible in Watts.");
-                }
             }
 
             if (this.components.containsKey(component.name)) {
@@ -100,7 +89,14 @@ public class SensorMetadata {
         this.totalComponents = totalComponents;
     }
 
-    public static SensorMetadata.Builder withNewComponent(String name, String description, boolean isAttributed, String unit,
+    public static SensorMetadata.Builder withNewComponent(String name, String description, boolean isAttributed,
+            String unitSymbol,
+            boolean participatesInTotal) {
+        return new SensorMetadata.Builder().withNewComponent(name, description, isAttributed, unitSymbol, participatesInTotal);
+    }
+
+    public static SensorMetadata.Builder withNewComponent(String name, String description, boolean isAttributed,
+            SensorUnit unit,
             boolean participatesInTotal) {
         return new SensorMetadata.Builder().withNewComponent(name, description, isAttributed, unit, participatesInTotal);
     }
@@ -207,7 +203,14 @@ public class SensorMetadata {
         private int currentIndex = 0;
         private String documentation;
 
-        public Builder withNewComponent(String name, String description, boolean isAttributed, String unit,
+        public Builder withNewComponent(String name, String description, boolean isAttributed, String unitSymbol,
+                boolean isIncludedInTotal) {
+            components
+                    .add(new ComponentMetadata(name, currentIndex++, description, isAttributed, unitSymbol, isIncludedInTotal));
+            return this;
+        }
+
+        public Builder withNewComponent(String name, String description, boolean isAttributed, SensorUnit unit,
                 boolean isIncludedInTotal) {
             components.add(new ComponentMetadata(name, currentIndex++, description, isAttributed, unit, isIncludedInTotal));
             return this;
@@ -240,23 +243,21 @@ public class SensorMetadata {
      *        metric for that sensor. Components that take part of the total computation must use a unit commensurable with
      *        {@link SensorUnit#W}
      */
-    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, String unit,
+    public record ComponentMetadata(String name, int index, String description, boolean isAttributed, SensorUnit unit,
             boolean isIncludedInTotal) {
 
         public ComponentMetadata {
             if (name == null) {
                 throw new IllegalArgumentException("Component name cannot be null");
             }
+            if (unit == null) {
+                throw new IllegalArgumentException("Component unit cannot be null");
+            }
         }
 
-        /**
-         * Determines whether or not this component is measuring power (i.e. its value can be converted to Watts)
-         *
-         * @return {@code true} if this component's unit is commensurable to Watts, {@code false} otherwise
-         */
-        @JsonIgnore
-        public boolean isWattCommensurable() {
-            return unit != null && SensorUnit.of(unit).isWattCommensurable();
+        public ComponentMetadata(String name, int index, String description, boolean isAttributed, String unitSymbol,
+                boolean isIncludedInTotal) {
+            this(name, index, description, isAttributed, SensorUnit.of(unitSymbol), isIncludedInTotal);
         }
     }
 }
