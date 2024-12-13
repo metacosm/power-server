@@ -3,10 +3,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Random;
 import java.util.random.RandomGenerator;
 
-import net.laprun.sustainability.power.SensorUnit;
 import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.Compute;
 import net.laprun.sustainability.power.analysis.MeanComponentProcessor;
 import net.laprun.sustainability.power.measure.OngoingPowerMeasure;

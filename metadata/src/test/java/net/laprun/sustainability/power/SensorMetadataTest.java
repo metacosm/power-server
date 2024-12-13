@@ -71,4 +71,16 @@ class SensorMetadataTest {
                 () -> new SensorMetadata(List.of(), ""));
         assertEquals("Must provide at least one component", e2.getMessage());
     }
+
+    @Test
+    void shouldOrderComponentsByIndexOrder() {
+        final var metadata = new SensorMetadata(List.of(
+                new SensorMetadata.ComponentMetadata("foo", 1, null, true, SensorUnit.W),
+                new SensorMetadata.ComponentMetadata("component2", 0, null, true, SensorUnit.decimalPercentage)), "");
+
+        int i = 0;
+        for (var value : metadata.components().values()) {
+            assertEquals(i++, value.index());
+        }
+    }
 }
