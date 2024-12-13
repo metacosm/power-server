@@ -5,7 +5,7 @@
   <parent>
     <groupId>net.laprun.sustainability</groupId>
     <artifactId>power-server-parent</artifactId>
-    <version>0.0.12-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>power-server-measure</artifactId>
@@ -34,7 +34,7 @@
             <dependency>
               <groupId>net.laprun.sustainability</groupId>
               <artifactId>build-tools</artifactId>
-              <version>0.0.12-SNAPSHOT</version>
+              <version>0.1.0-SNAPSHOT</version>
             </dependency>
           </dependencies>
         </plugin>
