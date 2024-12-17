@@ -33,8 +33,13 @@ public class SensorUnit {
         this.factor = factor < 0 ? 1 : factor;
     }
 
-    @JsonCreator
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public static SensorUnit of(String symbol) {
+        symbol = Objects.requireNonNull(symbol, "Unit symbol cannot be null").trim();
+        if (symbol.isBlank()) {
+            throw new IllegalArgumentException("Unit symbol cannot be blank");
+        }
+
         var unit = baseUnits.get(symbol);
         if (unit != null) {
             return unit;
@@ -43,11 +48,6 @@ public class SensorUnit {
         unit = knownUnits.get(symbol);
         if (unit != null) {
             return unit;
-        }
-
-        symbol = Objects.requireNonNull(symbol, "Unit symbol cannot be null").trim();
-        if (symbol.isBlank()) {
-            throw new IllegalArgumentException("Unit symbol cannot be blank");
         }
 
         if (symbol.length() == 1) {
