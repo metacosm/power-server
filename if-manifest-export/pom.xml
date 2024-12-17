@@ -30,13 +30,9 @@
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>net.laprun.sustainability</groupId>
-                        <artifactId>build-tools</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                </dependencies>
+                <configuration>
+                    <configFile>../contributing/eclipse-format.xml</configFile>
+                </configuration>
             </plugin>
         </plugins>
     </build>
