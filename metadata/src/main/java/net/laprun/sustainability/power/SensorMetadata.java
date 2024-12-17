@@ -235,5 +235,10 @@ public class SensorMetadata {
                 @JsonProperty("isAttributed") boolean isAttributed, @JsonProperty("unit") String unitSymbol) {
             this(name, index, description, isAttributed, SensorUnit.of(unitSymbol));
         }
+
+        @JsonProperty("unit")
+        public String unitAsSymbol() {
+            return unit.symbol();
+        }
     }
 }
