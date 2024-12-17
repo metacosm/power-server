@@ -76,7 +76,8 @@ public class SensorMetadata {
     }
 
     @JsonCreator
-    SensorMetadata(Map<String, ComponentMetadata> components, String documentation) {
+    SensorMetadata(@JsonProperty("metadata") Map<String, ComponentMetadata> components,
+            @JsonProperty("documentation") String documentation) {
         this.components = components;
         this.documentation = documentation;
     }
@@ -228,7 +229,10 @@ public class SensorMetadata {
             }
         }
 
-        public ComponentMetadata(String name, int index, String description, boolean isAttributed, String unitSymbol) {
+        @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+        public ComponentMetadata(@JsonProperty("name") String name, @JsonProperty("index") int index,
+                @JsonProperty("description") String description,
+                @JsonProperty("isAttributed") boolean isAttributed, @JsonProperty("unit") String unitSymbol) {
             this(name, index, description, isAttributed, SensorUnit.of(unitSymbol));
         }
     }
