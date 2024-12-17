@@ -6,8 +6,9 @@ without further processing.
 
 This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java Framework and comprises 3 modules:
 
-- `build-tools`, which contains formatting configuration that you can use to set your IDE up to contribute to this
-  project
+- `analysis`, which contains utilities helpful to analyze power measures (computations, statistics, histograms, etc…)
+- `if-manifest-export`, which provides a means to export a stopped measure as a [Green Software Foundation](https://greensoftware.foundation/) [Impact Framework](https://if.greensoftware.foundation/) manifest
+- `measure`, which provides classes to help record and process measures in client applications
 - `metadata`, which contains the metadata API that the RESTful server uses to provide information about what is returned
   by the power sensors. This artifact contains classes that can be reused in client projects.
 - `server` contains the RESTful server, listening by default on port `20432` (as specified
