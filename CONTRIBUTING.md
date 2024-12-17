@@ -1,7 +1,7 @@
 # IDE Config and Code Style
 
 This project has a strictly enforced code style. Code formatting is done by the Eclipse code
-formatter, using the config files found in the `build-tools` directory. By
+formatter, using the config files found in the `contributing` directory. By
 default when you run `mvn install` the code will be formatted automatically. When submitting a
 pull request the CI build will fail if running the formatter results in any code changes, so it is
 recommended that you always run a full Maven build before submitting a pull request.
@@ -11,7 +11,7 @@ If you want to run the formatting without doing a full build, you can run `mvn p
 #### Eclipse Setup
 
 Open the *Preferences* window, and then navigate to _Java_ -> _Code Style_ -> _Formatter_. Click _
-Import_ and then select the `eclipse-format.xml` file in the `build-tools`
+Import_ and then select the `eclipse-format.xml` file in the `contributing`
 directory.
 
 Next navigate to _Java_ -> _Code Style_ -> _Organize Imports_. Click _Import_ and select
@@ -29,7 +29,7 @@ Settings_ -> _Eclipse Code Formatter_.
 
 Select _Use the Eclipse Code Formatter_, then change the _Eclipse Java Formatter Config File_ to
 point to the
-`eclipse-format.xml` file in the `build-tools` directory. Make sure the _
+`eclipse-format.xml` file in the `contributing` directory. Make sure the _
 Optimize Imports_ box is ticked, and select the `eclipse.importorder` file as the import order
 config file.
 
