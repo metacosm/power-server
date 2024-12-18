@@ -8,6 +8,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.analysis.Processors;
 
 public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure {
     private static final int DEFAULT_SIZE = 32;
@@ -19,6 +20,8 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
     private long[] timestamps;
 
     public OngoingPowerMeasure(SensorMetadata metadata) {
+        super(Processors.empty);
+
         startedAt = System.currentTimeMillis();
         this.metadata = metadata;
 
