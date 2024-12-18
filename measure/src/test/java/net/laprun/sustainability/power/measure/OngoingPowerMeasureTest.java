@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
+import net.laprun.sustainability.power.analysis.MeasureProcessor;
 
 public class OngoingPowerMeasureTest {
     private final static SensorMetadata metadata = SensorMetadata
@@ -71,7 +72,9 @@ public class OngoingPowerMeasureTest {
 
         final var measure = new OngoingPowerMeasure(metadata);
         final var testProc = new TestComponentProcessor();
+        final var measureProc = new TestMeasureProcessor();
         measure.registerProcessorFor(0, testProc);
+        measure.registerMeasureProcessor(measureProc);
 
         final var components = new double[metadata.componentCardinality()];
         components[0] = m1c1;
@@ -86,9 +89,12 @@ public class OngoingPowerMeasureTest {
         assertThat(processors.processorsFor(0)).hasSize(1);
         assertThat(processors.processorsFor(1)).isEmpty();
         assertThat(processors.processorsFor(2)).isEmpty();
+        assertThat(processors.measureProcessors()).hasSize(1);
 
         assertThat(testProc.values.getFirst().value()).isEqualTo(m1c1);
         assertThat(testProc.values.getLast().value()).isEqualTo(m2c1);
+        assertThat(measureProc.values.getFirst().measures()).isEqualTo(new double[] { m1c1, m1c2, 0 });
+        assertThat(measureProc.values.getLast().measures()).isEqualTo(new double[] { m2c1, m2c2, 0 });
     }
 
     private static class TestComponentProcessor implements ComponentProcessor {
@@ -97,6 +103,17 @@ public class OngoingPowerMeasureTest {
         @Override
         public void recordComponentValue(double value, long timestamp) {
             values.add(new PowerMeasure.TimestampedValue(timestamp, value));
+        }
+    }
+
+    private static class TestMeasureProcessor implements MeasureProcessor {
+        final List<PowerMeasure.TimestampedMeasures> values = new ArrayList<>();
+
+        @Override
+        public void recordMeasure(double[] measure, long timestamp) {
+            final var copy = new double[measure.length];
+            System.arraycopy(measure, 0, copy, 0, measure.length);
+            values.add(new PowerMeasure.TimestampedMeasures(timestamp, copy));
         }
     }
 }

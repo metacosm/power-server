@@ -14,6 +14,8 @@ public class StoppedPowerMeasure extends ProcessorAware implements PowerMeasure 
     private final Duration duration;
 
     public StoppedPowerMeasure(OngoingPowerMeasure powerMeasure) {
+        super(powerMeasure.processors());
+
         this.measure = powerMeasure;
         this.duration = powerMeasure.duration();
         this.samples = powerMeasure.numberOfSamples();

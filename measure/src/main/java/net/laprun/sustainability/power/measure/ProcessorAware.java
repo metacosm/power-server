@@ -7,7 +7,11 @@ import net.laprun.sustainability.power.analysis.MeasureProcessor;
 import net.laprun.sustainability.power.analysis.Processors;
 
 abstract class ProcessorAware {
-    private Processors processors = Processors.empty;
+    private Processors processors;
+
+    public ProcessorAware(Processors processors) {
+        this.processors = processors == null ? Processors.empty : processors;
+    }
 
     public abstract SensorMetadata metadata();
 
