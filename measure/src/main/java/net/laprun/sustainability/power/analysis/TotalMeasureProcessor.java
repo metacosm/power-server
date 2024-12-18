@@ -59,7 +59,7 @@ public class TotalMeasureProcessor implements MeasureProcessor {
     }
 
     public double minMeasuredTotal() {
-        return convertToExpectedUnit(minTotal);
+        return minTotal == Double.MAX_VALUE ? 0.0 : convertToExpectedUnit(minTotal);
     }
 
     public double maxMeasuredTotal() {
@@ -80,7 +80,8 @@ public class TotalMeasureProcessor implements MeasureProcessor {
 
     @Override
     public String output() {
-        return MeasureProcessor.super.output();
+        final var symbol = expectedResultUnit.symbol();
+        return String.format("%.2f%s (min: %.2f / max: %.2f)", total(), symbol, minMeasuredTotal(), maxMeasuredTotal());
     }
 
     @Override

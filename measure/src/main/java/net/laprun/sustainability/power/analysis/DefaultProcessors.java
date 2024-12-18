@@ -8,6 +8,7 @@ import net.laprun.sustainability.power.SensorMetadata;
 
 public class DefaultProcessors implements Processors {
     private final List<ComponentProcessor>[] processors;
+    private boolean hasComponentProcessors = false;
     private List<MeasureProcessor> measureProcessors;
 
     @SuppressWarnings("unchecked")
@@ -39,6 +40,7 @@ public class DefaultProcessors implements Processors {
                 processors[componentIndex] = processorsForComponent;
             }
             processorsForComponent.add(processor);
+            hasComponentProcessors = true;
         }
     }
 
@@ -66,13 +68,25 @@ public class DefaultProcessors implements Processors {
     @Override
     public String output(SensorMetadata metadata) {
         StringBuilder builder = new StringBuilder();
-        builder.append("# Component Processors\n");
-        for (int i = 0; i < processors.length; i++) {
-            final var name = metadata.metadataFor(i).name();
-            builder.append("  - ").append(name).append(" component:\n");
-            for (var processor : processorsFor(i)) {
-                builder.append("    * ").append(processor.name())
-                        .append(": ").append(processor.output()).append("\n");
+        final var measureProcs = measureProcessors();
+        if (!measureProcs.isEmpty()) {
+            builder.append("# Measure Processors\n");
+            for (var processor : measureProcs) {
+                builder.append("  * ").append(processor.name()).append(": ").append(processor.output()).append("\n");
+            }
+        }
+        if (hasComponentProcessors) {
+            builder.append("# Component Processors\n");
+            for (int i = 0; i < processors.length; i++) {
+                final var componentProcessors = processorsFor(i);
+                if (!componentProcessors.isEmpty()) {
+                    final var name = metadata.metadataFor(i).name();
+                    builder.append("  - ").append(name).append(" component:\n");
+                    for (var processor : componentProcessors) {
+                        builder.append("    * ").append(processor.name())
+                                .append(": ").append(processor.output()).append("\n");
+                    }
+                }
             }
         }
         return builder.toString();

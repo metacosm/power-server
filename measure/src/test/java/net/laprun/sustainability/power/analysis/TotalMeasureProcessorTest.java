@@ -68,6 +68,8 @@ class TotalMeasureProcessorTest {
         assertEquals(m1c1 + m1c2 + m1c3 + m2c1 + m2c2 + m2c3 + m3c1 + m3c2 + m3c3, totalProc.total());
         assertEquals(Stream.of(m1total, m2total, m3total).min(Double::compareTo).orElseThrow(), totalProc.minMeasuredTotal());
         assertEquals(Stream.of(m1total, m2total, m3total).max(Double::compareTo).orElseThrow(), totalProc.maxMeasuredTotal());
+
+        assertTrue(totalProc.output().contains("" + totalProc.total()));
     }
 
 }
