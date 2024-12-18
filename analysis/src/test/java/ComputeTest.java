@@ -10,7 +10,6 @@ import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.Compute;
 import net.laprun.sustainability.power.analysis.MeanComponentProcessor;
 import net.laprun.sustainability.power.measure.OngoingPowerMeasure;
-import net.laprun.sustainability.power.measure.PowerMeasure;
 
 public class ComputeTest {
     private final static SensorMetadata metadata = SensorMetadata
@@ -115,7 +114,5 @@ public class ComputeTest {
         assertEquals(0, c3Avg, 0.0001,
                 "Average did not match the expected value");
         assertEquals(0, avgProc3.mean());
-
-        System.out.println(PowerMeasure.asString(measure));
     }
 }
