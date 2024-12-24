@@ -10,19 +10,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SensorUnit {
 
+    /**
+     * Note that for simplicity's sake, we're not supporting deca prefix since it would make the prefix identification logic
+     * more complex and it's not a very used prefix. Might revisit as needed.
+     */
     private final static Map<String, Double> prefixesToFactors = Map.of(
             "n", 1e-9,
             "µ", 1e-6,
             "m", 1e-3,
             "c", 1e-2,
-            "d", 10.0,
+            "d", 1e-1,
             "h", 100.0,
             "k", 1e3,
             "M", 1e6,
             "G", 1e9);
     private final static Map<String, SensorUnit> baseUnits = new HashMap<>();
+    public static final SensorUnit W = baseUnitFor("W");
+    public static final SensorUnit J = baseUnitFor("J");
+    public static final SensorUnit decimalPercentage = baseUnitFor("decimal percentage");
     private final static Map<String, SensorUnit> knownUnits = new HashMap<>();
-
+    public static final SensorUnit mW = SensorUnit.of("mW");
+    public static final SensorUnit µJ = SensorUnit.of("µJ");
     private final String symbol;
     private final SensorUnit base;
     private final double factor;
@@ -121,10 +129,4 @@ public class SensorUnit {
     public int hashCode() {
         return Objects.hashCode(symbol);
     }
-
-    public static final SensorUnit W = baseUnitFor("W");
-    public static final SensorUnit mW = SensorUnit.of("mW");
-    public static final SensorUnit J = baseUnitFor("J");
-    public static final SensorUnit µJ = SensorUnit.of("µJ");
-    public static final SensorUnit decimalPercentage = baseUnitFor("decimal percentage");
 }
