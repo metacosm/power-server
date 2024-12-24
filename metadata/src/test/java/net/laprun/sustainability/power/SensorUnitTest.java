@@ -18,6 +18,10 @@ class SensorUnitTest {
         assertThat(su).isEqualTo(SensorUnit.decimalPercentage);
         assertThat(su.factor()).isEqualTo(1);
         assertThat(su.base()).isEqualTo(SensorUnit.decimalPercentage);
+
+        su = SensorUnit.of("dW");
+        assertThat(su.base()).isEqualTo(SensorUnit.W);
+        assertThat(su.factor()).isEqualTo(0.1);
     }
 
     @Test
@@ -47,9 +51,9 @@ class SensorUnitTest {
         assertEquals(1, SensorUnit.J.conversionFactorTo(SensorUnit.J));
         assertEquals(1, SensorUnit.decimalPercentage.conversionFactorTo(SensorUnit.decimalPercentage));
         assertEquals(1, SensorUnit.of("mW").conversionFactorTo(SensorUnit.of("mW")));
-        assertEquals(1e-3, SensorUnit.of("mW").conversionFactorTo(SensorUnit.W), 0.0001);
-        assertEquals(1e3, SensorUnit.of("W").conversionFactorTo(SensorUnit.of("mW")), 0.0001);
-        assertEquals(1e3, SensorUnit.of("mW").conversionFactorTo(SensorUnit.of("µW")), 0.0001);
+        assertEquals(0.001, SensorUnit.of("mW").conversionFactorTo(SensorUnit.W), 0.0001);
+        assertEquals(1000, SensorUnit.of("W").conversionFactorTo(SensorUnit.of("mW")), 0.0001);
+        assertEquals(1000, SensorUnit.of("mW").conversionFactorTo(SensorUnit.of("µW")), 0.0001);
         assertEquals(1e-3, SensorUnit.of("µW").conversionFactorTo(SensorUnit.of("mW")), 0.0001);
         assertEquals(0.1, SensorUnit.of("mW").conversionFactorTo(SensorUnit.of("cW")), 0.0001);
         assertEquals(10, SensorUnit.of("cW").conversionFactorTo(SensorUnit.of("mW")), 0.0001);
