@@ -1,4 +1,4 @@
-package net.laprun.sustainability.power.analysis;
+package net.laprun.sustainability.power.analysis.total;
 
 import static org.junit.jupiter.api.Assertions.*;
 

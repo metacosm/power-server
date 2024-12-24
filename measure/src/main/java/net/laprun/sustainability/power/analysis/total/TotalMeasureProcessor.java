@@ -1,4 +1,4 @@
-package net.laprun.sustainability.power.analysis;
+package net.laprun.sustainability.power.analysis.total;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -8,13 +8,17 @@ import java.util.stream.Collectors;
 import net.laprun.sustainability.power.Errors;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
+import net.laprun.sustainability.power.analysis.MeasureProcessor;
 
-public class TotalSyntheticComponent implements SyntheticComponent {
+public class TotalMeasureProcessor implements MeasureProcessor {
+    private final String name;
+    private double minTotal = Double.MAX_VALUE;
+    private double maxTotal;
+    private double accumulatedTotal;
     private final Function<double[], Double> formula;
     private final SensorUnit expectedResultUnit;
-    private final SensorMetadata.ComponentMetadata metadata;
 
-    public TotalSyntheticComponent(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
+    public TotalMeasureProcessor(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
         Objects.requireNonNull(totalComponentIndices, "Must specify component indices that will aggregated in a total");
         this.expectedResultUnit = Objects.requireNonNull(expectedResultUnit, "Must specify expected result unit");
 
@@ -22,15 +26,9 @@ public class TotalSyntheticComponent implements SyntheticComponent {
         final var totalComponents = Arrays.stream(totalComponentIndices)
                 .mapToObj(i -> toTotalComponent(metadata, i, errors))
                 .toArray(TotalComponent[]::new);
-        final String description = Arrays.stream(totalComponents)
+        name = Arrays.stream(totalComponents)
                 .map(TotalComponent::name)
                 .collect(Collectors.joining(" + ", "Aggregated total from (", ")"));
-        final String name = Arrays.stream(totalComponents)
-                .map(TotalComponent::name)
-                .collect(Collectors.joining("_", "total", ""));
-        final var isAttributed = metadata.components().values().stream()
-                .map(SensorMetadata.ComponentMetadata::isAttributed)
-                .reduce(Boolean::logicalAnd).orElse(false);
         formula = components -> {
             double result = 0;
             for (var totalComponent : totalComponents) {
@@ -39,22 +37,9 @@ public class TotalSyntheticComponent implements SyntheticComponent {
             return result;
         };
 
-        if (metadata.exists(name)) {
-            errors.addError("Component " + name + " already exists");
-        }
-
         if (errors.hasErrors()) {
             throw new IllegalArgumentException(errors.formatErrors());
         }
-
-        this.metadata = new SensorMetadata.ComponentMetadata(name, description, isAttributed, expectedResultUnit);
-    }
-
-    private double convertToExpectedUnit(double value) {
-        return value * expectedResultUnit.base().conversionFactorTo(expectedResultUnit);
-    }
-
-    private record TotalComponent(String name, int index, double factor) {
     }
 
     private TotalComponent toTotalComponent(SensorMetadata metadata, int index, Errors errors) {
@@ -70,13 +55,45 @@ public class TotalSyntheticComponent implements SyntheticComponent {
         return new TotalComponent(name, index, factor);
     }
 
-    @Override
-    public SensorMetadata.ComponentMetadata metadata() {
-        return metadata;
+    public double total() {
+        return convertToExpectedUnit(accumulatedTotal);
+    }
+
+    public double minMeasuredTotal() {
+        return minTotal == Double.MAX_VALUE ? 0.0 : convertToExpectedUnit(minTotal);
+    }
+
+    public double maxMeasuredTotal() {
+        return convertToExpectedUnit(maxTotal);
+    }
+
+    private double convertToExpectedUnit(double value) {
+        return value * expectedResultUnit.base().conversionFactorTo(expectedResultUnit);
+    }
+
+    private record TotalComponent(String name, int index, double factor) {
     }
 
     @Override
-    public double synthesizeFrom(double[] components, long timestamp) {
-        return convertToExpectedUnit(formula.apply(components));
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public String output() {
+        final var symbol = expectedResultUnit.symbol();
+        return String.format("%.2f%s (min: %.2f / max: %.2f)", total(), symbol, minMeasuredTotal(), maxMeasuredTotal());
+    }
+
+    @Override
+    public void recordMeasure(double[] measure, long timestamp) {
+        final double recordedTotal = formula.apply(measure);
+        accumulatedTotal += recordedTotal;
+        if (recordedTotal < minTotal) {
+            minTotal = recordedTotal;
+        }
+        if (recordedTotal > maxTotal) {
+            maxTotal = recordedTotal;
+        }
     }
 }
