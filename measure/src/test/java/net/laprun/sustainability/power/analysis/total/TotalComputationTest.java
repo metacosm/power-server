@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
 
-class TotalMeasureProcessorTest {
+class TotalComputationTest {
 
     @Test
     void totalShouldFailIfAllComponentsAreNotCommensurable() {
