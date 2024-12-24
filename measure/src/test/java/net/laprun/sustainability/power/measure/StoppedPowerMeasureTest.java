@@ -9,7 +9,7 @@ import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
 import net.laprun.sustainability.power.analysis.MeasureProcessor;
 import net.laprun.sustainability.power.analysis.Processors;
-import net.laprun.sustainability.power.analysis.TotalMeasureProcessor;
+import net.laprun.sustainability.power.analysis.total.TotalMeasureProcessor;
 
 public class StoppedPowerMeasureTest {
     private final static SensorMetadata metadata = SensorMetadata
