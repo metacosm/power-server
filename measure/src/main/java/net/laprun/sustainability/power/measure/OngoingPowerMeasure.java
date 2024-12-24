@@ -1,7 +1,9 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -9,6 +11,8 @@ import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.Processors;
+import net.laprun.sustainability.power.analysis.RegisteredSyntheticComponent;
+import net.laprun.sustainability.power.analysis.SyntheticComponent;
 
 public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure {
     private static final int DEFAULT_SIZE = 32;
@@ -16,20 +20,32 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
     private final long startedAt;
     private final BitSet nonZeroComponents;
     private final double[][] measures;
+    private final List<RegisteredSyntheticComponent> syntheticComponents;
     private int samples;
     private long[] timestamps;
 
-    public OngoingPowerMeasure(SensorMetadata metadata) {
+    public OngoingPowerMeasure(SensorMetadata metadata, SyntheticComponent... syntheticComponents) {
         super(Processors.empty);
 
         startedAt = System.currentTimeMillis();
-        this.metadata = metadata;
-
         final var numComponents = metadata.componentCardinality();
         measures = new double[numComponents][DEFAULT_SIZE];
-        timestamps = new long[DEFAULT_SIZE];
-        // we don't need to record the total component as a non-zero component since it's almost never zero and we compute the std dev separately
         nonZeroComponents = new BitSet(numComponents);
+        timestamps = new long[DEFAULT_SIZE];
+
+        if (syntheticComponents != null) {
+            final var builder = SensorMetadata.from(metadata);
+            for (var component : syntheticComponents) {
+                builder.withNewComponent(component.metadata());
+            }
+            this.metadata = builder.build();
+            this.syntheticComponents = Arrays.stream(syntheticComponents)
+                    .map(sc -> new RegisteredSyntheticComponent(sc, this.metadata.metadataFor(sc.metadata().name()).index()))
+                    .toList();
+        } else {
+            this.syntheticComponents = List.of();
+            this.metadata = metadata;
+        }
     }
 
     @Override
@@ -54,7 +70,14 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
             recordComponentValue(component, componentValue, timestamp);
         }
 
-        processors().recordMeasure(components, timestamp);
+        final var processors = processors();
+        processors.recordMeasure(components, timestamp);
+
+        if (!syntheticComponents.isEmpty()) {
+            syntheticComponents.forEach(sc -> processors.recordSyntheticComponentValue(sc.synthesizeFrom(components, timestamp),
+                    timestamp, sc.computedIndex()));
+
+        }
     }
 
     private void recordComponentValue(int component, double value, long timestamp) {

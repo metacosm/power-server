@@ -10,8 +10,10 @@ import java.util.random.RandomGenerator;
 import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.ComponentProcessor;
 import net.laprun.sustainability.power.analysis.MeasureProcessor;
+import net.laprun.sustainability.power.analysis.SyntheticComponent;
 
 public class OngoingPowerMeasureTest {
     private final static SensorMetadata metadata = SensorMetadata
@@ -95,6 +97,42 @@ public class OngoingPowerMeasureTest {
         assertThat(testProc.values.getLast().value()).isEqualTo(m2c1);
         assertThat(measureProc.values.getFirst().measures()).isEqualTo(new double[] { m1c1, m1c2, 0 });
         assertThat(measureProc.values.getLast().measures()).isEqualTo(new double[] { m2c1, m2c2, 0 });
+    }
+
+    @Test
+    void syntheticComponentsShouldWork() {
+        final var random = Random.from(RandomGenerator.getDefault());
+        final var m1c1 = random.nextDouble();
+        final var m2c1 = random.nextDouble();
+
+        final var doublerName = "doubler";
+        final var doubler = new SyntheticComponent() {
+            @Override
+            public SensorMetadata.ComponentMetadata metadata() {
+                return new SensorMetadata.ComponentMetadata(doublerName, "doubler desc", true, SensorUnit.mW);
+            }
+
+            @Override
+            public double synthesizeFrom(double[] components, long timestamp) {
+                return components[0] * 2;
+            }
+        };
+
+        final var measure = new OngoingPowerMeasure(metadata, doubler);
+        final var testProc = new TestComponentProcessor();
+        // need to get updated metadata
+        final var doublerIndex = measure.metadata().metadataFor(doublerName).index();
+        measure.registerProcessorFor(doublerIndex, testProc);
+
+        final var components = new double[metadata.componentCardinality()];
+        components[0] = m1c1;
+        measure.recordMeasure(components);
+
+        components[0] = m2c1;
+        measure.recordMeasure(components);
+
+        assertThat(testProc.values.getFirst().value()).isEqualTo(m1c1 * 2);
+        assertThat(testProc.values.getLast().value()).isEqualTo(m2c1 * 2);
     }
 
     private static class TestComponentProcessor implements ComponentProcessor {
