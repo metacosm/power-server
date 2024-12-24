@@ -202,6 +202,15 @@ public class SensorMetadata {
         public SensorMetadata build() {
             return new SensorMetadata(components, documentation);
         }
+
+        public Builder withNewComponent(ComponentMetadata metadata) {
+            if (-1 == metadata.index) {
+                metadata = new SensorMetadata.ComponentMetadata(metadata.name, currentIndex++, metadata.description,
+                        metadata.isAttributed, metadata.unit);
+            }
+            components.add(metadata);
+            return this;
+        }
     }
 
     /**
@@ -227,6 +236,14 @@ public class SensorMetadata {
             if (unit == null) {
                 throw new IllegalArgumentException("Component unit cannot be null");
             }
+        }
+
+        /**
+         * Creates a ComponentMetadata that will be automatically assigned an index whenever added to a {@link SensorMetadata},
+         * based on the contextual order of how other components have been added.
+         */
+        public ComponentMetadata(String name, String description, boolean isAttributed, SensorUnit unit) {
+            this(name, -1, description, isAttributed, unit);
         }
 
         @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)

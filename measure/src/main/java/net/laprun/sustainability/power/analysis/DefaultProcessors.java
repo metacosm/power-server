@@ -23,12 +23,20 @@ public class DefaultProcessors implements Processors {
         }
 
         for (var index = 0; index < components.length; index++) {
-            final var fIndex = index;
-            final var componentProcessors = processors[index];
-            if (componentProcessors != null) {
-                componentProcessors.forEach(proc -> proc.recordComponentValue(components[fIndex], timestamp));
-            }
+            recordComponentValue(components[index], timestamp, index);
         }
+    }
+
+    private void recordComponentValue(double value, long timestamp, int componentIndex) {
+        final var componentProcessors = processors[componentIndex];
+        if (componentProcessors != null) {
+            componentProcessors.forEach(proc -> proc.recordComponentValue(value, timestamp));
+        }
+    }
+
+    @Override
+    public void recordSyntheticComponentValue(double syntheticValue, long timestamp, int componentIndex) {
+        recordComponentValue(syntheticValue, componentIndex, componentIndex);
     }
 
     @Override

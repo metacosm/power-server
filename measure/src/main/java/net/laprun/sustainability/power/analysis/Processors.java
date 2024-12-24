@@ -29,4 +29,7 @@ public interface Processors {
     default String output(SensorMetadata metadata) {
         return "";
     }
+
+    default void recordSyntheticComponentValue(double syntheticValue, long timestamp, int componentIndex) {
+    }
 }
