@@ -121,7 +121,10 @@ public class OngoingPowerMeasureTest {
         final var measure = new OngoingPowerMeasure(metadata, doubler);
         final var testProc = new TestComponentProcessor();
         // need to get updated metadata
-        final var doublerIndex = measure.metadata().metadataFor(doublerName).index();
+        final var updatedMetadata = measure.metadata();
+        assertThat(updatedMetadata.componentCardinality()).isEqualTo(metadata.componentCardinality() + 1);
+        final var doublerIndex = updatedMetadata.metadataFor(doublerName).index();
+        assertThat(doublerIndex).isEqualTo(metadata.componentCardinality());
         measure.registerProcessorFor(doublerIndex, testProc);
 
         final var components = new double[metadata.componentCardinality()];
@@ -133,6 +136,7 @@ public class OngoingPowerMeasureTest {
 
         assertThat(testProc.values.getFirst().value()).isEqualTo(m1c1 * 2);
         assertThat(testProc.values.getLast().value()).isEqualTo(m2c1 * 2);
+        assertThat(PowerMeasure.asString(measure)).contains("doubler", testProc.values.toString());
     }
 
     private static class TestComponentProcessor implements ComponentProcessor {
@@ -141,6 +145,11 @@ public class OngoingPowerMeasureTest {
         @Override
         public void recordComponentValue(double value, long timestamp) {
             values.add(new PowerMeasure.TimestampedValue(timestamp, value));
+        }
+
+        @Override
+        public String output() {
+            return values.toString();
         }
     }
 
