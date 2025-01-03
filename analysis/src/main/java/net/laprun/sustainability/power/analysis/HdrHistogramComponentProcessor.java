@@ -13,6 +13,10 @@ public class HdrHistogramComponentProcessor implements ComponentProcessor {
         histogram = new IntCountsHistogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
     }
 
+    public IntCountsHistogram histogram() {
+        return histogram;
+    }
+
     @Override
     public void recordComponentValue(double value, long timestamp) {
         histogram.recordValue((long) (CONVERSION_FACTOR * value));

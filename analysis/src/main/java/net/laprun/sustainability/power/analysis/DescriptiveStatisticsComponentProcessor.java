@@ -10,6 +10,10 @@ public class DescriptiveStatisticsComponentProcessor implements ComponentProcess
         statistics = new DescriptiveStatistics();
     }
 
+    public DescriptiveStatistics statistics() {
+        return statistics;
+    }
+
     @Override
     public void recordComponentValue(double value, long timestamp) {
         statistics.addValue(value);
