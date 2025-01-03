@@ -23,12 +23,9 @@ public class TotalSyntheticComponent implements SyntheticComponent {
         final var totalComponents = Arrays.stream(totalComponentIndices)
                 .mapToObj(i -> toTotalComponent(metadata, i, errors))
                 .toArray(TotalComponent[]::new);
-        final String description = Arrays.stream(totalComponents)
-                .map(TotalComponent::name)
-                .collect(Collectors.joining(" + ", "Aggregated total from (", ")"));
         final String name = Arrays.stream(totalComponents)
                 .map(TotalComponent::name)
-                .collect(Collectors.joining("_", "total", ""));
+                .collect(Collectors.joining(" + ", "total (", ")"));
         final var isAttributed = metadata.components().values().stream()
                 .map(SensorMetadata.ComponentMetadata::isAttributed)
                 .reduce(Boolean::logicalAnd).orElse(false);
@@ -48,7 +45,7 @@ public class TotalSyntheticComponent implements SyntheticComponent {
             throw new IllegalArgumentException(errors.formatErrors());
         }
 
-        this.metadata = new SensorMetadata.ComponentMetadata(name, description, isAttributed, expectedResultUnit);
+        this.metadata = new SensorMetadata.ComponentMetadata(name, "Aggregated " + name, isAttributed, expectedResultUnit);
     }
 
     private double convertToExpectedUnit(double value) {
