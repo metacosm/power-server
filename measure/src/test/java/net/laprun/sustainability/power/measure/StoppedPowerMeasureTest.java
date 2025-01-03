@@ -93,7 +93,7 @@ public class StoppedPowerMeasureTest {
         final var output = PowerMeasure.asString(stopped);
         assertThat(output).contains(stoppedCompProcOutput, stoppedMeasureOutput, ongoingCompProcOutput);
         // second anonymous class
-        assertThat(output).contains(stoppedCompProcName, stoppedMeasureProcName, "Aggregated total from (cp1)",
+        assertThat(output).contains(stoppedCompProcName, stoppedMeasureProcName, "total (cp1)",
                 getClass().getName() + "$2");
         assertThat(output).contains("0.00mW");
         assertThat(output).doesNotContain("Infinity");
