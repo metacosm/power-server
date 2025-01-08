@@ -47,7 +47,7 @@
         <skipITs>true</skipITs>
         <format.skip>false</format.skip>
 
-        <quarkus.platform.version>3.17.5</quarkus.platform.version>
+        <quarkus.platform.version>3.17.6</quarkus.platform.version>
         <assertj.version>3.27.2</assertj.version>
 
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
