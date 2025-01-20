@@ -63,4 +63,8 @@ public class StoppedPowerMeasure extends ProcessorAware implements PowerMeasure 
     private int ensureIndex(int upToIndex) {
         return Math.min(upToIndex, samples - 1);
     }
+
+    protected OngoingPowerMeasure underlyingMeasure() {
+        return measure;
+    }
 }
