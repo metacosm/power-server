@@ -107,7 +107,7 @@ public class SensorMetadata {
                 .forEach(cm -> sb.append("- ").append(cm).append("\n"));
         return "components:\n"
                 + sb
-                + "documentation: " + documentation;
+                + (documentation != null ? "documentation: " + documentation : "");
     }
 
     /**
