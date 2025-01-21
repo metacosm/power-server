@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.laprun.sustainability</groupId>
     <artifactId>power-server-parent</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5-SNAPSHOT</version>
   </parent>
   <artifactId>power-server</artifactId>
   <name>power-server : server</name>

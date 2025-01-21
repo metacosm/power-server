@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.laprun.sustainability</groupId>
     <artifactId>power-server-parent</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>power-server : parent</name>
@@ -33,7 +33,7 @@
         <connection>scm:git:git://github.com/metacosm/power-server.git</connection>
         <developerConnection>scm:git:git@github.com/metacosm/power-server.git</developerConnection>
         <url>https://github.com/metacosm/power-server/tree/main</url>
-      <tag>0.1.4</tag>
+      <tag>HEAD</tag>
   </scm>
 
 
