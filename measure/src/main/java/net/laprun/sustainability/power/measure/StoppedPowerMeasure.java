@@ -1,9 +1,7 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
-import java.util.Optional;
 import java.util.stream.DoubleStream;
-import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 
@@ -38,20 +36,8 @@ public class StoppedPowerMeasure extends ProcessorAware implements PowerMeasure 
     }
 
     @Override
-    public Optional<double[]> getMeasuresFor(int component) {
-        return measure.measuresFor(component, samples);
-    }
-
-    @Override
-    public Stream<TimestampedValue> streamTimestampedMeasuresFor(int component, int upToIndex) {
-        upToIndex = ensureIndex(upToIndex);
-        return measure.streamTimestampedMeasuresFor(component, upToIndex);
-    }
-
-    @Override
-    public DoubleStream streamMeasuresFor(int component, int upToIndex) {
-        upToIndex = ensureIndex(upToIndex);
-        return measure.streamMeasuresFor(component, upToIndex);
+    public DoubleStream getMeasuresFor(int component) {
+        return measure.getMeasuresFor(component).limit(samples);
     }
 
     @Override

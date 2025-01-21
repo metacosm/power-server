@@ -52,8 +52,8 @@ public class OngoingPowerMeasureTest {
         components[2] = m3c3;
         measure.recordMeasure(components);
 
-        assertThat(measure.getMeasuresFor(0)).hasValue(new double[] { m1c1, m2c1, m3c1 });
-        assertThat(measure.getMeasuresFor(1)).hasValue(new double[] { m1c2, m2c2, m3c2 });
+        assertThat(measure.getMeasuresFor(0)).contains(m1c1, m2c1, m3c1);
+        assertThat(measure.getMeasuresFor(1)).contains(m1c2, m2c2, m3c2);
         assertThat(measure.getMeasuresFor(2)).isEmpty();
 
         var measures = measure.getNthTimestampedMeasures(0);
