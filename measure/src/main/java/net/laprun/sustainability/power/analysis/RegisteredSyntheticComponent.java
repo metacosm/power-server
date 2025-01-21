@@ -24,4 +24,8 @@ public class RegisteredSyntheticComponent implements SyntheticComponent {
     public int computedIndex() {
         return computedIndex;
     }
+
+    public SyntheticComponent syntheticComponent() {
+        return syntheticComponent;
+    }
 }

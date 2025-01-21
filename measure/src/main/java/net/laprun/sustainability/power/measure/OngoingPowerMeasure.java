@@ -4,13 +4,11 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.analysis.Processors;
+import net.laprun.sustainability.power.analysis.Recorder;
 import net.laprun.sustainability.power.analysis.RegisteredSyntheticComponent;
 import net.laprun.sustainability.power.analysis.SyntheticComponent;
 
@@ -102,40 +100,24 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
     }
 
     @Override
-    public Optional<double[]> getMeasuresFor(int component) {
-        return measuresFor(component, samples);
-    }
-
-    Optional<double[]> measuresFor(int component, int upToIndex) {
+    public DoubleStream getMeasuresFor(int component) {
         if (nonZeroComponents.get(component)) {
-            final var dest = new double[upToIndex];
-            System.arraycopy(measures[component], 0, dest, 0, upToIndex);
-            return Optional.of(dest);
+            return Arrays.stream(measures[component], 0, samples);
         } else {
-            return Optional.empty();
+            final var match = syntheticComponents.stream()
+                    .filter(rsc -> targetComponentExistsAndIsRecorder(component, rsc))
+                    .map(rsc -> (Recorder) rsc.syntheticComponent())
+                    .findFirst()
+                    .orElse(null);
+            if (match != null) {
+                return match.measures();
+            }
         }
+        return DoubleStream.empty();
     }
 
-    @Override
-    public Stream<TimestampedValue> streamTimestampedMeasuresFor(int component, int upToIndex) {
-        final var componentMeasures = measures[component];
-        return indicesFor(component, upToIndex)
-                .mapToObj(index -> new TimestampedValue(timestamps[index], componentMeasures[index]));
-    }
-
-    @Override
-    public DoubleStream streamMeasuresFor(int component, int upToIndex) {
-        final var componentMeasures = measures[component];
-        return indicesFor(component, upToIndex).mapToDouble(index -> componentMeasures[index]);
-    }
-
-    IntStream indicesFor(int component, int upToIndex) {
-        upToIndex = Math.min(upToIndex, samples - 1);
-        if (upToIndex >= 0 && nonZeroComponents.get(component)) {
-            return IntStream.range(0, upToIndex);
-        } else {
-            return IntStream.empty();
-        }
+    private static boolean targetComponentExistsAndIsRecorder(int component, RegisteredSyntheticComponent rsc) {
+        return component == rsc.computedIndex() && rsc.syntheticComponent() instanceof Recorder;
     }
 
     @Override
