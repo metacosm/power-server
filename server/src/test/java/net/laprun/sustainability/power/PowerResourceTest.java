@@ -3,6 +3,7 @@ package net.laprun.sustainability.power;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.Duration;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,16 @@ public class PowerResourceTest {
                 .when().get("/power/" + pid)
                 .then()
                 .statusCode(200);
+    }
+
+    @Test
+    public void samplingPeriod() {
+        final Duration duration = given()
+                .when().get("/power/sampling")
+                .then()
+                .statusCode(200)
+                .extract().body().as(Duration.class);
+        assertEquals(Duration.parse(PowerMeasurer.DEFAULT_SAMPLING_PERIOD), duration);
     }
 
     protected long getPid() {

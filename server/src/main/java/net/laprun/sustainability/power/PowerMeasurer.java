@@ -5,6 +5,8 @@ import java.time.Duration;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import net.laprun.sustainability.power.sensors.Measures;
@@ -13,9 +15,12 @@ import net.laprun.sustainability.power.sensors.PowerSensor;
 @ApplicationScoped
 public class PowerMeasurer {
 
-    public static final int SAMPLING_FREQUENCY_IN_MILLIS = 500;
+    public static final String DEFAULT_SAMPLING_PERIOD = "PT0.5S";
     @Inject
     PowerSensor sensor;
+
+    @ConfigProperty(name = "net.laprun.sustainability.power.sampling-period", defaultValue = DEFAULT_SAMPLING_PERIOD)
+    Duration samplingPeriod;
 
     private Multi<Measures> periodicSensorCheck;
 
@@ -24,9 +29,9 @@ public class PowerMeasurer {
         final var parsedPID = validPIDOrFail(pid);
 
         if (!sensor.isStarted()) {
-            sensor.start(SAMPLING_FREQUENCY_IN_MILLIS);
+            sensor.start(samplingPeriod.toMillis());
             periodicSensorCheck = Multi.createFrom().ticks()
-                    .every(Duration.ofMillis(SAMPLING_FREQUENCY_IN_MILLIS))
+                    .every(samplingPeriod)
                     .map(sensor::update)
                     .broadcast()
                     .withCancellationAfterLastSubscriberDeparture()
@@ -49,5 +54,9 @@ public class PowerMeasurer {
 
     public SensorMetadata metadata() {
         return sensor.metadata();
+    }
+
+    public Duration getSamplingPeriod() {
+        return samplingPeriod;
     }
 }
