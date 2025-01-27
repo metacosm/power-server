@@ -1,5 +1,7 @@
 package net.laprun.sustainability.power;
 
+import java.time.Duration;
+
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -28,5 +30,11 @@ public class PowerResource {
     @Path("metadata")
     public SensorMetadata metadata() {
         return measurer.metadata();
+    }
+
+    @GET
+    @Path("sampling")
+    public Duration samplingPeriod() {
+        return measurer.getSamplingPeriod();
     }
 }
