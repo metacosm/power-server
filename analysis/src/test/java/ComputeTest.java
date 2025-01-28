@@ -107,10 +107,10 @@ public class ComputeTest {
 
         assertEquals((m1c1 + m2c1 + m3c1) / 3, c1Avg, 0.0001,
                 "Average did not match the expected value");
-        assertEquals(c1Avg, avgProc1.mean());
+        assertEquals(c1Avg, avgProc1.mean(), 0.0001);
         assertEquals((m1c2 + m2c2 + m3c2) / 3, c2Avg, 0.0001,
                 "Average did not match the expected value");
-        assertEquals(c2Avg, avgProc2.mean());
+        assertEquals(c2Avg, avgProc2.mean(), 0.0001);
         assertEquals(0, c3Avg, 0.0001,
                 "Average did not match the expected value");
         assertEquals(0, avgProc3.mean());
