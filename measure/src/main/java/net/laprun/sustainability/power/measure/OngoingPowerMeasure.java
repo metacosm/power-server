@@ -58,14 +58,18 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
 
     public void recordMeasure(double[] components) {
         samples++;
+        ensureArraysSize();
+
         final var timestamp = System.currentTimeMillis();
+        timestamps[samples - 1] = timestamp;
+
         for (int component = 0; component < components.length; component++) {
             final var componentValue = components[component];
             // record that the value is not zero
             if (componentValue != 0) {
                 nonZeroComponents.set(component);
             }
-            recordComponentValue(component, componentValue, timestamp);
+            measures[component][samples - 1] = componentValue;
         }
 
         final var processors = processors();
@@ -78,8 +82,8 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
         }
     }
 
-    private void recordComponentValue(int component, double value, long timestamp) {
-        final var currentSize = measures[component].length;
+    private void ensureArraysSize() {
+        final int currentSize = timestamps.length;
         if (currentSize <= samples) {
             final var newSize = currentSize * 2;
             for (int index = 0; index < measures.length; index++) {
@@ -91,8 +95,6 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
             System.arraycopy(timestamps, 0, newTimestamps, 0, currentSize);
             timestamps = newTimestamps;
         }
-        timestamps[samples - 1] = timestamp;
-        measures[component][samples - 1] = value;
     }
 
     public Duration duration() {
