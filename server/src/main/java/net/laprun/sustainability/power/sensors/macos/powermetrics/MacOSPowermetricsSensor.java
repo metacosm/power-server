@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Pattern;
 
-import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
@@ -89,7 +88,6 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             final var metadata = new SensorMetadata(components,
                     "macOS powermetrics derived information, see https://firefox-source-docs.mozilla.org/performance/powermetrics.html");
             cpu.setMetadata(metadata);
-            Log.info("Detected metadata:\n" + metadata);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
