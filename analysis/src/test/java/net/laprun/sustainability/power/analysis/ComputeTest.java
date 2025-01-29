@@ -1,3 +1,5 @@
+package net.laprun.sustainability.power.analysis;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Random;
@@ -7,8 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
-import net.laprun.sustainability.power.analysis.Compute;
-import net.laprun.sustainability.power.analysis.MeanComponentProcessor;
 import net.laprun.sustainability.power.measure.OngoingPowerMeasure;
 
 public class ComputeTest {
