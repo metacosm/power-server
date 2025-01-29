@@ -133,6 +133,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
 
     @Override
     public Measures update(Long tick) {
+        final long start = System.currentTimeMillis();
         final var measure = new double[raplFiles.length];
         for (int i = 0; i < raplFiles.length; i++) {
             final var value = raplFiles[i].extractEnergyInMicroJoules();
@@ -140,7 +141,8 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
             measure[i] = newComponentValue;
             lastMeasuredSensorValues[i] = newComponentValue;
         }
-        measures.singleMeasure(new SensorMeasure(measure, tick));
+        final long timestamp = System.currentTimeMillis();
+        measures.singleMeasure(new SensorMeasure(measure, tick, timestamp, timestamp - start));
         return measures;
     }
 }

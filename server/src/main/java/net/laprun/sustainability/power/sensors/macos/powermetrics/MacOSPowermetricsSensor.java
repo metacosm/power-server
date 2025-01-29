@@ -118,6 +118,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
     }
 
     Measures extractPowerMeasure(InputStream powerMeasureInput, Long tick) {
+        final long start = System.currentTimeMillis();
         try {
             // Should not be closed since it closes the process
             BufferedReader input = new BufferedReader(new InputStreamReader(powerMeasureInput));
@@ -196,7 +197,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                     }
                 });
 
-                measures.record(pid, new SensorMeasure(measure, tick));
+                final long timestamp = System.currentTimeMillis();
+                measures.record(pid, new SensorMeasure(measure, tick, timestamp, timestamp - start));
             });
         } catch (Exception exception) {
             throw new RuntimeException(exception);
