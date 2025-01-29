@@ -139,4 +139,8 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
         }
         return new TimestampedMeasures(timestamps[n], result);
     }
+
+    public Cursor.PartialCursor getCursorOver(long timestamp, Duration duration) {
+        return Cursor.cursorOver(timestamps, timestamp, duration, startedAt, samplePeriod);
+    }
 }
