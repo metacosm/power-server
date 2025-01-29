@@ -21,8 +21,13 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
     private final List<RegisteredSyntheticComponent> syntheticComponents;
     private int samples;
     private long[] timestamps;
+    private long samplePeriod;
 
     public OngoingPowerMeasure(SensorMetadata metadata, SyntheticComponent... syntheticComponents) {
+        this(metadata, -1, syntheticComponents);
+    }
+
+    public OngoingPowerMeasure(SensorMetadata metadata, long samplePeriod, SyntheticComponent... syntheticComponents) {
         super(Processors.empty);
 
         startedAt = System.currentTimeMillis();
@@ -30,6 +35,7 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
         measures = new double[numComponents][DEFAULT_SIZE];
         nonZeroComponents = new BitSet(numComponents);
         timestamps = new long[DEFAULT_SIZE];
+        this.samplePeriod = samplePeriod;
 
         if (syntheticComponents != null) {
             final var builder = SensorMetadata.from(metadata);
@@ -47,7 +53,7 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
     }
 
     @Override
-    public int numberOfSamples() {
+    public synchronized int numberOfSamples() {
         return samples;
     }
 
@@ -57,19 +63,20 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
     }
 
     public void recordMeasure(double[] components) {
-        samples++;
         ensureArraysSize();
 
         final var timestamp = System.currentTimeMillis();
-        timestamps[samples - 1] = timestamp;
 
-        for (int component = 0; component < components.length; component++) {
-            final var componentValue = components[component];
-            // record that the value is not zero
-            if (componentValue != 0) {
-                nonZeroComponents.set(component);
+        synchronized (this) {
+            timestamps[samples - 1] = timestamp;
+            for (int component = 0; component < components.length; component++) {
+                final var componentValue = components[component];
+                // record that the value is not zero
+                if (componentValue != 0) {
+                    nonZeroComponents.set(component);
+                }
+                measures[component][samples - 1] = componentValue;
             }
-            measures[component][samples - 1] = componentValue;
         }
 
         final var processors = processors();
@@ -82,7 +89,8 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
         }
     }
 
-    private void ensureArraysSize() {
+    private synchronized void ensureArraysSize() {
+        samples++;
         final int currentSize = timestamps.length;
         if (currentSize <= samples) {
             final var newSize = currentSize * 2;
@@ -123,7 +131,7 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
     }
 
     @Override
-    public TimestampedMeasures getNthTimestampedMeasures(int n) {
+    public synchronized TimestampedMeasures getNthTimestampedMeasures(int n) {
         n = Math.min(n, samples - 1);
         final var result = new double[measures.length];
         for (int i = 0; i < measures.length; i++) {
