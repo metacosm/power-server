@@ -5,7 +5,7 @@ import java.time.Duration;
 public enum Cursors {
     ;
 
-    public static PartialCursor cursorOver(long[] timestamps, long timestamp, Duration duration, long initialOffset,
+    public static Cursor cursorOver(long[] timestamps, long timestamp, Duration duration, long initialOffset,
             long averagePeriodHint) {
         // adjusted timestamp for modding
         final var timestampForDiv = timestamp - initialOffset;
@@ -13,7 +13,7 @@ public enum Cursors {
 
         // cannot find an interval for a timestamp that is before the recording started
         if (timestampForDiv < 0) {
-            return PartialCursor.empty;
+            return Cursor.empty;
         }
 
         if (timestamps.length < 2) {
@@ -22,7 +22,7 @@ public enum Cursors {
             if (averagePeriodHint > 0) {
                 ratio = (double) durationAsMs / averagePeriodHint;
             }
-            return new PartialCursor(0, 0, ratio, ratio);
+            return new Cursor(0, 0, ratio, ratio);
         }
 
         // estimate sample period based on 2 samples interval
@@ -38,7 +38,7 @@ public enum Cursors {
             final long previousTimestamp = startIndex == 0 ? initialOffset : timestamps[startIndex - 1];
             final long slotDuration = timestamps[startIndex] - previousTimestamp;
             var ratio = (double) durationAsMs / slotDuration;
-            return new PartialCursor(startIndex, endIndex, ratio, -1);
+            return new Cursor(startIndex, endIndex, ratio, -1);
         }
 
         // get the index with the timestamp right after the one we're looking for since what we're interested in is the portion of the measure that gets recorded after the timestamp we want
@@ -58,6 +58,6 @@ public enum Cursors {
             endRatio = (double) endOffset / slotDuration;
         }
 
-        return new PartialCursor(startIndex, endIndex, startRatio, endRatio);
+        return new Cursor(startIndex, endIndex, startRatio, endRatio);
     }
 }

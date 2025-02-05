@@ -1,8 +1,8 @@
 package net.laprun.sustainability.power.measure;
 
-public record PartialCursor(int startIndex, int endIndex, double firstMeasureRatio, double lastMeasureRatio) {
+public record Cursor(int startIndex, int endIndex, double firstMeasureRatio, double lastMeasureRatio) {
 
-    public static final PartialCursor empty = new PartialCursor(-1, -1, 0.0, 0.0);
+    public static final Cursor empty = new Cursor(-1, -1, 0.0, 0.0);
 
     public double sum(double[] values) {
         if (values == null || values.length == 0 || this == empty || values.length <= endIndex) {
