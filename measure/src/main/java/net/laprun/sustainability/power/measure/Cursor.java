@@ -1,7 +1,6 @@
 package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
-import java.util.Arrays;
 
 public enum Cursor {
     ;
@@ -9,11 +8,8 @@ public enum Cursor {
     public static PartialCursor cursorOver(long[] timestamps, long timestamp, Duration duration, long initialOffset,
             long averagePeriodHint) {
         // adjusted timestamp for modding
-        System.out.println(Arrays.toString(timestamps));
-        System.out.println("timestamp = " + timestamp);
         final var timestampForDiv = timestamp - initialOffset;
         final var durationAsMs = duration.toMillis();
-        System.out.println("durationAsMs = " + durationAsMs);
 
         // cannot find an interval for a timestamp that is before the recording started
         if (timestampForDiv < 0) {
@@ -36,9 +32,7 @@ public enum Cursor {
 
         // first, find potential first sample based on timestamp
         int startIndex = (int) Math.floorDiv(timestampForDiv, averagePeriodHint);
-        System.out.println("startIndex = " + startIndex);
         int endIndex = (int) Math.floorDiv(timestampForDiv + durationAsMs, averagePeriodHint);
-        System.out.println("endIndex = " + endIndex);
 
         if (startIndex == endIndex) {
             final long previousTimestamp = startIndex == 0 ? initialOffset : timestamps[startIndex - 1];
