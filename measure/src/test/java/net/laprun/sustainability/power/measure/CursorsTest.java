@@ -8,14 +8,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class CursorTest {
+class CursorsTest {
 
     @ParameterizedTest
     @ValueSource(longs = { -1, 0, 100, 98, 105 })
     void cursorOverSimple(long periodHint) {
         final var timestamps = new long[] { 100, 200, 300, 400, 500, 600, 700, 800, 900 };
 
-        final var cursor = Cursor.cursorOver(timestamps, 225, Duration.ofMillis(540 - 225), 0,
+        final var cursor = Cursors.cursorOver(timestamps, 225, Duration.ofMillis(540 - 225), 0,
                 periodHint);
 
         assertEquals(2, cursor.startIndex());
@@ -37,7 +37,7 @@ class CursorTest {
     void cursorOverOneMeasure() {
         final var timestamps = new long[] { 100, 200, 300, 400, 500, 600, 700, 800, 900 };
 
-        final var cursor = Cursor.cursorOver(timestamps, 1, Duration.ofMillis(10), 0,
+        final var cursor = Cursors.cursorOver(timestamps, 1, Duration.ofMillis(10), 0,
                 100);
 
         assertEquals(0, cursor.startIndex());

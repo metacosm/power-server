@@ -2,7 +2,7 @@ package net.laprun.sustainability.power.measure;
 
 import java.time.Duration;
 
-public enum Cursor {
+public enum Cursors {
     ;
 
     public static PartialCursor cursorOver(long[] timestamps, long timestamp, Duration duration, long initialOffset,
