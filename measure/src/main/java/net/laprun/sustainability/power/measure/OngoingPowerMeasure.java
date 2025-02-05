@@ -15,13 +15,13 @@ import net.laprun.sustainability.power.analysis.SyntheticComponent;
 public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure {
     private static final int DEFAULT_SIZE = 32;
     private final SensorMetadata metadata;
-    private final long startedAt;
     private final BitSet nonZeroComponents;
-    private final double[][] measures;
     private final List<RegisteredSyntheticComponent> syntheticComponents;
+    private final long samplePeriod;
+    private double[][] measures;
+    private long startedAt;
     private int samples;
     private long[] timestamps;
-    private long samplePeriod;
 
     public OngoingPowerMeasure(SensorMetadata metadata, SyntheticComponent... syntheticComponents) {
         this(metadata, -1, syntheticComponents);
@@ -30,11 +30,9 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
     public OngoingPowerMeasure(SensorMetadata metadata, long samplePeriod, SyntheticComponent... syntheticComponents) {
         super(Processors.empty);
 
-        startedAt = System.currentTimeMillis();
-        final var numComponents = metadata.componentCardinality();
-        measures = new double[numComponents][DEFAULT_SIZE];
-        nonZeroComponents = new BitSet(numComponents);
-        timestamps = new long[DEFAULT_SIZE];
+        final int componentCardinality = metadata.componentCardinality();
+        nonZeroComponents = new BitSet(componentCardinality);
+        reset(componentCardinality);
         this.samplePeriod = samplePeriod;
 
         if (syntheticComponents != null) {
@@ -50,6 +48,18 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
             this.syntheticComponents = List.of();
             this.metadata = metadata;
         }
+    }
+
+    public void reset() {
+        reset(metadata.componentCardinality());
+    }
+
+    private synchronized void reset(int componentCardinality) {
+        startedAt = System.currentTimeMillis();
+        nonZeroComponents.clear();
+        measures = new double[componentCardinality][DEFAULT_SIZE];
+        timestamps = new long[DEFAULT_SIZE];
+        samples = 0;
     }
 
     @Override
