@@ -121,8 +121,16 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
 
     @Override
     public DoubleStream getMeasuresFor(int component) {
+        final double[] measuresForComponent = getLiveMeasuresFor(component);
+        if (measuresForComponent == null || measuresForComponent.length == 0) {
+            return DoubleStream.empty();
+        }
+        return Arrays.stream(measuresForComponent, 0, samples);
+    }
+
+    public double[] getLiveMeasuresFor(int component) {
         if (nonZeroComponents.get(component)) {
-            return Arrays.stream(measures[component], 0, samples);
+            return measures[component];
         } else {
             final var match = syntheticComponents.stream()
                     .filter(rsc -> targetComponentExistsAndIsRecorder(component, rsc))
@@ -130,10 +138,10 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
                     .findFirst()
                     .orElse(null);
             if (match != null) {
-                return match.measures();
+                return match.liveMeasures();
             }
         }
-        return DoubleStream.empty();
+        return new double[0];
     }
 
     private static boolean targetComponentExistsAndIsRecorder(int component, RegisteredSyntheticComponent rsc) {
