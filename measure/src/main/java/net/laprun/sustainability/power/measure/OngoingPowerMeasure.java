@@ -163,4 +163,8 @@ public class OngoingPowerMeasure extends ProcessorAware implements PowerMeasure 
         System.arraycopy(timestamps, 0, result, 0, timestamps.length);
         return new Timing(result, startedAt, samplePeriod);
     }
+
+    public List<RegisteredSyntheticComponent> syntheticComponents() {
+        return syntheticComponents;
+    }
 }
