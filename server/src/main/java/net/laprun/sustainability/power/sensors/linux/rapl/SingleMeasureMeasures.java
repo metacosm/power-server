@@ -33,7 +33,7 @@ class SingleMeasureMeasures implements Measures {
     }
 
     @Override
-    public int numberOfTrackerPIDs() {
+    public int numberOfTrackedPIDs() {
         return trackedPIDs.size();
     }
 
