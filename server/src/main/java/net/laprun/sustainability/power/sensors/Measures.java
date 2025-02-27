@@ -39,7 +39,7 @@ public interface Measures {
      *
      * @return the number of tracked processes
      */
-    int numberOfTrackerPIDs();
+    int numberOfTrackedPIDs();
 
     /**
      * Records the specified measure and associates it to the specified tracked process, normally called once per tick
