@@ -9,6 +9,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import net.laprun.sustainability.power.persistence.Persistence;
 import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
 
@@ -43,6 +44,7 @@ public class PowerMeasurer {
         //  currently return -1 instead of null but this needs to be properly addressed
         return periodicSensorCheck
                 .map(measures -> measures.getOrDefault(registeredPID))
+                .onItem().invoke(sm -> Persistence.save(sm, parsedPID))
                 .onCancellation().invoke(() -> sensor.unregister(registeredPID));
     }
 
