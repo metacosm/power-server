@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.laprun.sustainability</groupId>
@@ -8,8 +8,7 @@
 
     <name>power-server : parent</name>
     <description>An application allowing to retrieve power consumption and associated metadata on a per-process basis,
-        via a RESTful endpoint
-    </description>
+        via a RESTful endpoint</description>
     <url>https://github.com/metacosm/power-server</url>
 
     <licenses>
@@ -184,6 +183,14 @@
                             <disable>true</disable>
                         </consoleOutputReporter>
                         <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
+                            <printStacktraceOnError>true</printStacktraceOnError>
+                            <printStacktraceOnFailure>true</printStacktraceOnFailure>
+                            <printStdoutOnError>true</printStdoutOnError>
+                            <printStdoutOnFailure>true</printStdoutOnFailure>
+                            <printStdoutOnSuccess>false</printStdoutOnSuccess>
+                            <printStderrOnError>true</printStderrOnError>
+                            <printStderrOnFailure>true</printStderrOnFailure>
+                            <printStderrOnSuccess>false</printStderrOnSuccess>
                             <theme>UNICODE</theme>
                             <printStacktraceOnError>true</printStacktraceOnError>
                             <printStacktraceOnFailure>true</printStacktraceOnFailure>
@@ -212,10 +219,8 @@
                             </goals>
                             <configuration>
                                 <systemPropertyVariables>
-                                    <native.image.path>${project.build.directory}/${project.build.finalName}-runner
-                                    </native.image.path>
-                                    <java.util.logging.manager>org.jboss.logmanager.LogManager
-                                    </java.util.logging.manager>
+                                    <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+                                    <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                     <maven.home>${maven.home}</maven.home>
                                 </systemPropertyVariables>
                             </configuration>
@@ -326,12 +331,8 @@
                                         </sdkman>
                                         <artifacts>
                                             <artifact>
-                                                <path>
-                                                    {{artifactsDir}}/{{distributionName}}-{{projectVersion}}-linux-x86_64.tar.gz
-                                                </path>
-                                                <transform>
-                                                    artifacts/{{distributionName}}-{{projectEffectiveVersion}}-linux-x86_64.tar.gz
-                                                </transform>
+                                                <path>{{artifactsDir}}/{{distributionName}}-{{projectVersion}}-linux-x86_64.tar.gz</path>
+                                                <transform>artifacts/{{distributionName}}-{{projectEffectiveVersion}}-linux-x86_64.tar.gz</transform>
                                                 <platform>linux-x86_64</platform>
                                             </artifact>
                                             <!--<artifact>
@@ -344,21 +345,13 @@
                                                 <platform>windows-x86_64</platform>
                                             </artifact>-->
                                             <artifact>
-                                                <path>
-                                                    {{artifactsDir}}/{{distributionName}}-{{projectVersion}}-osx-x86_64.tar.gz
-                                                </path>
-                                                <transform>
-                                                    artifacts/{{distributionName}}-{{projectEffectiveVersion}}-osx-x86_64.tar.gz
-                                                </transform>
+                                                <path>{{artifactsDir}}/{{distributionName}}-{{projectVersion}}-osx-x86_64.tar.gz</path>
+                                                <transform>artifacts/{{distributionName}}-{{projectEffectiveVersion}}-osx-x86_64.tar.gz</transform>
                                                 <platform>osx-x86_64</platform>
                                             </artifact>
                                             <artifact>
-                                                <path>
-                                                    {{artifactsDir}}/{{distributionName}}-{{projectVersion}}-osx-aarch_64.tar.gz
-                                                </path>
-                                                <transform>
-                                                    artifacts/{{distributionName}}-{{projectEffectiveVersion}}-osx-aarch_64.tar.gz
-                                                </transform>
+                                                <path>{{artifactsDir}}/{{distributionName}}-{{projectVersion}}-osx-aarch_64.tar.gz</path>
+                                                <transform>artifacts/{{distributionName}}-{{projectEffectiveVersion}}-osx-aarch_64.tar.gz</transform>
                                                 <platform>osx-aarch_64</platform>
                                             </artifact>
                                         </artifacts>
@@ -396,12 +389,8 @@
                             <archive>
                                 <index>true</index>
                                 <manifest>
-                                    <addDefaultSpecificationEntries>
-                                        true
-                                    </addDefaultSpecificationEntries>
-                                    <addDefaultImplementationEntries>
-                                        true
-                                    </addDefaultImplementationEntries>
+                                    <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                 </manifest>
                                 <manifestEntries>
                                     <Implementation-URL>${project.url}</Implementation-URL>
@@ -438,12 +427,8 @@
                             <archive>
                                 <index>true</index>
                                 <manifest>
-                                    <addDefaultSpecificationEntries>
-                                        true
-                                    </addDefaultSpecificationEntries>
-                                    <addDefaultImplementationEntries>
-                                        true
-                                    </addDefaultImplementationEntries>
+                                    <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                 </manifest>
                                 <manifestEntries>
                                     <Implementation-URL>${project.url}</Implementation-URL>
