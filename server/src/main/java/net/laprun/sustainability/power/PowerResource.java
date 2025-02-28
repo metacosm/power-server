@@ -1,6 +1,7 @@
 package net.laprun.sustainability.power;
 
 import java.time.Duration;
+import java.util.List;
 
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -12,6 +13,7 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Multi;
+import net.laprun.sustainability.power.persistence.Measure;
 
 @Path("/power")
 public class PowerResource {
@@ -44,5 +46,11 @@ public class PowerResource {
     @Path("sampling")
     public Duration samplingPeriod() {
         return measurer.getSamplingPeriod();
+    }
+
+    @GET
+    @Path("data/{pid}")
+    public List<Measure> measures(@PathParam("pid") String pid) throws Exception {
+        return Measure.forPID(Long.parseLong(pid));
     }
 }
