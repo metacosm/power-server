@@ -36,7 +36,8 @@ Linux implementation where the measures are actually energy counters for the who
 charge of computing the process attribution.
 
 Only Linux/amd64 and macOS (amd64/apple silicon) are supported at the moment. Of note, this tool needs to be run
-via `sudo` because power consumption information is considered as security sensitive (as it can
+privileged code either via running it with `sudo` (preferred) or giving it access to the read the resources it needs
+because power consumption information is considered as security sensitive (as it can
 enable [side-channel attacks](https://en.wikipedia.org/wiki/Side-channel_attack)) See below for platform-specific
 information.
 
@@ -45,8 +46,16 @@ information.
 Power monitoring is performed using the
 bundled
 `[powermetrics](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/power_efficiency_guidelines_osx/PrioritizeWorkAtTheTaskLevel.html#//apple_ref/doc/uid/TP40013929-CH35-SW10)`
-tool, which is run with specific parameters and which
-output is then parsed into a usable representation.
+tool, which is run with specific parameters and which output is then parsed into a usable representation.
+There are several options to give access to the tool:
+
+- Add the user running the server to the list of `sudoers` with no-password access to `/usr/bin/powermetrics`
+- Run with `sudo` (though this is impractical during development)
+- Provide a secret to be able to run the `powermetrics` process (and only this process) using `sudo`. The server will
+  look for the secret under the `power-server.sudo.secret` property key. Please look
+  at https://quarkus.io/guides/config-secrets for more details on how to do this securely with Quarkus. Note that this
+  option is only provided to facilitate development, notably dev mode, and will only work when re-building the project
+  with the appropriate dependencies.
 
 ### Linux
 
