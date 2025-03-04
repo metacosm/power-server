@@ -16,4 +16,8 @@ public class Measure extends PanacheEntity {
     public static List<Measure> forPID(long pid) {
         return find("pid", pid).list();
     }
+
+    public static List<Measure> all() {
+        return Measure.findAll().list();
+    }
 }
