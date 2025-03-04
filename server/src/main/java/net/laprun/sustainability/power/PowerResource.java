@@ -53,4 +53,10 @@ public class PowerResource {
     public List<Measure> measures(@PathParam("pid") String pid) throws Exception {
         return Measure.forPID(Long.parseLong(pid));
     }
+
+    @GET
+    @Path("pids")
+    public List<String> pids() {
+        return Measure.all().stream().map(m -> "" + m.pid).toList();
+    }
 }
