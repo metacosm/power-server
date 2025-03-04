@@ -11,7 +11,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
 
 public class SQLiteFilePersister {
     @ConfigProperty(name = "quarkus.datasource.jdbc.url")
@@ -20,9 +19,16 @@ public class SQLiteFilePersister {
     @ConfigProperty(name = "power-server.db.location")
     String fileName;
 
-    public void onStartup(@Observes StartupEvent event) {
-
-    }
+    //    public void onStartup(@Observes StartupEvent event) {
+    //        Log.info("Restoring data from " + fileName);
+    //        try (
+    //                Connection connection = DriverManager.getConnection(jdbcUrl);
+    //                Statement statement = connection.createStatement()) {
+    //            statement.executeUpdate("restore from " + fileName);
+    //        } catch (SQLException e) {
+    //            e.printStackTrace(System.err);
+    //        }
+    //    }
 
     public void onShutdown(@Observes ShutdownEvent event) {
         Log.info("Saving data to " + fileName);
