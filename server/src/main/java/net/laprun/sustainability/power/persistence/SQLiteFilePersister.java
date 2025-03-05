@@ -45,8 +45,8 @@ public class SQLiteFilePersister {
         access = entityManager.unwrap(SessionImpl.class).getJdbcConnectionAccess();
     }
 
-    // Execute a backup every 10 seconds
-    @Scheduled(delay = 10, delayUnit = TimeUnit.SECONDS, every = "10s")
+    // Periodical backup
+    @Scheduled(delay = 5, delayUnit = TimeUnit.MINUTES, every = "${power-server.db.backup.period}")
     void scheduled() {
         backup();
     }
