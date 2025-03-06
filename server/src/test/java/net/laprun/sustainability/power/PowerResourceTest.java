@@ -104,4 +104,13 @@ public class PowerResourceTest {
         assertTrue(metadata.documentation().contains("RAPL"));
     }
 
+    @Test
+    public void testDBBackedEndpoint() {
+        final var pid = getPid();
+        given()
+                .when().post("/power/start/powerresourcetest/" + pid)
+                .then()
+                .statusCode(204);
+    }
+
 }
