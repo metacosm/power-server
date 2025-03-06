@@ -8,14 +8,12 @@ import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.agroal.api.AgroalDataSource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.internal.SessionImpl;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.ShutdownEvent;
@@ -29,7 +27,7 @@ public class SQLiteFilePersister {
     private static final Logger LOGGER = Logger.getLogger(SQLiteFilePersister.class.getName());
 
     @Inject
-    EntityManager entityManager;
+    AgroalDataSource dataSource;
 
     private final AtomicBoolean executing = new AtomicBoolean(false);
 
@@ -57,10 +55,7 @@ public class SQLiteFilePersister {
                 var backupDbFilePath = originalDbFilePath.toAbsolutePath().getParent()
                         .resolve(originalDbFilePath.getFileName() + "_backup");
 
-                JdbcConnectionAccess access = entityManager
-                        .unwrap(SessionImpl.class)
-                        .getJdbcConnectionAccess();
-                try (var conn = access.obtainConnection();
+                try (var conn = dataSource.getConnection();
                         var stmt = conn.createStatement()) {
                     // Execute the backup
                     stmt.executeUpdate("backup to " + backupDbFilePath);
