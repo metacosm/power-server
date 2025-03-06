@@ -12,6 +12,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import net.laprun.sustainability.power.persistence.Persistence;
 import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
+import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 @ApplicationScoped
 public class PowerMeasurer {
@@ -25,7 +26,16 @@ public class PowerMeasurer {
 
     private Multi<Measures> periodicSensorCheck;
 
-    public Multi<SensorMeasure> startTracking(String pid) throws Exception {
+    public Multi<SensorMeasure> stream(String pid) throws Exception {
+        final var registeredPID = track(pid);
+        return periodicSensorCheck.map(measures -> measures.getOrDefault(registeredPID));
+    }
+
+    public void startTrackingApp(String appName, String pid) throws Exception {
+        stream(pid).subscribe().with(m -> Persistence.save(m, appName));
+    }
+
+    private RegisteredPID track(String pid) throws Exception {
         // first make sure that the process with that pid exists
         final var parsedPID = validPIDOrFail(pid);
 
@@ -42,10 +52,8 @@ public class PowerMeasurer {
         final var registeredPID = sensor.register(parsedPID);
         // todo: the timing of things could make it so that the pid has been removed before the map operation occurs so
         //  currently return -1 instead of null but this needs to be properly addressed
-        return periodicSensorCheck
-                .map(measures -> measures.getOrDefault(registeredPID))
-                .onItem().invoke(sm -> Persistence.save(sm, parsedPID))
-                .onCancellation().invoke(() -> sensor.unregister(registeredPID));
+        periodicSensorCheck = periodicSensorCheck.onCancellation().invoke(() -> sensor.unregister(registeredPID));
+        return registeredPID;
     }
 
     protected long validPIDOrFail(String pid) {
