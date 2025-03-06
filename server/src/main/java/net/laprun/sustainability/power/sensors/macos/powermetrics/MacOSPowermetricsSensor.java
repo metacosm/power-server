@@ -197,8 +197,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                     }
                 });
 
-                final long timestamp = System.currentTimeMillis();
-                measures.record(pid, new SensorMeasure(measure, tick, timestamp, timestamp - start));
+                measures.record(pid, new SensorMeasure(measure, start, System.currentTimeMillis()));
             });
         } catch (Exception exception) {
             throw new RuntimeException(exception);
