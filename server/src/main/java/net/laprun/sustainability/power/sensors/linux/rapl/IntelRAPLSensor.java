@@ -141,8 +141,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
             measure[i] = newComponentValue;
             lastMeasuredSensorValues[i] = newComponentValue;
         }
-        final long timestamp = System.currentTimeMillis();
-        measures.singleMeasure(new SensorMeasure(measure, tick, timestamp, timestamp - start));
+        measures.singleMeasure(new SensorMeasure(measure, start, System.currentTimeMillis()));
         return measures;
     }
 }

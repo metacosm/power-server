@@ -8,12 +8,12 @@ public enum Persistence {
     ;
 
     @Transactional
-    public static Measure save(SensorMeasure measure, long parsedPID) {
+    public static Measure save(SensorMeasure measure, String appName) {
         final var persisted = new Measure();
         persisted.components = measure.components();
-        persisted.pid = parsedPID;
-        persisted.startTime = measure.timestamp();
-        persisted.endTime = measure.timestamp() + measure.duration();
+        persisted.appName = appName;
+        persisted.startTime = measure.startMs();
+        persisted.endTime = measure.endMs();
         persisted.persist();
         return persisted;
     }
