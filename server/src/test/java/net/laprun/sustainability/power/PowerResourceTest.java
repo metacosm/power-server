@@ -20,9 +20,9 @@ public class PowerResourceTest {
     public void testPowerEndpoint() {
         final var pid = getPid();
         given()
-                .when().get("/power/" + pid)
+                .when().post("/power/start/powerresourcetest/" + pid)
                 .then()
-                .statusCode(200);
+                .statusCode(204);
     }
 
     @Test
