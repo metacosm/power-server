@@ -24,12 +24,15 @@ jobs:
       already_released: ${{steps.released.outputs.already_released}}
 
     steps:
+      - uses: actions/checkout@v4
+
       - uses: radcortez/project-metadata-action@main
         name: Retrieve project metadata
         id: metadata
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           metadata-file-path: '.github/project.yml'
+          local-file: true
 
       - name: Check if already released
         id: released
@@ -37,9 +40,6 @@ jobs:
           if curl --output /dev/null --silent --head --fail "https://repo1.maven.org/maven2/net/laprun/sustainability/power-server/${{steps.metadata.outputs.current-version}}"; then
             echo "already_released=true" >> $GITHUB_OUTPUT
           fi
-
-      - uses: actions/checkout@v4
-        if: steps.released.outputs.already_released != 'true'
 
       - uses: actions/setup-java@v4
         if: steps.released.outputs.already_released != 'true'
