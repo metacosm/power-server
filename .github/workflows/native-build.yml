@@ -2,16 +2,25 @@ name: Native build test
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        required: false
+        description: Binary platform
+        type: string
+        default: "macOS-latest"
+  workflow_call:
+    inputs:
+      platform:
+        required: false
+        description: Binary platform
+        type: string
+        default: "macOS-latest"
 
 jobs:
   # Build native executable per runner
   package:
-    name: 'Build with Graal on ${{ matrix.os }}'
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ ubuntu-latest, macOS-latest, macos-13 ]
-    runs-on: ${{ matrix.os }}
+    name: 'Build with Graal on ${{ inputs.platform }}'
+    runs-on: ${{ inputs.platform }}
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v4
@@ -31,7 +40,7 @@ jobs:
 
       - name: 'Build project'
         run: mvn install -DskipTests
-        
+
       - name: 'Build Native Image'
         run: |
           pushd server
@@ -49,21 +58,3 @@ jobs:
         with:
           name: power-server-${{ runner.os }}-${{ runner.arch }}
           path: server/target/distributions/*.tar.gz
-
-  check:
-    needs: package
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Download all build artifacts'
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          pattern: power-server-*
-          merge-multiple: true
-
-      - name: 'Release with JReleaser'
-        env:
-          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ls -la artifacts
-          mvn -ntp -B --file server/pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -Djreleaser.dry.run=true -Djreleaser.select.current.platform
