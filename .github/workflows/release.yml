@@ -1,6 +1,7 @@
 name: Release
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [ closed ]
     paths:
@@ -18,7 +19,9 @@ jobs:
   maven-release:
     runs-on: ubuntu-latest
     name: Release power-server
-    if: ${{github.event.pull_request.merged == true}}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true}}
+    outputs:
+      already_released: ${{steps.released.outputs.already_released}}
 
     steps:
       - uses: radcortez/project-metadata-action@main
@@ -28,9 +31,18 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           metadata-file-path: '.github/project.yml'
 
+      - name: Check if already released
+        id: released
+        run: |
+          if curl --output /dev/null --silent --head --fail "https://repo1.maven.org/maven2/net/laprun/sustainability/power-server/${{steps.metadata.outputs.current-version}}"; then
+            echo "already_released=true" >> $GITHUB_OUTPUT
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.released.outputs.already_released != 'true'
 
       - uses: actions/setup-java@v4
+        if: steps.released.outputs.already_released != 'true'
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -42,11 +54,13 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       - name: Configure Git author
+        if: steps.released.outputs.already_released != 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
       - name: Maven release ${{steps.metadata.outputs.current-version}}
+        if: steps.released.outputs.already_released != 'true'
         run: |
           mvn -B release:prepare -Prelease -Darguments="-DskipTests" -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}}
           mvn -B release:perform -Darguments="-DperformRelease -DskipTests" -DperformRelease -Prelease
@@ -56,12 +70,14 @@ jobs:
           MAVEN_GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
 
       - name: Push changes to ${{github.base_ref}} branch
+        if: steps.released.outputs.already_released != 'true'
         run: |
           git push
           git push origin ${{steps.metadata.outputs.current-version}}
 
   # Build native executable per runner
   package:
+    if: needs.maven-release.outputs.already_released != 'true'
     needs: [ maven-release ]
     name: 'Build with Graal on ${{ matrix.os }}'
     strategy:
@@ -109,6 +125,7 @@ jobs:
 
   # Collect all executables and release
   release:
+    if: needs.maven-release.outputs.already_released != 'true'
     needs: [ maven-release, package ]
     runs-on: ubuntu-latest
     steps:
