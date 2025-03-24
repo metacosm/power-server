@@ -27,7 +27,7 @@ public class MapMeasures implements Measures {
     }
 
     @Override
-    public int numberOfTrackerPIDs() {
+    public int numberOfTrackedPIDs() {
         return measures.size();
     }
 
