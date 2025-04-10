@@ -12,18 +12,14 @@ import io.smallrye.config.SmallRyeConfig;
 
 @Singleton
 public class Security {
-    private final static boolean isRoot;
+    private static Boolean isRoot;
     public static final String SECRET_PROPERTY_KEY = "power-server.sudo.secret";
-
-    static {
-        isRoot = isRunningAsAdministrator();
-    }
 
     private final String pwd;
 
     public Security(SmallRyeConfig config) {
         pwd = config.getConfigValue(SECRET_PROPERTY_KEY).getValue();
-        if (pwd == null && !isRoot) {
+        if (pwd == null && !isRunningAsAdministrator()) {
             throw new IllegalStateException(
                     "This application requires sudo access. Either provide a sudo secret using the 'power-server.sudo.secret' property or run using sudo.");
         }
@@ -32,26 +28,29 @@ public class Security {
     // figure out if we're running as admin by trying to write a system-level preference
     // see: https://stackoverflow.com/a/23538961/5752008
     private synchronized static boolean isRunningAsAdministrator() {
-        final var preferences = Preferences.systemRoot();
+        if (isRoot == null) {
+            final var preferences = Preferences.systemRoot();
 
-        // avoid outputting errors
-        System.setErr(new PrintStream(new OutputStream() {
-            @Override
-            public void write(int b) {
+            // avoid outputting errors
+            System.setErr(new PrintStream(new OutputStream() {
+                @Override
+                public void write(int b) {
+                }
+            }));
+
+            try {
+                preferences.put("foo", "bar"); // SecurityException on Windows
+                preferences.remove("foo");
+                preferences.flush(); // BackingStoreException on Linux and macOS
+                isRoot = true;
+            } catch (Exception exception) {
+                isRoot = false;
+            } finally {
+                System.setErr(System.err);
             }
-        }));
-
-        try {
-            preferences.put("foo", "bar"); // SecurityException on Windows
-            preferences.remove("foo");
-            preferences.flush(); // BackingStoreException on Linux and macOS
-            return true;
-        } catch (Exception exception) {
-            return false;
-        } finally {
-            System.setErr(System.err);
         }
 
+        return isRoot;
     }
 
     public Process execPowermetrics(String... options) throws IOException {
@@ -70,7 +69,7 @@ public class Security {
             throw new IllegalArgumentException("No command specified to run with sudo");
         }
 
-        if (!isRoot) {
+        if (!isRunningAsAdministrator()) {
             final var args = new String[cmd.length + 2];
             args[0] = "sudo";
             args[1] = "-S";
