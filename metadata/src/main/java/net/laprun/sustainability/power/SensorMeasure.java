@@ -6,11 +6,12 @@ package net.laprun.sustainability.power;
  * with the sensor.
  *
  * @param components an array recording the power consumption reported by each component of this sensor
- * @param tick the ordinal tick associated with this measure
+ * @param startMs the start timestamp in milliseconds for this measure
+ * @param endMs the end timestamp in milliseconds for this measure
  */
-public record SensorMeasure(double[] components, long tick, long timestamp, long duration) {
+public record SensorMeasure(double[] components, long startMs, long endMs) {
     /**
      * Represents an invalid or somehow missed measure.
      */
-    public static final SensorMeasure missing = new SensorMeasure(new double[] { -1.0 }, -1, -1, -1);
+    public static final SensorMeasure missing = new SensorMeasure(new double[] { -1.0 }, -1, -1);
 }
