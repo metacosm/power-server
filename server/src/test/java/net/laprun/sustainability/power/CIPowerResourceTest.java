@@ -10,4 +10,9 @@ public class CIPowerResourceTest extends PowerResourceTest {
     protected long getPid() {
         return 29419;
     }
+
+    @Override
+    public void testLinuxMetadataEndpoint() {
+        // overridden to disable as with the profile activation, the MockPowerSensor implementation is picked up, which is a macOS-specific implementation
+    }
 }
