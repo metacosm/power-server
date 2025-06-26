@@ -3,6 +3,7 @@ package net.laprun.sustainability.power;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.Set;
 
@@ -11,18 +12,19 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
+import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 public class PowerResourceTest {
 
+    @TestHTTPResource
+    URI uri;
+
     @Test
-    public void testPowerEndpoint() {
+    public void testPowerEndpoint() throws Exception {
         final var pid = getPid();
-        given()
-                .when().get("/power/" + pid)
-                .then()
-                .statusCode(200);
+        StreamChecker.checkPowerForPID(uri, pid);
     }
 
     @Test
