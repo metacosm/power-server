@@ -65,7 +65,7 @@
         <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
         <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
-        <jreleaser.version>1.18.0</jreleaser.version>
+        <jreleaser.version>1.19.0</jreleaser.version>
     </properties>
 
     <modules>
