@@ -9,15 +9,14 @@ import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.sql.DataSource;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.persistence.EntityManager;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.internal.SessionImpl;
 
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.ShutdownEvent;
@@ -29,10 +28,9 @@ public class SQLiteFilePersister {
     @ConfigProperty(name = "quarkus.datasource.jdbc.url")
     String jdbcUrl;
     @Inject
-    EntityManager entityManager;
+    DataSource dataSource;
     private Path dbFile;
     private Path backupDBFile;
-    private JdbcConnectionAccess access;
 
     @PostConstruct
     void init() {
@@ -42,7 +40,6 @@ public class SQLiteFilePersister {
         var dbFileName = jdbcUrl.substring(prefixLength, length);
         dbFile = Paths.get(dbFileName);
         backupDBFile = dbFile.toAbsolutePath().getParent().resolve(dbFile.getFileName() + "_backup");
-        access = entityManager.unwrap(SessionImpl.class).getJdbcConnectionAccess();
     }
 
     // Periodical backup
@@ -60,7 +57,7 @@ public class SQLiteFilePersister {
         if (executing.compareAndSet(false, true)) {
             try {
                 Log.trace("Starting DB backup for file: " + dbFile);
-                try (var conn = access.obtainConnection();
+                try (var conn = dataSource.getConnection();
                         var stmt = conn.createStatement()) {
                     // Execute the backup
                     stmt.executeUpdate("backup to " + backupDBFile);
