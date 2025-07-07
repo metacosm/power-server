@@ -5,8 +5,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.sse.SseEventSource;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -24,7 +33,24 @@ public class PowerResourceTest {
     @Test
     public void testPowerEndpoint() throws Exception {
         final var pid = getPid();
-        StreamChecker.checkPowerForPID(uri, pid);
+        try (final var client = ClientBuilder.newClient();
+                final var eventSource = SseEventSource
+                        .target(client.target(uri)
+                                .path("power/stream/{pid}")
+                                .resolveTemplate("pid", pid))
+                        .build()) {
+            CompletableFuture<List<String>> res = new CompletableFuture<>();
+            List<String> collect = Collections.synchronizedList(new ArrayList<>());
+            eventSource.register(inboundSseEvent -> {
+                collect.add(inboundSseEvent.readData());
+                // stop after one event
+                eventSource.close();
+            },
+                    res::completeExceptionally,
+                    () -> res.complete(collect));
+            eventSource.open();
+            Assertions.assertThat(res.get(5, TimeUnit.SECONDS)).hasSize(1);
+        }
     }
 
     @Test
