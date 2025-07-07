@@ -1,14 +1,15 @@
 package net.laprun.sustainability.power.persistence;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import net.laprun.sustainability.power.SensorMeasure;
 
-public enum Persistence {
-    ;
+@ApplicationScoped
+public class Persistence {
 
     @Transactional
-    public static Measure save(SensorMeasure measure, String appName) {
+    public Measure save(SensorMeasure measure, String appName) {
         final var persisted = new Measure();
         persisted.components = measure.components();
         persisted.appName = appName;
