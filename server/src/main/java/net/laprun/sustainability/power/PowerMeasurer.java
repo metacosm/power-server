@@ -21,6 +21,9 @@ public class PowerMeasurer {
     @Inject
     PowerSensor sensor;
 
+    @Inject
+    Persistence persistence;
+
     @ConfigProperty(name = "net.laprun.sustainability.power.sampling-period", defaultValue = DEFAULT_SAMPLING_PERIOD)
     Duration samplingPeriod;
 
@@ -32,7 +35,7 @@ public class PowerMeasurer {
     }
 
     public void startTrackingApp(String appName, String pid) throws Exception {
-        stream(pid).subscribe().with(m -> Persistence.save(m, appName));
+        stream(pid).subscribe().with(m -> persistence.save(m, appName));
     }
 
     private RegisteredPID track(String pid) throws Exception {
