@@ -16,6 +16,7 @@ public class StreamChecker {
 
     static void checkPowerForPID(URI uri, long pid) throws Exception {
         final var powerForPid = ClientBuilder.newClient().target(uri.resolve("power"))
+                .path("stream")
                 .path("{pid}").resolveTemplate("pid", pid);
 
         try (final var eventSource = SseEventSource.target(powerForPid).build()) {
