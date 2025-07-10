@@ -48,6 +48,7 @@
 
         <quarkus.platform.version>3.28.1</quarkus.platform.version>
         <assertj.version>3.27.6</assertj.version>
+        <sqlite4j.version>0.0.7</sqlite4j.version>
 
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
