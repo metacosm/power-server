@@ -25,8 +25,8 @@ import io.quarkus.scheduler.Scheduled;
 @Singleton
 public class SQLiteFilePersister {
     private final AtomicBoolean executing = new AtomicBoolean(false);
-    @ConfigProperty(name = "quarkus.datasource.jdbc.url")
-    String jdbcUrl;
+    @ConfigProperty(name = "power-server.db.backup.location")
+    String dbFilelocation;
     @Inject
     DataSource dataSource;
     private Path dbFile;
@@ -34,12 +34,8 @@ public class SQLiteFilePersister {
 
     @PostConstruct
     void init() {
-        int prefixLength = "jdbc:sqlite:".length();
-        int queryParamsIdx = jdbcUrl.indexOf('?');
-        int length = (queryParamsIdx != -1) ? queryParamsIdx : jdbcUrl.length();
-        var dbFileName = jdbcUrl.substring(prefixLength, length);
-        dbFile = Paths.get(dbFileName);
-        backupDBFile = dbFile.toAbsolutePath().getParent().resolve(dbFile.getFileName() + "_backup");
+        dbFile = Paths.get(dbFilelocation);
+        backupDBFile = dbFile.toAbsolutePath().getParent().resolve(dbFile.getFileName() + ".backup");
     }
 
     // Periodical backup
@@ -56,7 +52,8 @@ public class SQLiteFilePersister {
     void backup() {
         if (executing.compareAndSet(false, true)) {
             try {
-                Log.trace("Starting DB backup for file: " + dbFile);
+
+                Log.trace("Persisting database to: " + dbFile);
                 try (var conn = dataSource.getConnection();
                         var stmt = conn.createStatement()) {
                     // Execute the backup
@@ -64,16 +61,16 @@ public class SQLiteFilePersister {
                     // Atomically substitute the DB file with its backup
                     Files.move(backupDBFile, dbFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
                 } catch (SQLException e) {
-                    throw new RuntimeException("Failed to backup the database", e);
+                    throw new RuntimeException("Failed to persist the database", e);
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to create backup files or folders", e);
                 }
-                Log.info("Backup of " + dbFile + " completed");
+                Log.info("Persisting " + dbFile + " completed");
             } finally {
                 executing.set(false);
             }
         } else {
-            Log.trace("Skipping backup as one is already in progress");
+            Log.trace("Skipping database persistence as the operation is already in progress");
         }
     }
 
