@@ -71,8 +71,9 @@
     <modules>
         <module>metadata</module>
         <module>measure</module>
-        <module>server</module>
+        <module>backend</module>
         <module>analysis</module>
+        <module>server</module>
         <module>if-manifest-export</module>
     </modules>
 

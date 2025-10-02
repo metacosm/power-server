@@ -3,6 +3,7 @@ package net.laprun.sustainability.power.sensors;
 import io.quarkus.logging.Log;
 
 public abstract class AbstractPowerSensor<M extends Measures> implements PowerSensor {
+    //    private static final Logger log = Logger.getLogger(AbstractPowerSensor.class);
     protected final M measures;
 
     public AbstractPowerSensor(M measures) {
