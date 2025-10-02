@@ -74,6 +74,7 @@
         <module>backend</module>
         <module>analysis</module>
         <module>server</module>
+        <module>cli</module>
         <module>if-manifest-export</module>
     </modules>
 
