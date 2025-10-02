@@ -21,7 +21,8 @@ public class Security {
         pwd = config.getConfigValue(SECRET_PROPERTY_KEY).getValue();
         if (pwd == null && !isRunningAsAdministrator()) {
             throw new IllegalStateException(
-                    "This application requires sudo access. Either provide a sudo secret using the 'power-server.sudo.secret' property or run using sudo.");
+                    "This application requires sudo access. Either provide a sudo secret using the '" +
+                            SECRET_PROPERTY_KEY + "' property or run using sudo.");
         }
     }
 
