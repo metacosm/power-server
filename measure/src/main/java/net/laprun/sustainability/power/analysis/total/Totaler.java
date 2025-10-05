@@ -13,6 +13,7 @@ class Totaler {
     private final SensorUnit expectedResultUnit;
     private final Function<double[], Double> formula;
     private final String name;
+    private final int[] totalComponentIndices;
     private Errors errors;
 
     Totaler(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
@@ -27,6 +28,7 @@ class Totaler {
                 .map(TotalComponent::name)
                 .collect(Collectors.joining(" + ", "total (", ")"));
         formula = formulaFrom(totalComponents);
+        this.totalComponentIndices = totalComponentIndices;
     }
 
     void validate() {
@@ -52,6 +54,11 @@ class Totaler {
     }
 
     public double computeTotalFrom(double[] measure) {
+        if (measure.length < totalComponentIndices.length) {
+            throw new IllegalArgumentException("Provided measure " + Arrays.toString(measure) +
+                    " doesn't countain components for required total indices: " + Arrays.toString(totalComponentIndices));
+        }
+
         checkValidated();
         return convertToExpectedUnit(formula.apply(measure));
     }
