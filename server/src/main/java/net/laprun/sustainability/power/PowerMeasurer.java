@@ -79,4 +79,8 @@ public class PowerMeasurer {
     public Duration getSamplingPeriod() {
         return samplingPeriod;
     }
+
+    public Persistence persistence() {
+        return persistence;
+    }
 }
