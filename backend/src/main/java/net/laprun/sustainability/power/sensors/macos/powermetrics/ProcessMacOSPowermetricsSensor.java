@@ -37,7 +37,8 @@ public class ProcessMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     public void start(long frequency) throws Exception {
         if (!isStarted()) {
             // it takes some time for the external process in addition to the sampling time so adjust the sampling frequency to account for this so that at most one measure occurs during the sampling time window
-            final var freq = Long.toString(frequency - 50);
+            frequency = Math.min(0, frequency - 50);
+            final var freq = Long.toString(frequency);
             powermetrics = security.execPowermetrics("cpu_power,tasks", "--show-process-samp-norm", "--show-process-gpu", "-i",
                     freq);
         }
