@@ -1,5 +1,6 @@
 package net.laprun.sustainability.power.analysis.total;
 
+import net.laprun.sustainability.power.Measure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.SyntheticComponent;
@@ -31,5 +32,9 @@ public class TotalSyntheticComponent implements SyntheticComponent {
     @Override
     public double synthesizeFrom(double[] components, long timestamp) {
         return totaler.computeTotalFrom(components);
+    }
+
+    public Measure asMeasure(double[] components) {
+        return new Measure(synthesizeFrom(components, 0L), metadata.unit());
     }
 }
