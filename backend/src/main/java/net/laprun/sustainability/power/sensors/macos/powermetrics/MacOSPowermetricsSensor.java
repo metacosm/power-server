@@ -151,6 +151,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                             pidsToProcess.remove(pid);
                             break;
                         }
+
+                        // todo? if pid is not found, this will loop forever and we should break if ALL_TASKS is reached without draining the pids to process
                     }
                     continue;
                 }
