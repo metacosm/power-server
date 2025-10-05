@@ -46,6 +46,7 @@ public class SQLiteFilePersister {
 
     // Execute a backup during shutdown
     public void onShutdown(@Observes ShutdownEvent event) {
+        Log.info("Persisting database on shutdown");
         backup();
     }
 
