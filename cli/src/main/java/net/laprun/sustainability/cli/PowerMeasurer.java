@@ -1,4 +1,4 @@
-package net.laprun.sustainability.power;
+package net.laprun.sustainability.cli;
 
 import java.time.Duration;
 
@@ -10,6 +10,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
+import net.laprun.sustainability.power.SensorMeasure;
+import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.persistence.Persistence;
 import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
@@ -40,22 +42,18 @@ public class PowerMeasurer {
         return periodicSensorCheck.map(measures -> measures.getOrDefault(registeredPID));
     }
 
-    public Cancellable startTrackingApp(String appName, long pid) throws Exception {
-        return uncheckedStream(pid).subscribe()
-                .with(m -> persistence.save(m, appName, appName + "-" + pid + "-" + System.currentTimeMillis()));
+    public Cancellable startTrackingApp(String appName, long pid, String session) throws Exception {
+        return uncheckedStream(pid).subscribe().with(m -> persistence.save(m, appName, session));
     }
 
-    public Cancellable startTrackingProcess(Process process) throws Exception {
-        return startTrackingApp(process.info().commandLine().orElseThrow(), process.pid());
-    }
-
-    private RegisteredPID track(long pid) throws Exception {
+    RegisteredPID track(long pid) throws Exception {
         if (!sensor.isStarted()) {
             sensor.start(samplingPeriod.toMillis());
             periodicSensorCheck = Multi.createFrom().ticks()
                     .every(samplingPeriod)
                     .log()
                     .map(sensor::update)
+                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                     .broadcast()
                     .withCancellationAfterLastSubscriberDeparture()
                     .toAtLeast(1)
@@ -80,5 +78,13 @@ public class PowerMeasurer {
 
     public Duration getSamplingPeriod() {
         return samplingPeriod;
+    }
+
+    public Persistence persistence() {
+        return persistence;
+    }
+
+    public void stop() {
+        sensor.stop();
     }
 }

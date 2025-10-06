@@ -1,6 +1,7 @@
 package net.laprun.sustainability.power.sensors;
 
 import java.util.Set;
+import java.util.function.Consumer;
 
 import net.laprun.sustainability.power.SensorMeasure;
 
@@ -66,4 +67,6 @@ public interface Measures {
      * @return the last measured end epoch of an update, or {@code -1} if the measure didn't provide that information
      */
     long lastMeasuredUpdateEndEpoch();
+
+    void forEach(Consumer<? super SensorMeasure> consumer);
 }

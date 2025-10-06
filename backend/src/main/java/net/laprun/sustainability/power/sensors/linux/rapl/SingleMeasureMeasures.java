@@ -2,6 +2,7 @@ package net.laprun.sustainability.power.sensors.linux.rapl;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.sensors.Measures;
@@ -45,6 +46,11 @@ class SingleMeasureMeasures implements Measures {
     @Override
     public SensorMeasure getOrDefault(RegisteredPID pid) {
         return trackedPIDs.contains(pid) && measure != null ? measure : SensorMeasure.missing;
+    }
+
+    @Override
+    public void forEach(Consumer<? super SensorMeasure> consumer) {
+        throw new UnsupportedOperationException("todo: not implemented yet");
     }
 
     @Override
