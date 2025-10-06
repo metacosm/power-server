@@ -26,6 +26,10 @@
       <artifactId>quarkus-picocli</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.smallrye.config</groupId>
       <artifactId>smallrye-config-crypto</artifactId>
       <optional>true</optional>

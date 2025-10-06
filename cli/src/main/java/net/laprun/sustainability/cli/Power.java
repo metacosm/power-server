@@ -1,13 +1,18 @@
 package net.laprun.sustainability.cli;
 
-import java.io.File;
+import static org.awaitility.Awaitility.await;
+
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import io.quarkus.logging.Log;
-import io.quarkus.runtime.Quarkus;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import net.laprun.sustainability.power.Measure;
 import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.total.TotalSyntheticComponent;
@@ -25,19 +30,18 @@ public class Power implements Runnable {
             "--name" }, description = "Optional name for the application, defaults to passed command line")
     String name;
 
-    private final File output;
+    private final ExecutorService executor = Executors.newFixedThreadPool(3);
+    private final Path outputFile;
     private final PowerSensor sensor;
     private Process powermetrics;
 
     public Power() throws IOException {
-        /*
-         * this.output = File.createTempFile("power-", ".tmp");
-         * output.deleteOnExit();
-         */
-        this.output = new File("output.txt");
-        output.createNewFile();
-        sensor = new FileMacOSPowermetricsSensor(output);
-        Log.info(output.getAbsolutePath());
+        this.outputFile = Path.of("output.txt").toAbsolutePath();
+        Files.deleteIfExists(this.outputFile);
+        //        Files.createFile(this.outputFile);
+
+        Log.infof("Output file: %s", this.outputFile);
+        sensor = new FileMacOSPowermetricsSensor(this.outputFile.toFile());
     }
 
     @Override
@@ -47,28 +51,28 @@ public class Power implements Runnable {
             return;
         }
 
-        final var cmdPid = Uni.createFrom()
-                .item(this::runPowermetrics)
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .chain(powermetrics -> Uni.createFrom()
-                        .item(this::runCommandToMeasure)
-                        .onTermination()
-                        .invoke(powermetrics::destroy))
-                .await()
-                .indefinitely();
+        var powermetricsProcess = runPowermetrics();
+        var powermetricsPid = powermetricsProcess.pid();
+        Log.infof("Powermetrics pid: %d", powermetricsPid);
 
-        final int exit;
+        var commandProcess = runCommandToMeasure();
+        var commandPid = commandProcess.pid();
+
         try {
-            Log.infof("powermetrics exit code: %d", powermetrics.waitFor());
-        } catch (InterruptedException e) {
+            var commandExitVal = commandProcess.waitFor();
+            Log.infof("Process [%s] with pid %d exited with status code %d", cmd, commandPid, commandExitVal);
+
+            stopPowermetrics(commandPid);
+            //            var latch = new CountDownLatch(1);
+            //            extractPowerConsumption(commandPid, latch);
+            //            latch.await();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        extractPowerConsumption(cmdPid);
-
-        Quarkus.waitForExit();
     }
 
-    private Measure extractPowerConsumption(long pid) {
+    private Measure extractPowerConsumption(long pid, CountDownLatch latch) {
+        Log.infof("Extracting power consumption for process %d", pid);
         sensor.stop();
         // first read metadata
         final var metadata = sensor.metadata();
@@ -81,36 +85,75 @@ public class Power implements Runnable {
                 .asMeasure(measure.getOrDefault(registeredPID).components());
 
         Log.info("Measured power: " + power);
-        Quarkus.asyncExit();
+
+        latch.countDown();
 
         return power;
     }
 
-    private Process runPowermetrics() {
-        Log.info("Starting powermetrics");
+    private void stopPowermetrics(long commandPid) {
+        var powermetricsPid = powermetrics.pid();
+        var powermetricsExit = powermetrics.onExit().thenApply(p -> {
+            try {
+                Log.info("powermetrics process complete");
+
+                await()
+                        .atMost(Duration.ofMinutes(1))
+                        .until(() -> Files.exists(this.outputFile)
+                                && Files.readString(this.outputFile).contains("Combined Power (CPU + GPU + ANE):"));
+
+                var latch = new CountDownLatch(1);
+                extractPowerConsumption(commandPid, latch);
+
+                latch.await();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            return p;
+        });
+
         try {
-            powermetrics = new ProcessBuilder()
+            var exitVal = invokeOnAnotherThread(() -> {
+                Log.infof("Sending SIGINT to powermetrics process %d", powermetricsPid);
+                return new ProcessBuilder("kill", "-SIGINT", String.valueOf(powermetricsPid));
+            }).waitFor();
+            Log.infof("Sent SIGINT to powermetrics. Received exit status %d", exitVal);
+
+            var powermetricsExitStatus = powermetricsExit.get().waitFor();
+            Log.infof("powermetrics process %d exited with status %d", powermetricsPid, powermetricsExitStatus);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Process runPowermetrics() {
+        return powermetrics = invokeOnAnotherThread(() -> {
+            Log.infof("Starting powermetrics - outputting to %s", this.outputFile);
+
+            return new ProcessBuilder()
                     .command("powermetrics", "--samplers",
                             "cpu_power,tasks",
                             "--show-process-samp-norm",
                             "--show-process-gpu",
                             "--show-usage-summary",
                             "-i", "0") // no sampling frequency, just record aggregate
-                    .redirectOutput(output)
-                    .start();
-            return powermetrics;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+                    .redirectOutput(this.outputFile.toFile());
+            //                    .inheritIO();
+            //                            "-o", this.outputFile.toString());
+        });
     }
 
-    private long runCommandToMeasure() {
-        Log.infof("Recording energy consumption for: %s", cmd);
-        final var command = new ProcessBuilder().command(cmd);
+    private Process runCommandToMeasure() {
+        return invokeOnAnotherThread(() -> {
+            Log.infof("Recording energy consumption for: %s", cmd);
+            return new ProcessBuilder().command(cmd);
+        });
+    }
+
+    private Process invokeOnAnotherThread(Callable<ProcessBuilder> processBuilder) {
         try {
-            final var process = command.start();
-            process.waitFor();
-            return process.pid();
+            return this.executor.submit(() -> processBuilder.call().start()).get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
