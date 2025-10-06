@@ -1,20 +1,17 @@
 package net.laprun.sustainability.cli;
 
-import static org.awaitility.Awaitility.await;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import io.quarkus.logging.Log;
-
 import net.laprun.sustainability.power.Measure;
 import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.total.TotalSyntheticComponent;
@@ -66,14 +63,24 @@ public class Power implements Runnable {
         var commandProcessId = runCommandToMeasure();
         Log.infof("Process pid: %d", commandProcessId.pid());
 
-        var commandProcessHandle = ProcessHandle.of(commandProcessId.pid())
-                .filter(ProcessHandle::isAlive)
-                .map(p -> p.onExit().join())
-                .orElseThrow(() -> new IllegalArgumentException("Process %s is not alive".formatted(commandProcessId.pid())));
+        if (configWithExistingProcess()) {
+            try {
+                TimeUnit.SECONDS.sleep(10);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            var commandProcessHandle = ProcessHandle.of(commandProcessId.pid())
+                    .filter(ProcessHandle::isAlive)
+                    .map(p -> p.onExit().join())
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Process %s is not alive".formatted(commandProcessId.pid())));
 
-        // By now the underlying process should be done
-        Log.infof("Process [%s] with pid %d exited", commandProcessHandle.info().commandLine().orElse(""),
-                commandProcessId.pid());
+            // By now the underlying process should be done
+            Log.infof("Process [%s] with pid %d exited", commandProcessHandle.info().commandLine().orElse(""),
+                    commandProcessId.pid());
+        }
+
         stopPowermetrics(powermetricsProcess, commandProcessId);
     }
 
@@ -93,33 +100,29 @@ public class Power implements Runnable {
 
         Log.info("Measured power: " + power);
 
-        latch.countDown();
+        //        latch.countDown();
 
         return power;
     }
 
     private void stopPowermetrics(Process powermetricsProcess, Power.ProcessId commandPid) {
         var powermetricsPid = powermetricsProcess.pid();
-        var powermetricsExit = powermetricsProcess.onExit().thenApply(p -> {
-            try {
-                Log.info("powermetrics process complete");
-                Log.infof("Output file: %s", Files.readString(this.outputFile));
+        //    var powermetricsExit = powermetricsProcess.onExit().join();
+        try {
+            Log.info("powermetrics process complete");
 
-                await()
-                        .atMost(Duration.ofMinutes(1))
-                        .until(() -> Files.exists(this.outputFile)
-                                && Files.readString(this.outputFile).contains("Combined Power (CPU + GPU + ANE):"));
+            //            await()
+            //                    .atMost(Duration.ofMinutes(1))
+            //                    .until(() -> Files.exists(this.outputFile)
+            //                            && Files.readString(this.outputFile).contains("Combined Power (CPU + GPU + ANE):"));
 
-                var latch = new CountDownLatch(1);
-                extractPowerConsumption(commandPid, latch);
+            //            var latch = new CountDownLatch(1);
+            //            extractPowerConsumption(commandPid, latch);
 
-                latch.await();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            return p;
-        });
+            //            latch.await();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         try {
             Log.infof("Sending SIGIO to powermetrics process %d", powermetricsPid);
@@ -130,8 +133,12 @@ public class Power implements Runnable {
             }).waitFor();
             Log.infof("Sent SIGTERM to powermetrics. Received exit status %d", exitVal);
 
-            var powermetricsExitStatus = powermetricsExit.get().waitFor();
-            Log.infof("powermetrics process %d exited with status %d", powermetricsPid, powermetricsExitStatus);
+            var powermetricsExitStatus = powermetricsProcess.onExit().get().waitFor();
+            //      var powermetricsExitStatus = powermetricsExit.get().waitFor();
+            Log.infof("powermetrics process %d exited with status %d", powermetricsPid, powermetricsProcess.exitValue());
+
+            Log.infof("Output file: %s", Files.readString(this.outputFile));
+            extractPowerConsumption(commandPid, new CountDownLatch(0));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -161,7 +168,7 @@ public class Power implements Runnable {
                 .filter(s2 -> !s2.isBlank());
     }
 
-    private Optional<ProcessId> pidProcessId() {
+    private Optional<Power.ProcessId> pidProcessId() {
         return stripped(this.pid)
                 .map(Long::parseLong)
                 .map(ProcessId::new);
@@ -181,6 +188,10 @@ public class Power implements Runnable {
         return pidProcessId()
                 .or(this::commandProcessId)
                 .orElseThrow(() -> new IllegalArgumentException("Must provide either -p or -c"));
+    }
+
+    private boolean configWithExistingProcess() {
+        return pidProcessId().isPresent();
     }
 
     private static Process invokeOnAnotherThread(Callable<ProcessBuilder> processBuilder) {
