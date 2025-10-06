@@ -1,118 +1,115 @@
 package net.laprun.sustainability.cli;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Optional;
 
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.Quarkus;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.subscription.Cancellable;
 import net.laprun.sustainability.power.Measure;
+import net.laprun.sustainability.power.Security;
 import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.total.TotalSyntheticComponent;
-import net.laprun.sustainability.power.sensors.PowerSensor;
-import net.laprun.sustainability.power.sensors.macos.powermetrics.FileMacOSPowermetricsSensor;
 import picocli.CommandLine;
 
 @CommandLine.Command
 public class Power implements Runnable {
-
-    @CommandLine.Parameters(index = "0..*", hidden = true)
-    List<String> cmd;
-
     @CommandLine.Option(names = { "-n",
             "--name" }, description = "Optional name for the application, defaults to passed command line")
     String name;
 
-    private final File output;
-    private final PowerSensor sensor;
-    private Process powermetrics;
+    @CommandLine.Option(names = { "-s",
+            "--session" }, description = "Optional session name for the power measurement session, defaults to epoch at the time the processing starts")
+    String session;
 
-    public Power() throws IOException {
-        /*
-         * this.output = File.createTempFile("power-", ".tmp");
-         * output.deleteOnExit();
-         */
-        this.output = new File("output.txt");
-        output.createNewFile();
-        sensor = new FileMacOSPowermetricsSensor(output);
-        Log.info(output.getAbsolutePath());
+    @CommandLine.Option(names = { "-c",
+            "--command" }, required = true, description = "Command to measure energy consumption for")
+    String cmd;
+
+    PowerMeasurer measurer;
+    Security security;
+
+    public Power(PowerMeasurer measurer, Security security) throws IOException {
+        this.measurer = measurer;
+        this.security = security;
     }
 
     @Override
     public void run() {
-        if (cmd == null || cmd.isEmpty()) {
-            Log.info("No command specified, exiting.");
-            return;
+        // start powermetrics
+        final Cancellable powermetrics;
+        try {
+            powermetrics = measurer.startTrackingApp("kernel task", 1, "ignore");
+        } catch (Exception e) {
+            Log.error("Error starting kernel task", e);
+            throw new RuntimeException(e);
         }
 
+        // run target command to completion
         final var cmdPid = Uni.createFrom()
-                .item(this::runPowermetrics)
+                .item(this::runCommandToMeasureToCompletion)
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .chain(powermetrics -> Uni.createFrom()
-                        .item(this::runCommandToMeasure)
-                        .onTermination()
-                        .invoke(powermetrics::destroy))
                 .await()
                 .indefinitely();
 
-        final int exit;
-        try {
-            Log.infof("powermetrics exit code: %d", powermetrics.waitFor());
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        extractPowerConsumption(cmdPid);
+        final var measure = extractPowerConsumption(cmdPid);
+        Log.infof("Power consumption: %s", measure);
 
+        powermetrics.cancel();
+        measurer.stop();
         Quarkus.waitForExit();
     }
 
     private Measure extractPowerConsumption(long pid) {
-        sensor.stop();
         // first read metadata
-        final var metadata = sensor.metadata();
+        final var metadata = measurer.metadata();
         Log.infof("Metadata:\n%s", metadata);
-        // register pid
-        final var registeredPID = sensor.register(pid);
-        // re-open output file to read process info
-        final var measure = sensor.update(0L);
-        final var power = new TotalSyntheticComponent(metadata, SensorUnit.W, 0, 1, 2)
-                .asMeasure(measure.getOrDefault(registeredPID).components());
 
-        Log.info("Measured power: " + power);
+        // create a synthetic component to get the total power
+        final var totalPower = new TotalSyntheticComponent(metadata, SensorUnit.W, 0, 1, 2);
+
+        final var power = measurer.persistence()
+                .synthesizeAndAggregateForSession(name, session, m -> totalPower.synthesizeFrom(m.components, m.startTime))
+                .map(measure -> new Measure(measure, totalPower.metadata().unit()))
+                .orElseThrow(() -> new RuntimeException("Could not extract power consumption"));
+
         Quarkus.asyncExit();
-
         return power;
     }
 
-    private Process runPowermetrics() {
-        Log.info("Starting powermetrics");
+    private Process runCommandToMeasure() {
+        final var command = new ProcessBuilder().command("/bin/bash", "-c", stripped(cmd).orElseThrow());
         try {
-            powermetrics = new ProcessBuilder()
-                    .command("powermetrics", "--samplers",
-                            "cpu_power,tasks",
-                            "--show-process-samp-norm",
-                            "--show-process-gpu",
-                            "--show-usage-summary",
-                            "-i", "0") // no sampling frequency, just record aggregate
-                    .redirectOutput(output)
-                    .start();
-            return powermetrics;
-        } catch (IOException e) {
+            final var process = command.start();
+            name = name == null ? String.join(" ", cmd) : name;
+            session = session == null ? "" + System.currentTimeMillis() : session;
+            Log.infof("Recording energy consumption for application '%s' (pid: %d) with session '%s'", name, process.pid(),
+                    session);
+            measurer.startTrackingApp(name, process.pid(), session);
+            return process;
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private long runCommandToMeasure() {
-        Log.infof("Recording energy consumption for: %s", cmd);
-        final var command = new ProcessBuilder().command(cmd);
+    private long runCommandToMeasureToCompletion() {
+        final var process = runCommandToMeasure();
         try {
-            final var process = command.start();
             process.waitFor();
-            return process.pid();
-        } catch (Exception e) {
+            security.onNonZeroExitCode(process,
+                    (exitCode, errorMsg) -> Log.errorf("Couldn't run command %s, got exit code: %d, reason: %s",
+                            process.info().commandLine(), exitCode, errorMsg));
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        return process.pid();
+    }
+
+    private static Optional<String> stripped(String s) {
+        return Optional.ofNullable(s)
+                .map(String::strip)
+                .filter(s2 -> !s2.isBlank());
     }
 }

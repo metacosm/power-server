@@ -80,6 +80,24 @@ class MacOSPowermetricsSensorTest {
         checkPowerMeasure("sonoma-intel.txt", 8.53f, MacOSPowermetricsSensor.PACKAGE, 1002);
     }
 
+    @Test
+    void extractionShouldWorkForLowProcessIds() {
+        final var sensor = new ResourceMacOSPowermetricsSensor("sonoma-m1max.txt");
+        final var metadata = sensor.metadata();
+        final var pid0 = sensor.register(0);
+        final var pid1 = sensor.register(1);
+
+        final var cpu = metadata.metadataFor(MacOSPowermetricsSensor.CPU);
+        // re-open the stream to read the measure this time
+        final var measure = sensor.update(0L);
+        // Process CPU power should be equal to sample ms/s divided for process (here: 116.64) by total samples (1222.65) times total CPU power
+        var pidCPUShare = 116.64 / 1222.65;
+        assertEquals(pidCPUShare * 211, getComponent(measure, pid0, cpu));
+
+        pidCPUShare = 7.90 / 1222.65;
+        assertEquals(pidCPUShare * 211, getComponent(measure, pid1, cpu));
+    }
+
     private static void checkPowerMeasure(String testFileName, float total, String totalMeasureName,
             long expectedMeasureDuration) {
         final var startUpdateEpoch = System.currentTimeMillis();

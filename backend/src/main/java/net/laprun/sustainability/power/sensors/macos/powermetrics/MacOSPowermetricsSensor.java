@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
@@ -148,6 +149,10 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                         }
 
                         // todo? if pid is not found, this will loop forever and we should break if ALL_TASKS is reached without draining the pids to process
+                        if (line.startsWith("ALL_TASKS")) {
+                            Log.info("Couldn't find process " + pid.stringForMatching());
+                            break;
+                        }
                     }
                     continue;
                 }
