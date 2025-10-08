@@ -57,6 +57,23 @@ class MacOSPowermetricsSensorTest {
     }
 
     @Test
+    void extractPowerMeasureForM4() {
+        final var sensor = new ResourceMacOSPowermetricsSensor("tahoe-m4-summary.txt");
+        final var metadata = sensor.metadata();
+        final var pid0 = sensor.register(2976);
+
+        final var cpu = metadata.metadataFor(MacOSPowermetricsSensor.CPU);
+        // re-open the stream to read the measure this time
+        final var measure = sensor.update(0L);
+
+        final var totalCPUPower = 420;
+        final var totalCPUTime = 1287.34;
+        // Process CPU power should be equal to sample ms/s divided for process (here: 116.64) by total samples (1222.65) times total CPU power
+        var pidCPUShare = 224.05 / totalCPUTime;
+        assertEquals(pidCPUShare * totalCPUPower, getComponent(measure, pid0, cpu));
+    }
+
+    @Test
     void extractPowerMeasureForIntel() {
         checkPowerMeasure("sonoma-intel.txt", 8.53f, MacOSPowermetricsSensor.PACKAGE);
     }

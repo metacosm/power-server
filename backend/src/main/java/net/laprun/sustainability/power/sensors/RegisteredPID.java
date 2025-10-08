@@ -10,6 +10,10 @@ public record RegisteredPID(String stringForMatching) {
         return " " + pid + " ";
     }
 
+    public static String prepare(String pidAsString) {
+        return " " + pidAsString + " ";
+    }
+
     public long pid() {
         return Long.parseLong(stringForMatching().trim());
     }
