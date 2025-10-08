@@ -25,7 +25,7 @@ import io.quarkus.scheduler.Scheduled;
 @Singleton
 public class SQLiteFilePersister {
     private final AtomicBoolean executing = new AtomicBoolean(false);
-    @ConfigProperty(name = "power-server.db.backup.location")
+    @ConfigProperty(name = "power-server.db.backup.location", defaultValue = "power-server-db.sqlite")
     String dbFilelocation;
     @Inject
     DataSource dataSource;

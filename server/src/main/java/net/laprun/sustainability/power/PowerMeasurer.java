@@ -9,8 +9,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.subscription.Cancellable;
-import net.laprun.sustainability.power.persistence.Persistence;
 import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
@@ -21,9 +19,6 @@ public class PowerMeasurer {
     public static final String DEFAULT_SAMPLING_PERIOD = "PT0.5S";
     @Inject
     PowerSensor sensor;
-
-    @Inject
-    Persistence persistence;
 
     @ConfigProperty(name = "net.laprun.sustainability.power.sampling-period", defaultValue = DEFAULT_SAMPLING_PERIOD)
     Duration samplingPeriod;
@@ -38,14 +33,6 @@ public class PowerMeasurer {
     public Multi<SensorMeasure> uncheckedStream(long pid) throws Exception {
         final var registeredPID = track(pid);
         return periodicSensorCheck.map(measures -> measures.getOrDefault(registeredPID));
-    }
-
-    public Cancellable startTrackingApp(String appName, long pid) throws Exception {
-        return uncheckedStream(pid).subscribe().with(m -> persistence.save(m, appName));
-    }
-
-    public Cancellable startTrackingProcess(Process process) throws Exception {
-        return startTrackingApp(process.info().commandLine().orElseThrow(), process.pid());
     }
 
     private RegisteredPID track(long pid) throws Exception {
@@ -78,9 +65,5 @@ public class PowerMeasurer {
 
     public Duration getSamplingPeriod() {
         return samplingPeriod;
-    }
-
-    public Persistence persistence() {
-        return persistence;
     }
 }
