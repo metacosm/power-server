@@ -18,11 +18,15 @@ import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Multi;
 import net.laprun.sustainability.power.persistence.Measure;
+import net.laprun.sustainability.power.persistence.Persistence;
 
 @Path("/power")
 public class PowerResource {
     @Inject
     PowerMeasurer measurer;
+
+    @Inject
+    Persistence persistence;
 
     public void onStartup(@Observes StartupEvent event) {
         Log.info("\nConfigured sampling period: " + samplingPeriod() +
@@ -44,7 +48,7 @@ public class PowerResource {
     @Path("start/{appName}/{pid}")
     public void startMeasure(@PathParam("appName") String appName, @PathParam("pid") String pid) throws Exception {
         try {
-            measurer.startTrackingApp(appName, measurer.validPIDOrFail(pid));
+            measurer.uncheckedStream(measurer.validPIDOrFail(pid)).subscribe().with(m -> persistence.save(m, appName));
         } catch (IllegalArgumentException e) {
             throw new NotFoundException("Unknown process: " + pid);
         }
