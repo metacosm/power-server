@@ -48,7 +48,7 @@ public class PowerResource {
     @Path("start/{appName}/{pid}")
     public void startMeasure(@PathParam("appName") String appName, @PathParam("pid") String pid) throws Exception {
         try {
-            measurer.uncheckedStream(measurer.validPIDOrFail(pid)).subscribe().with(m -> persistence.save(m, appName));
+            measurer.startTrackingApp(appName, measurer.validPIDOrFail(pid));
         } catch (IllegalArgumentException e) {
             throw new NotFoundException("Unknown process: " + pid);
         }
