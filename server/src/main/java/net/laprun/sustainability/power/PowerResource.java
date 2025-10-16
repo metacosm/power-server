@@ -18,15 +18,11 @@ import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Multi;
 import net.laprun.sustainability.power.persistence.Measure;
-import net.laprun.sustainability.power.persistence.Persistence;
 
 @Path("/power")
 public class PowerResource {
     @Inject
     PowerMeasurer measurer;
-
-    @Inject
-    Persistence persistence;
 
     public void onStartup(@Observes StartupEvent event) {
         Log.info("\nConfigured sampling period: " + samplingPeriod() +
@@ -68,7 +64,7 @@ public class PowerResource {
 
     @GET
     @Path("measures/{appName}")
-    public List<SensorMeasure> measures(@PathParam("appName") String appName) throws Exception {
+    public List<SensorMeasure> measures(@PathParam("appName") String appName) {
         return Measure.forApplication(appName).stream().map(Measure::asSensorMeasure).toList();
     }
 }
