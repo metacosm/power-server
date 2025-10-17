@@ -121,6 +121,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             final var metadata = cpu.metadata();
             final var powerComponents = new HashMap<String, Number>(metadata.componentCardinality());
             var endUpdateEpoch = -1L;
+            var stopProcessingProcesses = false;
             while ((line = input.readLine()) != null) {
                 if (line.isEmpty()) {
                     continue;
@@ -140,7 +141,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                 }
 
                 // first, look for process line detailing share
-                if (!pidsToProcess.isEmpty()) {
+                if (!stopProcessingProcesses && !pidsToProcess.isEmpty()) {
                     for (RegisteredPID pid : pidsToProcess) {
                         if (line.contains(pid.stringForMatching())) {
                             pidMeasures.put(pid, new ProcessRecord(line));
@@ -151,6 +152,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                         // todo? if pid is not found, this will loop forever and we should break if ALL_TASKS is reached without draining the pids to process
                         if (line.startsWith("ALL_TASKS")) {
                             Log.info("Couldn't find process " + pid.stringForMatching());
+                            stopProcessingProcesses = true;
                             break;
                         }
                     }
