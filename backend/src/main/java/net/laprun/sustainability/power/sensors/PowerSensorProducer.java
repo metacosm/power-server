@@ -1,10 +1,8 @@
 package net.laprun.sustainability.power.sensors;
 
 import jakarta.enterprise.inject.Produces;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import net.laprun.sustainability.power.Security;
 import net.laprun.sustainability.power.sensors.linux.rapl.IntelRAPLSensor;
 import net.laprun.sustainability.power.sensors.macos.powermetrics.ProcessMacOSPowermetricsSensor;
 
@@ -12,17 +10,14 @@ import net.laprun.sustainability.power.sensors.macos.powermetrics.ProcessMacOSPo
 public class PowerSensorProducer {
     private static final String OS_NAME = System.getProperty("os.name").toLowerCase();
 
-    @Inject
-    Security security;
-
     @Produces
     public PowerSensor sensor() {
-        return determinePowerSensor(security);
+        return determinePowerSensor();
     }
 
-    public static PowerSensor determinePowerSensor(Security security) {
+    public static PowerSensor determinePowerSensor() {
         if (OS_NAME.contains("mac os x")) {
-            return new ProcessMacOSPowermetricsSensor(security);
+            return new ProcessMacOSPowermetricsSensor();
         }
 
         if (!OS_NAME.contains("linux")) {

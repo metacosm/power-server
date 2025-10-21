@@ -70,15 +70,31 @@ public class Security {
             throw new IllegalArgumentException("No command specified to run with sudo");
         }
 
+        final Process exec;
         if (!isRunningAsAdministrator()) {
             final var args = new String[cmd.length + 2];
             args[0] = "sudo";
             args[1] = "-S";
             System.arraycopy(cmd, 0, args, 2, cmd.length);
             final var runWithSudo = new ProcessBuilder(args);
-            return ProcessBuilder.startPipeline(List.of(new ProcessBuilder("echo", pwd), runWithSudo)).getLast();
+            exec = ProcessBuilder.startPipeline(List.of(new ProcessBuilder("echo", pwd), runWithSudo)).getLast();
         } else {
-            return new ProcessBuilder().command(cmd).start();
+            exec = new ProcessBuilder().command(cmd).start();
         }
+
+        // if the process is already dead, get the error
+        if (!exec.isAlive()) {
+            final var exitValue = exec.exitValue();
+            if (exitValue != 0) {
+                final String errorMsg;
+                try (final var error = exec.errorReader()) {
+                    errorMsg = error.readLine();
+                }
+                throw new RuntimeException(
+                        "Couldn't execute powermetrics. Error code: " + exitValue + ", message: " + errorMsg);
+            }
+        }
+
+        return exec;
     }
 }

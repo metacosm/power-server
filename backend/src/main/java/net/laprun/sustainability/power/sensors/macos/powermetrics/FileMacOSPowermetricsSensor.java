@@ -39,6 +39,7 @@ public class FileMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     @Override
     public void stop() {
         started = false;
+        // need to defer reading metadata until we know the file has been populated
         initMetadata(getInputStream());
     }
 }

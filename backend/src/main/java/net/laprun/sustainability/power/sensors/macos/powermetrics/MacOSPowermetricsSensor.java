@@ -158,6 +158,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             final var hasGPU = totalSampledGPU != 0;
             double finalTotalSampledGPU = totalSampledGPU;
             double finalTotalSampledCPU = totalSampledCPU;
+            final var endMs = System.currentTimeMillis();
             pidMeasures.forEach((pid, record) -> {
                 final var cpuShare = record.cpu / finalTotalSampledCPU;
                 final var measure = new double[metadata.componentCardinality()];
@@ -178,8 +179,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                         measure[index] = value;
                     }
                 });
-
-                measures.record(pid, new SensorMeasure(measure, start, System.currentTimeMillis()));
+                measures.record(pid, new SensorMeasure(measure, start, endMs));
             });
         } catch (Exception exception) {
             throw new RuntimeException(exception);
