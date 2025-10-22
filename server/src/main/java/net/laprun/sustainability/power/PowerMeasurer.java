@@ -40,6 +40,7 @@ public class PowerMeasurer {
             sensor.start(samplingPeriod.toMillis());
             periodicSensorCheck = Multi.createFrom().ticks()
                     .every(samplingPeriod)
+                    .log()
                     .map(sensor::update)
                     .broadcast()
                     .withCancellationAfterLastSubscriberDeparture()

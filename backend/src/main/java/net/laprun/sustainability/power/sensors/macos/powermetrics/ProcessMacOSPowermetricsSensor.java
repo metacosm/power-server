@@ -3,7 +3,7 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 import java.io.InputStream;
 
 public class ProcessMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
-    private final ProcessWrapper processWrapper = new JavaProcessWrapper();
+    private final ProcessWrapper processWrapper = new NuProcessWrapper();
 
     public ProcessMacOSPowermetricsSensor() {
         // extract metadata
