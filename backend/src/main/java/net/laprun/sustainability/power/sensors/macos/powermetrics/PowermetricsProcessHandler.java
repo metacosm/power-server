@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.nuprocess.NuAbstractProcessHandler;
@@ -13,7 +15,8 @@ public class PowermetricsProcessHandler extends NuAbstractProcessHandler {
     private String errorMsg;
     private NuProcess process;
     private final String[] command;
-    private ByteArrayInputStream bais;
+    private final GrowableBuffer stdOutBuffer = new GrowableBuffer();
+    private final CompletableFuture<InputStream> output = new CompletableFuture<>();
 
     public PowermetricsProcessHandler(String... command) {
         if (command == null || command.length == 0) {
@@ -63,8 +66,12 @@ public class PowermetricsProcessHandler extends NuAbstractProcessHandler {
 
     @Override
     public void onStdout(ByteBuffer buffer, boolean closed) {
-        if (!closed) {
-            bais = new ByteArrayInputStream(buffer.array());
+        if (buffer.hasRemaining()) {
+            stdOutBuffer.put(buffer);
+        }
+
+        if (closed) {
+            output.complete(new ByteArrayInputStream(stdOutBuffer.array()));
         }
     }
 
@@ -78,8 +85,8 @@ public class PowermetricsProcessHandler extends NuAbstractProcessHandler {
         super.onStderr(buffer, closed);
     }
 
-    public InputStream getInputStream() {
-        return bais;
+    public Future<InputStream> getInputStream() {
+        return output;
     }
 
     public boolean isRunning() {
