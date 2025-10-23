@@ -19,7 +19,7 @@ public class NuProcessWrapper implements ProcessWrapper {
     private NuProcess exec(PowermetricsProcessHandler handler) {
         if (handler == null)
             throw new IllegalArgumentException("Handler cannot be null");
-        return new NuProcessBuilder(handler, handler.comand()).start();
+        return new NuProcessBuilder(handler, handler.command()).start();
     }
 
     @Override
