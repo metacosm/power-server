@@ -31,7 +31,7 @@ public class PowermetricsProcessHandler extends NuAbstractProcessHandler {
         this.command = args;
     }
 
-    public String[] comand() {
+    public String[] command() {
         return command;
     }
 
