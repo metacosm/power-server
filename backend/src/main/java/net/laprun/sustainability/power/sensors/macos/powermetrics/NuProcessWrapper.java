@@ -10,7 +10,6 @@ public class NuProcessWrapper implements ProcessWrapper {
     private final PowermetricsProcessHandler metadataHandler;
     private PowermetricsProcessHandler measureHandler;
     private String periodInMilliSecondsAsString;
-    private long periodInMilliSeconds;
 
     public NuProcessWrapper() {
         metadataHandler = new PowermetricsProcessHandler("cpu_power", "-i", "10", "-n", "1");
@@ -35,8 +34,8 @@ public class NuProcessWrapper implements ProcessWrapper {
     @Override
     public void start(long periodInMilliSeconds) {
         // todo? check if asked period is the same as the current used one
-        this.periodInMilliSeconds = periodInMilliSeconds > 100 ? periodInMilliSeconds - 50 : periodInMilliSeconds;
-        this.periodInMilliSecondsAsString = Long.toString(this.periodInMilliSeconds);
+        periodInMilliSeconds = periodInMilliSeconds > 100 ? periodInMilliSeconds - 50 : periodInMilliSeconds;
+        this.periodInMilliSecondsAsString = Long.toString(periodInMilliSeconds);
     }
 
     @Override
