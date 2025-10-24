@@ -56,12 +56,7 @@ public class JavaProcessWrapper implements ProcessWrapper {
         if (options == null || options.length == 0) {
             throw new IllegalArgumentException("No powermetrics options specified");
         }
-        final var additionalArgsCardinality = 3;
-        final var args = new String[options.length + additionalArgsCardinality];
-        args[0] = "sudo";
-        args[1] = "powermetrics";
-        args[2] = "--samplers";
-        System.arraycopy(options, 0, args, additionalArgsCardinality, options.length);
+        final var args = ProcessWrapper.preparePowermetricsCommand(options);
         final var start = System.currentTimeMillis();
         final Process exec = new ProcessBuilder().command(args).start();
         Log.info("Starting process took " + (System.currentTimeMillis() - start) + "ms");
