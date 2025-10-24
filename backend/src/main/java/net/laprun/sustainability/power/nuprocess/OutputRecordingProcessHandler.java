@@ -11,14 +11,14 @@ import java.util.concurrent.TimeUnit;
 import com.zaxxer.nuprocess.NuAbstractProcessHandler;
 import com.zaxxer.nuprocess.NuProcess;
 
-public class BaseProcessHandler extends NuAbstractProcessHandler {
+public class OutputRecordingProcessHandler extends NuAbstractProcessHandler {
     private String errorMsg;
     private NuProcess process;
     private final String[] command;
     private final GrowableBuffer stdOutBuffer = new GrowableBuffer();
     private final CompletableFuture<InputStream> output = new CompletableFuture<>();
 
-    public BaseProcessHandler(String... command) {
+    public OutputRecordingProcessHandler(String... command) {
         if (command == null || command.length == 0) {
             throw new IllegalArgumentException("No command specified");
         }
