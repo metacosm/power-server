@@ -1,4 +1,4 @@
-package net.laprun.sustainability.power.sensors.macos.powermetrics;
+package net.laprun.sustainability.power.nuprocess;
 
 import java.nio.ByteBuffer;
 
