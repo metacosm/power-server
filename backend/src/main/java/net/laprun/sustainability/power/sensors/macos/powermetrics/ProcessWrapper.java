@@ -14,11 +14,13 @@ public interface ProcessWrapper {
     InputStream streamForMeasure();
 
     static String[] preparePowermetricsCommand(String[] command) {
-        final var additionalArgsCardinality = 3;
+        final var additionalArgsCardinality = 5;
         final var args = new String[command.length + additionalArgsCardinality];
         args[0] = "sudo";
         args[1] = "powermetrics";
-        args[2] = "--samplers";
+        args[2] = "--order";
+        args[3] = "cputime";
+        args[4] = "--samplers";
         System.arraycopy(command, 0, args, additionalArgsCardinality, command.length);
         return args;
     }
