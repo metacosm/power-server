@@ -9,6 +9,8 @@ import net.laprun.sustainability.power.SensorMeasure;
  * A representation of ongoing {@link PowerSensor} measures.
  */
 public interface Measures {
+    long SYSTEM_TOTAL_PID = Long.MIN_VALUE;
+    RegisteredPID SYSTEM_TOTAL_REGISTERED_PID = new RegisteredPID(SYSTEM_TOTAL_PID);
 
     /**
      * Tracks the provided process identifier (pid) in the measures. For sensors that only provide system-wide measures, this
@@ -67,6 +69,10 @@ public interface Measures {
      * @return the last measured end epoch of an update, or {@code -1} if the measure didn't provide that information
      */
     long lastMeasuredUpdateEndEpoch();
+
+    default SensorMeasure getSystemTotal() {
+        return getOrDefault(SYSTEM_TOTAL_REGISTERED_PID);
+    }
 
     void forEach(Consumer<? super SensorMeasure> consumer);
 }

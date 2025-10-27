@@ -66,6 +66,15 @@ public class PowerMeasurer {
         return registeredPID;
     }
 
+    /**
+     * Starts measuring even in the absence of registered PID. This will record the system's total energy consumption.
+     *
+     * @throws Exception
+     */
+    public void start(String session) throws Exception {
+        startTrackingApp(Persistence.SYSTEM_TOTAL_APP_NAME, Measures.SYSTEM_TOTAL_PID, session);
+    }
+
     public long validPIDOrFail(String pid) {
         final var parsedPID = Long.parseLong(pid);
         ProcessHandle.of(parsedPID).orElseThrow(() -> new IllegalArgumentException("Unknown process: " + pid));
