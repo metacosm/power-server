@@ -10,17 +10,23 @@ import net.laprun.sustainability.power.SensorMeasure;
 
 @ApplicationScoped
 public class Persistence {
+    public static final String SYSTEM_TOTAL_APP_NAME = "system:total";
 
     @Transactional
     public Measure save(SensorMeasure measure, String appName, String session) {
         final var persisted = new Measure();
         persisted.components = measure.components();
         persisted.appName = appName;
-        persisted.session = session;
+        persisted.session = session == null ? defaultSession(appName) : session;
         persisted.startTime = measure.startMs();
         persisted.endTime = measure.endMs();
         persisted.persist();
         return persisted;
+    }
+
+    @Transactional
+    public Measure save(SensorMeasure measure, String appName) {
+        return save(measure, appName, null);
     }
 
     @Transactional
@@ -30,5 +36,9 @@ public class Persistence {
                 .filter(measure -> measure.components.length != 1)
                 .map(synthesizer)
                 .reduce(Double::sum);
+    }
+
+    public static String defaultSession(String appName) {
+        return appName + "-" + System.currentTimeMillis();
     }
 }

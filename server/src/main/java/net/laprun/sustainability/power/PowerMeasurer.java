@@ -41,8 +41,7 @@ public class PowerMeasurer {
     }
 
     public Cancellable startTrackingApp(String appName, long pid) throws Exception {
-        return uncheckedStream(pid).subscribe()
-                .with(m -> persistence.save(m, appName, appName + "-" + pid + "-" + System.currentTimeMillis()));
+        return uncheckedStream(pid).subscribe().with(m -> persistence.save(m, appName));
     }
 
     public Cancellable startTrackingProcess(Process process) throws Exception {
