@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,6 +33,7 @@ public class SQLiteFilePersister {
     DataSource dataSource;
     private Path dbFile;
     private Path backupDBFile;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @PostConstruct
     void init() {
@@ -52,26 +55,29 @@ public class SQLiteFilePersister {
 
     void backup() {
         if (executing.compareAndSet(false, true)) {
-            try {
-
-                Log.trace("Persisting database to: " + dbFile);
-                try (var conn = dataSource.getConnection();
-                        var stmt = conn.createStatement()) {
-                    // Execute the backup
-                    stmt.executeUpdate("backup to " + backupDBFile);
-                    // Atomically substitute the DB file with its backup
-                    Files.move(backupDBFile, dbFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-                } catch (SQLException e) {
-                    throw new RuntimeException("Failed to persist the database", e);
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to create backup files or folders", e);
-                }
-                Log.info("Persisting " + dbFile + " completed");
-            } finally {
-                executing.set(false);
-            }
+            executor.submit(this::doBackup);
         } else {
             Log.trace("Skipping database persistence as the operation is already in progress");
+        }
+    }
+
+    private void doBackup() {
+        try {
+            Log.trace("Persisting database to: " + dbFile);
+            try (var conn = dataSource.getConnection();
+                    var stmt = conn.createStatement()) {
+                // Execute the backup
+                stmt.executeUpdate("backup to " + backupDBFile);
+                // Atomically substitute the DB file with its backup
+                Files.move(backupDBFile, dbFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to persist the database", e);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create backup files or folders", e);
+            }
+            Log.info("Persisting " + dbFile + " completed");
+        } finally {
+            executing.set(false);
         }
     }
 
