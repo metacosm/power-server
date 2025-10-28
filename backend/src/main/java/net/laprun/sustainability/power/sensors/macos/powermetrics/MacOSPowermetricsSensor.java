@@ -168,7 +168,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             final var hasGPU = totalSampledGPU != 0;
             double finalTotalSampledGPU = totalSampledGPU;
             double finalTotalSampledCPU = totalSampledCPU;
-            final var endMs = endUpdateEpoch;
+            final var endMs = endUpdateEpoch != -1 ? endUpdateEpoch : newUpdateEpoch;
             pidMeasures.forEach((pid, record) -> {
                 final var cpuShare = record.cpu / finalTotalSampledCPU;
                 final var measure = new double[metadata.componentCardinality()];
