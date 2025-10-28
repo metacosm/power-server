@@ -103,7 +103,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
     }
 
     @Override
-    public void start(long frequency) {
+    public void doStart(long frequency) {
         this.frequency = frequency;
 
         // perform an initial measure to prime the data

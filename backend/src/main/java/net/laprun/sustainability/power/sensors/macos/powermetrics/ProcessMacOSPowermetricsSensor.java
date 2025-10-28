@@ -14,13 +14,9 @@ public class ProcessMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
         }
     }
 
-    public void start(long frequency) throws Exception {
-        processWrapper.start(frequency);
-    }
-
     @Override
-    public boolean isStarted() {
-        return processWrapper.isRunning();
+    public void doStart(long frequency) {
+        processWrapper.start(frequency);
     }
 
     @Override
@@ -31,5 +27,6 @@ public class ProcessMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     @Override
     public void stop() {
         processWrapper.stop();
+        super.stop();
     }
 }

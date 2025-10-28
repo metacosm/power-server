@@ -6,7 +6,6 @@ import net.laprun.sustainability.power.sensors.Measures;
 
 public class ResourceMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     private final String resourceName;
-    private boolean started;
     private final long start;
 
     public ResourceMacOSPowermetricsSensor(String resourceName) {
@@ -28,17 +27,5 @@ public class ResourceMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     @Override
     protected InputStream getInputStream() {
         return Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
-    }
-
-    @Override
-    public boolean isStarted() {
-        return started;
-    }
-
-    @Override
-    public void start(long samplingFrequencyInMillis) {
-        if (!started) {
-            started = true;
-        }
     }
 }

@@ -99,6 +99,11 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
         return cpu.metadata();
     }
 
+    @Override
+    protected void doStart(long samplingFrequencyInMillis) {
+        // nothing to do here by default
+    }
+
     Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch) {
         final long start = lastUpdateEpoch;
         try {

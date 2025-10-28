@@ -3,9 +3,9 @@ package net.laprun.sustainability.power.sensors;
 import io.quarkus.logging.Log;
 
 public abstract class AbstractPowerSensor<M extends Measures> implements PowerSensor {
-    //    private static final Logger log = Logger.getLogger(AbstractPowerSensor.class);
     protected final M measures;
     private long lastUpdateEpoch;
+    private boolean started;
 
     public AbstractPowerSensor(M measures) {
         this.measures = measures;
@@ -22,6 +22,28 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
         measures.unregister(registeredPID);
         Log.info("Unregistered pid: " + registeredPID.pid());
     }
+
+    @Override
+    public void start(long samplingFrequencyInMillis) throws Exception {
+        if (!started) {
+            lastUpdateEpoch = System.currentTimeMillis();
+            started = true;
+            doStart(samplingFrequencyInMillis);
+        }
+    }
+
+    @Override
+    public boolean isStarted() {
+        return started;
+    }
+
+    @Override
+    public void stop() {
+        PowerSensor.super.stop();
+        started = false;
+    }
+
+    protected abstract void doStart(long samplingFrequencyInMillis);
 
     @Override
     public Measures update(Long tick) {

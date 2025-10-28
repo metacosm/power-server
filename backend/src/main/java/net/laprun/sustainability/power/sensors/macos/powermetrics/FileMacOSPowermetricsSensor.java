@@ -9,7 +9,6 @@ import java.io.InputStream;
  */
 public class FileMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     private final File file;
-    private boolean started;
 
     public FileMacOSPowermetricsSensor(File file) {
         this.file = file;
@@ -25,21 +24,9 @@ public class FileMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     }
 
     @Override
-    public boolean isStarted() {
-        return started;
-    }
-
-    @Override
-    public void start(long samplingFrequencyInMillis) {
-        if (!started) {
-            started = true;
-        }
-    }
-
-    @Override
     public void stop() {
-        started = false;
         // need to defer reading metadata until we know the file has been populated
         initMetadata(getInputStream());
+        super.stop();
     }
 }
