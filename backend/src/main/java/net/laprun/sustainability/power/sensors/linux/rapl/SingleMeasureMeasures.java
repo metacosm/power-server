@@ -46,4 +46,9 @@ class SingleMeasureMeasures implements Measures {
     public SensorMeasure getOrDefault(RegisteredPID pid) {
         return trackedPIDs.contains(pid) && measure != null ? measure : SensorMeasure.missing;
     }
+
+    @Override
+    public long lastMeasuredUpdateEndEpoch() {
+        return -1;
+    }
 }
