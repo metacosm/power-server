@@ -17,7 +17,6 @@ public class TestPowerSensor extends AbstractPowerSensor<MapMeasures> {
             List.of(new SensorMetadata.ComponentMetadata(CPU, 0, "CPU", true, mW)),
             "Test PowerSensor returning random values for a single 'cpu' component");
     private final SensorMetadata metadata;
-    private boolean started;
 
     public TestPowerSensor() {
         this(DEFAULT);
@@ -34,15 +33,8 @@ public class TestPowerSensor extends AbstractPowerSensor<MapMeasures> {
     }
 
     @Override
-    public boolean isStarted() {
-        return started;
-    }
-
-    @Override
-    public void start(long samplingFrequencyInMillis) {
-        if (!started) {
-            started = true;
-        }
+    public void doStart(long samplingFrequencyInMillis) {
+        // nothing to do
     }
 
     @Override
