@@ -59,4 +59,11 @@ public interface Measures {
      *         retrieved for any reason
      */
     SensorMeasure getOrDefault(RegisteredPID pid);
+
+    /**
+     * Returns the last measured end epoch of an update, if it exists.
+     *
+     * @return the last measured end epoch of an update, or {@code -1} if the measure didn't provide that information
+     */
+    long lastMeasuredUpdateEndEpoch();
 }

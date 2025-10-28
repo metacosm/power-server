@@ -115,10 +115,11 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
      *
      * @param componentIndex the index of the component being measured
      * @param sensorValue the micro Joules energy reading
+     * @param newMeasureTime the epoch of the new measure being taken
      * @return the power over the interval defined by the sampling frequency in mW
      */
-    private double computePowerInMilliWatt(int componentIndex, long sensorValue) {
-        return (sensorValue - lastMeasuredSensorValues[componentIndex]) / frequency / 1000;
+    private double computePowerInMilliWatt(int componentIndex, long sensorValue, long newMeasureTime) {
+        return (sensorValue - lastMeasuredSensorValues[componentIndex]) / (newMeasureTime - lastUpdateEpoch()) / 1000;
     }
 
     @Override
@@ -132,16 +133,15 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
     }
 
     @Override
-    public Measures update(Long tick) {
-        final long start = System.currentTimeMillis();
+    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
         final var measure = new double[raplFiles.length];
         for (int i = 0; i < raplFiles.length; i++) {
             final var value = raplFiles[i].extractEnergyInMicroJoules();
-            final var newComponentValue = computePowerInMilliWatt(i, value);
+            final var newComponentValue = computePowerInMilliWatt(i, value, newUpdateStartEpoch);
             measure[i] = newComponentValue;
             lastMeasuredSensorValues[i] = newComponentValue;
         }
-        measures.singleMeasure(new SensorMeasure(measure, start, System.currentTimeMillis()));
+        measures.singleMeasure(new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch));
         return measures;
     }
 }

@@ -5,6 +5,7 @@ import io.quarkus.logging.Log;
 public abstract class AbstractPowerSensor<M extends Measures> implements PowerSensor {
     //    private static final Logger log = Logger.getLogger(AbstractPowerSensor.class);
     protected final M measures;
+    private long lastUpdateEpoch;
 
     public AbstractPowerSensor(M measures) {
         this.measures = measures;
@@ -21,4 +22,19 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
         measures.unregister(registeredPID);
         Log.info("Unregistered pid: " + registeredPID.pid());
     }
+
+    @Override
+    public Measures update(Long tick) {
+        final long newUpdateStartEpoch = System.currentTimeMillis();
+        final var measures = doUpdate(lastUpdateEpoch, newUpdateStartEpoch);
+        lastUpdateEpoch = measures.lastMeasuredUpdateEndEpoch() > 0 ? measures.lastMeasuredUpdateEndEpoch()
+                : newUpdateStartEpoch;
+        return measures;
+    }
+
+    protected long lastUpdateEpoch() {
+        return lastUpdateEpoch;
+    }
+
+    abstract protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch);
 }

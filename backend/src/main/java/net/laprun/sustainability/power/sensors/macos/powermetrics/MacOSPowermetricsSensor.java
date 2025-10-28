@@ -47,6 +47,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
      * The extracted CPU share component name, this represents the process' share of the measured power consumption
      */
     public static final String CPU_SHARE = "cpuShare";
+    private static final String DURATION_SUFFIX = "ms elapsed) ***";
+    private static final int DURATION_SUFFIX_LENGTH = DURATION_SUFFIX.length();
 
     private CPU cpu;
 
@@ -97,8 +99,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
         return cpu.metadata();
     }
 
-    Measures extractPowerMeasure(InputStream powerMeasureInput, Long tick) {
-        final long start = System.currentTimeMillis();
+    Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch) {
+        final long start = lastUpdateEpoch;
         try {
             // Should not be closed since it closes the process
             BufferedReader input = new BufferedReader(new InputStreamReader(powerMeasureInput));
@@ -106,20 +108,28 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
 
             double totalSampledCPU = -1;
             double totalSampledGPU = -1;
-            int headerLinesToSkip = 10;
             // copy the pids so that we can remove them as soon as we've processed them
             final var pidsToProcess = new HashSet<>(measures.trackedPIDs());
             // start measure
             final var pidMeasures = new HashMap<RegisteredPID, ProcessRecord>(measures.numberOfTrackedPIDs());
             final var metadata = cpu.metadata();
             final var powerComponents = new HashMap<String, Number>(metadata.componentCardinality());
+            var endUpdateEpoch = -1L;
             while ((line = input.readLine()) != null) {
-                if (headerLinesToSkip != 0) {
-                    headerLinesToSkip--;
+                if (line.isEmpty()) {
                     continue;
                 }
 
-                if (line.isEmpty() || line.charAt(0) == '*') {
+                if (line.charAt(0) == '*') {
+                    // check if we have the sample duration
+                    if (endUpdateEpoch == -1 && line.endsWith(DURATION_SUFFIX)) {
+                        final var startLookingIndex = line.length() - DURATION_SUFFIX_LENGTH;
+                        final var lastOpenParenIndex = line.lastIndexOf('(', startLookingIndex);
+                        if (lastOpenParenIndex > 0) {
+                            endUpdateEpoch = start
+                                    + Math.round(Float.parseFloat(line.substring(lastOpenParenIndex + 1, startLookingIndex)));
+                        }
+                    }
                     continue;
                 }
 
@@ -158,7 +168,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             final var hasGPU = totalSampledGPU != 0;
             double finalTotalSampledGPU = totalSampledGPU;
             double finalTotalSampledCPU = totalSampledCPU;
-            final var endMs = System.currentTimeMillis();
+            final var endMs = endUpdateEpoch;
             pidMeasures.forEach((pid, record) -> {
                 final var cpuShare = record.cpu / finalTotalSampledCPU;
                 final var measure = new double[metadata.componentCardinality()];
@@ -188,8 +198,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
     }
 
     @Override
-    public Measures update(Long tick) {
-        return extractPowerMeasure(getInputStream(), tick);
+    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
+        return extractPowerMeasure(getInputStream(), lastUpdateEpoch, newUpdateStartEpoch);
     }
 
     protected abstract InputStream getInputStream();

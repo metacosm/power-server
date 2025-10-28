@@ -48,17 +48,18 @@ class MacOSPowermetricsSensorTest {
 
     @Test
     void extractPowerMeasureForM1Max() {
-        checkPowerMeasure("sonoma-m1max.txt", 211, MacOSPowermetricsSensor.CPU);
+        checkPowerMeasure("sonoma-m1max.txt", 211, MacOSPowermetricsSensor.CPU, 1012);
     }
 
     @Test
     void extractPowerMeasureForM2() {
-        checkPowerMeasure("monterey-m2.txt", 10, MacOSPowermetricsSensor.CPU);
+        checkPowerMeasure("monterey-m2.txt", 10, MacOSPowermetricsSensor.CPU, 1012);
     }
 
     @Test
     void extractPowerMeasureForM4() {
-        final var sensor = new ResourceMacOSPowermetricsSensor("tahoe-m4-summary.txt");
+        final var startUpdateEpoch = System.currentTimeMillis();
+        final var sensor = new ResourceMacOSPowermetricsSensor("tahoe-m4-summary.txt", startUpdateEpoch);
         final var metadata = sensor.metadata();
         final var pid0 = sensor.register(2976);
 
@@ -71,15 +72,18 @@ class MacOSPowermetricsSensorTest {
         // Process CPU power should be equal to sample ms/s divided for process (here: 116.64) by total samples (1222.65) times total CPU power
         var pidCPUShare = 224.05 / totalCPUTime;
         assertEquals(pidCPUShare * totalCPUPower, getComponent(measure, pid0, cpu));
+        assertEquals(startUpdateEpoch + 10458, measure.lastMeasuredUpdateEndEpoch());
     }
 
     @Test
     void extractPowerMeasureForIntel() {
-        checkPowerMeasure("sonoma-intel.txt", 8.53f, MacOSPowermetricsSensor.PACKAGE);
+        checkPowerMeasure("sonoma-intel.txt", 8.53f, MacOSPowermetricsSensor.PACKAGE, 1002);
     }
 
-    private static void checkPowerMeasure(String testFileName, float total, String totalMeasureName) {
-        final var sensor = new ResourceMacOSPowermetricsSensor(testFileName);
+    private static void checkPowerMeasure(String testFileName, float total, String totalMeasureName,
+            long expectedMeasureDuration) {
+        final var startUpdateEpoch = System.currentTimeMillis();
+        final var sensor = new ResourceMacOSPowermetricsSensor(testFileName, startUpdateEpoch);
         final var metadata = sensor.metadata();
         final var pid1 = sensor.register(29419);
         final var pid2 = sensor.register(391);
@@ -101,6 +105,7 @@ class MacOSPowermetricsSensorTest {
             assertEquals(0.0, getComponent(measure, pid1, gpuMetadata));
             assertEquals(0.0, getComponent(measure, pid2, gpuMetadata));
         }
+        assertEquals(startUpdateEpoch + expectedMeasureDuration, measure.lastMeasuredUpdateEndEpoch());
     }
 
     private static double getComponent(Measures measure, RegisteredPID pid1, SensorMetadata.ComponentMetadata metadata) {

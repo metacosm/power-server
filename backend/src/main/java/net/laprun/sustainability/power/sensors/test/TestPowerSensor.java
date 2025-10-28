@@ -46,9 +46,9 @@ public class TestPowerSensor extends AbstractPowerSensor<MapMeasures> {
     }
 
     @Override
-    public Measures update(Long tick) {
+    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
         measures.trackedPIDs().forEach(pid -> measures.record(pid,
-                new SensorMeasure(new double[] { Math.random() }, System.currentTimeMillis(), System.currentTimeMillis())));
+                new SensorMeasure(new double[] { Math.random() }, lastUpdateEpoch, newUpdateStartEpoch)));
         return measures;
     }
 }
