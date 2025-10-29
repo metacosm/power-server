@@ -6,6 +6,7 @@ import java.util.function.Function;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
+import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMeasure;
 
 @ApplicationScoped
@@ -21,6 +22,7 @@ public class Persistence {
         persisted.startTime = measure.startMs();
         persisted.endTime = measure.endMs();
         persisted.persist();
+        Log.infof("Persisted %s, measure duration: %sms", persisted, persisted.endTime - persisted.startTime);
         return persisted;
     }
 

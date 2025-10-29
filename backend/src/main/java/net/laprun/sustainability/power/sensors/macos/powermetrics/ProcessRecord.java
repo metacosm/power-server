@@ -1,5 +1,6 @@
 package net.laprun.sustainability.power.sensors.macos.powermetrics;
 
+import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 class ProcessRecord {
@@ -17,6 +18,8 @@ class ProcessRecord {
         try {
             // Trim leading/trailing whitespace
             line = line.trim();
+
+            Log.info(line);
 
             // Find first whitespace block after process name (marks start of ID)
             int idStart = findFirstWhitespace(line);
