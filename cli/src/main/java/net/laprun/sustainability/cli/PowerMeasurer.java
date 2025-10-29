@@ -1,12 +1,15 @@
 package net.laprun.sustainability.cli;
 
 import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
@@ -31,6 +34,7 @@ public class PowerMeasurer {
     Duration samplingPeriod;
 
     private Multi<Measures> periodicSensorCheck;
+    private final Map<Long, Cancellable> manuallyTrackedProcesses = new ConcurrentHashMap<>();
 
     public Multi<SensorMeasure> stream(String pid) throws Exception {
         final var parsedPID = validPIDOrFail(pid);
@@ -43,7 +47,9 @@ public class PowerMeasurer {
     }
 
     public Cancellable startTrackingApp(String appName, long pid, String session) throws Exception {
-        return uncheckedStream(pid).subscribe().with(m -> persistence.save(m, appName, session));
+        final var tracked = uncheckedStream(pid).subscribe().with(m -> persistence.save(m, appName, session));
+        manuallyTrackedProcesses.put(pid, tracked);
+        return tracked;
     }
 
     RegisteredPID track(long pid) throws Exception {
@@ -51,7 +57,6 @@ public class PowerMeasurer {
             sensor.start(samplingPeriod.toMillis());
             periodicSensorCheck = Multi.createFrom().ticks()
                     .every(samplingPeriod)
-                    .log()
                     .map(sensor::update)
                     .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                     .broadcast()
@@ -95,5 +100,12 @@ public class PowerMeasurer {
 
     public void stop() {
         sensor.stop();
+        manuallyTrackedProcesses.values().forEach(Cancellable::cancel);
+    }
+
+    public void stopTrackingProcess(long processId) {
+        sensor.unregister(new RegisteredPID(processId));
+        // cancel associated process tracking
+        manuallyTrackedProcesses.remove(processId).cancel();
     }
 }
