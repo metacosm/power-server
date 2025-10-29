@@ -13,14 +13,19 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
 
     @Override
     public RegisteredPID register(long pid) {
+        if (Measures.SYSTEM_TOTAL_PID == pid) {
+            return Measures.SYSTEM_TOTAL_REGISTERED_PID;
+        }
         Log.info("Registered pid: " + pid);
         return measures.register(pid);
     }
 
     @Override
     public void unregister(RegisteredPID registeredPID) {
-        measures.unregister(registeredPID);
-        Log.info("Unregistered pid: " + registeredPID.pid());
+        if (Measures.SYSTEM_TOTAL_REGISTERED_PID != registeredPID) {
+            measures.unregister(registeredPID);
+            Log.info("Unregistered pid: " + registeredPID.pid());
+        }
     }
 
     @Override
