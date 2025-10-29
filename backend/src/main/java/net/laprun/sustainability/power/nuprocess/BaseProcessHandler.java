@@ -69,4 +69,8 @@ public class BaseProcessHandler extends NuAbstractProcessHandler {
     public boolean isRunning() {
         return process != null && process.isRunning();
     }
+
+    public long processId() {
+        return process.getPID();
+    }
 }
