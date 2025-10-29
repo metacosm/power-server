@@ -116,6 +116,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             double totalSampledGPU = -1;
             // copy the pids so that we can remove them as soon as we've processed them
             final var pidsToProcess = new HashSet<>(measures.trackedPIDs());
+            // remove total system "pid"
+            pidsToProcess.remove(Measures.SYSTEM_TOTAL_REGISTERED_PID);
             // start measure
             final var pidMeasures = new HashMap<RegisteredPID, ProcessRecord>(measures.numberOfTrackedPIDs());
             final var metadata = cpu.metadata();
@@ -151,7 +153,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
 
                         // todo? if pid is not found, this will loop forever and we should break if ALL_TASKS is reached without draining the pids to process
                         if (line.startsWith("ALL_TASKS")) {
-                            Log.info("Couldn't find process " + pid.stringForMatching());
+                            Log.warnf("Couldn't find process %s", pid.stringForMatching());
                             stopProcessingProcesses = true;
                             break;
                         }
@@ -163,6 +165,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                     // then skip all lines until we get the totals
                     if (line.startsWith("ALL_TASKS")) {
                         final var totals = new ProcessRecord(line);
+                        pidMeasures.put(Measures.SYSTEM_TOTAL_REGISTERED_PID, totals);
                         // compute ratio
                         totalSampledCPU = totals.cpu;
                         totalSampledGPU = totals.gpu > 0 ? totals.gpu : 0;
@@ -182,6 +185,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             double finalTotalSampledCPU = totalSampledCPU;
             final var endMs = endUpdateEpoch != -1 ? endUpdateEpoch : newUpdateEpoch;
             pidMeasures.forEach((pid, record) -> {
+                // todo: move to ProcessRecord?
                 final var cpuShare = record.cpu / finalTotalSampledCPU;
                 final var measure = new double[metadata.componentCardinality()];
 
