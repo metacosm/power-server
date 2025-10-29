@@ -6,6 +6,7 @@ import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPo
 import java.util.HashMap;
 import java.util.List;
 
+import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMetadata;
 
 class AppleSiliconCPU extends CPU {
@@ -65,6 +66,7 @@ class AppleSiliconCPU extends CPU {
                 throw new IllegalStateException("Cannot parse power value from line '" + line + "'", e);
             }
             powerComponents.put(name, value);
+            Log.infof("POWER component %s = %s", name, value);
         }
 
         // we break out once we 've found all the extracted components (in this case, only cpuShare is not extracted)
