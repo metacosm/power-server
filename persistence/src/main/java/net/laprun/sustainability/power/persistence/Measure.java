@@ -1,5 +1,6 @@
 package net.laprun.sustainability.power.persistence;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -30,5 +31,20 @@ public class Measure extends PanacheEntity {
 
     public SensorMeasure asSensorMeasure() {
         return new SensorMeasure(components, startTime, endTime);
+    }
+
+    public long duration() {
+        return endTime - startTime;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() +
+                "{appName='" + appName + '\'' +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", components=" + Arrays.toString(components) +
+                ", session='" + session + '\'' +
+                '}';
     }
 }
