@@ -90,7 +90,7 @@ public class PowerMeasurer {
         return sensor.metadata();
     }
 
-    public Duration getSamplingPeriod() {
+    public Duration samplingPeriod() {
         return samplingPeriod;
     }
 
