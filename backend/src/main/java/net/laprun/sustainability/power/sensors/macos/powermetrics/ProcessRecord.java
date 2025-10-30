@@ -1,12 +1,42 @@
 package net.laprun.sustainability.power.sensors.macos.powermetrics;
 
-import io.quarkus.logging.Log;
+import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.CPU_SHARE;
+import static net.laprun.sustainability.power.sensors.macos.powermetrics.MacOSPowermetricsSensor.GPU;
+
+import java.util.Map;
+
+import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 class ProcessRecord {
     final double cpu;
     final double gpu;
     final String pid;
+
+    double[] asAttributedMeasure(SensorMetadata metadata, Map<String, Number> powerComponents, final double totalSampledCPU,
+            final double totalSampledGPU) {
+        final var cpuShare = cpu / totalSampledCPU;
+        final var measure = new double[metadata.componentCardinality()];
+
+        metadata.components().forEach((name, cm) -> {
+            final var index = cm.index();
+            final var value = CPU_SHARE.equals(name) ? cpuShare : powerComponents.getOrDefault(name, 0).doubleValue();
+
+            if (cm.isAttributed()) {
+                final double attributionFactor;
+                if (GPU.equals(name)) {
+                    attributionFactor = totalSampledGPU != 0 ? gpu / totalSampledGPU : 0.0;
+                } else {
+                    attributionFactor = cpuShare;
+                }
+                measure[index] = value * attributionFactor;
+            } else {
+                measure[index] = value;
+            }
+        });
+
+        return measure;
+    }
 
     public ProcessRecord(String line) throws IllegalArgumentException {
         // Expected normal output:

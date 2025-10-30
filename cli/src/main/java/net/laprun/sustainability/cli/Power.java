@@ -61,7 +61,7 @@ public class Power implements Runnable {
             process.waitFor(60, TimeUnit.SECONDS);
 
             final var measureTime = measurer.persistence()
-                    .synthesizeAndAggregateForSession(name, session, m -> (double) m.duration())
+                    .synthesizeAndAggregateForSession(Persistence.SYSTEM_TOTAL_APP_NAME, session, m -> (double) m.duration())
                     .orElseThrow(() -> new RuntimeException("Could not compute measure duration"));
             final var appPower = extractPowerConsumption(name);
             final var systemPower = extractPowerConsumption(Persistence.SYSTEM_TOTAL_APP_NAME);
@@ -105,7 +105,7 @@ public class Power implements Runnable {
         @Override
         public void onStart(NuProcess nuProcess) {
             super.onStart(nuProcess);
-            this.startTime = System.nanoTime();
+            this.startTime = System.currentTimeMillis();
         }
 
         @Override
@@ -113,13 +113,13 @@ public class Power implements Runnable {
             try {
                 super.onExit(statusCode);
             } finally {
-                duration = System.nanoTime() - this.startTime;
+                duration = System.currentTimeMillis() - this.startTime;
                 measurer.stop();
             }
         }
 
         public long duration() {
-            return duration / 1_000_000;
+            return duration;
         }
 
         private static Optional<String> stripped(String s) {

@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMeasure;
@@ -50,6 +52,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
     public static final String CPU_SHARE = "cpuShare";
     private static final String DURATION_SUFFIX = "ms elapsed) ***";
     private static final int DURATION_SUFFIX_LENGTH = DURATION_SUFFIX.length();
+    public static final String TASKS_SECTION_MARKER = "*** Running tasks ***";
+    public static final String CPU_USAGE_SECTION_MARKER = "**** Processor usage ****";
 
     private CPU cpu;
 
@@ -105,6 +109,10 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
         // nothing to do here by default
     }
 
+    private static class Section {
+        boolean done;
+    }
+
     Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch) {
         final long start = lastUpdateEpoch;
         try {
@@ -123,7 +131,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             final var metadata = cpu.metadata();
             final var powerComponents = new HashMap<String, Number>(metadata.componentCardinality());
             var endUpdateEpoch = -1L;
-            var stopProcessingProcesses = false;
+            Section processes = null;
+            Section cpuSection = null;
             while ((line = input.readLine()) != null) {
                 if (line.isEmpty()) {
                     continue;
@@ -138,79 +147,86 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
                             endUpdateEpoch = start
                                     + Math.round(Float.parseFloat(line.substring(lastOpenParenIndex + 1, startLookingIndex)));
                         }
+                        continue;
                     }
+
+                    // check for the beginning of tasks section
+                    if (processes == null && line.equals(TASKS_SECTION_MARKER)) {
+                        // make flag null to indicate it needs to be set to true on the next iteration, to avoid processing the marker line for processes
+                        processes = new Section();
+                        continue;
+                    }
+
+                    if (cpuSection == null && line.equals(CPU_USAGE_SECTION_MARKER)) {
+                        cpuSection = new Section();
+                        continue;
+                    }
+
                     continue;
                 }
 
                 // first, look for process line detailing share
-                if (!stopProcessingProcesses && !pidsToProcess.isEmpty()) {
-                    for (RegisteredPID pid : pidsToProcess) {
-                        if (line.contains(pid.stringForMatching())) {
-                            pidMeasures.put(pid, new ProcessRecord(line));
-                            pidsToProcess.remove(pid);
-                            break;
-                        }
-
-                        // todo? if pid is not found, this will loop forever and we should break if ALL_TASKS is reached without draining the pids to process
-                        if (line.startsWith("ALL_TASKS")) {
-                            Log.warnf("Couldn't find process %s", pid.stringForMatching());
-                            stopProcessingProcesses = true;
-                            break;
+                if (processes != null && !processes.done && !pidsToProcess.isEmpty()) {
+                    if (line.startsWith("ALL_TASKS")) {
+                        processes.done = true; // we reached the end of the process section
+                    } else {
+                        for (RegisteredPID pid : pidsToProcess) {
+                            if (line.contains(pid.stringForMatching())) {
+                                pidMeasures.put(pid, new ProcessRecord(line));
+                                pidsToProcess.remove(pid);
+                                break;
+                            }
                         }
                     }
-                    continue;
                 }
 
-                if (totalSampledCPU < 0) {
-                    // then skip all lines until we get the totals
-                    if (line.startsWith("ALL_TASKS")) {
-                        final var totals = new ProcessRecord(line);
-                        pidMeasures.put(Measures.SYSTEM_TOTAL_REGISTERED_PID, totals);
-                        // compute ratio
-                        totalSampledCPU = totals.cpu;
-                        totalSampledGPU = totals.gpu > 0 ? totals.gpu : 0;
+                // then skip all lines until we get the totals
+                if (totalSampledCPU < 0 && line.startsWith("ALL_TASKS")) {
+                    final var totals = new ProcessRecord(line);
+                    // compute ratio
+                    totalSampledCPU = totals.cpu;
+                    totalSampledGPU = totals.gpu > 0 ? totals.gpu : 0;
+                    if (!pidsToProcess.isEmpty()) {
+                        Log.warnf("Couldn't find processes: %s",
+                                Arrays.toString(pidsToProcess.stream().map(RegisteredPID::pid).toArray(Long[]::new)));
                     }
-                    continue;
                 }
 
                 // we need an exit condition to break out of the loop, otherwise we'll just keep looping forever since there are always new lines since the process is periodical
                 // fixme: perhaps we should relaunch the process on each update loop instead of keeping it running? Not sure which is more efficient
-                if (cpu.doneExtractingPowerComponents(line, powerComponents)) {
+                if (cpuSection != null && !cpuSection.done && cpu.doneExtractingPowerComponents(line, powerComponents)) {
                     break;
                 }
             }
 
-            final var hasGPU = totalSampledGPU != 0;
             double finalTotalSampledGPU = totalSampledGPU;
             double finalTotalSampledCPU = totalSampledCPU;
             final var endMs = endUpdateEpoch != -1 ? endUpdateEpoch : newUpdateEpoch;
+
+            // handle total system measure separately
+            measures.record(Measures.SYSTEM_TOTAL_REGISTERED_PID,
+                    new SensorMeasure(getSystemTotalMeasure(metadata, powerComponents), start, endMs));
+
             pidMeasures.forEach((pid, record) -> {
-                // todo: move to ProcessRecord?
-                final var cpuShare = record.cpu / finalTotalSampledCPU;
-                final var measure = new double[metadata.componentCardinality()];
-
-                metadata.components().forEach((name, cm) -> {
-                    final var index = cm.index();
-                    final var value = CPU_SHARE.equals(name) ? cpuShare : powerComponents.getOrDefault(name, 0).doubleValue();
-
-                    if (cm.isAttributed()) {
-                        final double attributionFactor;
-                        if (GPU.equals(name)) {
-                            attributionFactor = hasGPU ? record.gpu / finalTotalSampledGPU : 0.0;
-                        } else {
-                            attributionFactor = cpuShare;
-                        }
-                        measure[index] = value * attributionFactor;
-                    } else {
-                        measure[index] = value;
-                    }
-                });
-                measures.record(pid, new SensorMeasure(measure, start, endMs));
+                final var attributedMeasure = record.asAttributedMeasure(metadata, powerComponents, finalTotalSampledCPU,
+                        finalTotalSampledGPU);
+                measures.record(pid, new SensorMeasure(attributedMeasure, start, endMs));
             });
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
         return measures;
+    }
+
+    private static double[] getSystemTotalMeasure(SensorMetadata metadata, Map<String, Number> powerComponents) {
+        final var measure = new double[metadata.componentCardinality()];
+        metadata.components().forEach((name, cm) -> {
+            final var index = cm.index();
+            final var value = CPU_SHARE.equals(name) ? 1.0 : powerComponents.getOrDefault(name, 0).doubleValue();
+            measure[index] = value;
+        });
+
+        return measure;
     }
 
     @Override

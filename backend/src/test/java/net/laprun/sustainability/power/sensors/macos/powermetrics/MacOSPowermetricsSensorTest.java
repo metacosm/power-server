@@ -70,9 +70,29 @@ class MacOSPowermetricsSensorTest {
         final var totalCPUPower = 420;
         final var totalCPUTime = 1287.34;
         // Process CPU power should be equal to sample ms/s divided for process (here: 116.64) by total samples (1222.65) times total CPU power
-        var pidCPUShare = 224.05 / totalCPUTime;
+        final var pidCPUShare = 224.05 / totalCPUTime;
         assertEquals(pidCPUShare * totalCPUPower, getComponent(measure, pid0, cpu));
         assertEquals(startUpdateEpoch + 10458, measure.lastMeasuredUpdateEndEpoch());
+    }
+
+    @Test
+    void checkTotalPowerMeasureEvenWhenRegisteredProcessIsNotFound() {
+        final var startUpdateEpoch = System.currentTimeMillis();
+        final var sensor = new ResourceMacOSPowermetricsSensor("monterey-m2.txt", startUpdateEpoch);
+        final var metadata = sensor.metadata();
+        sensor.register(-666);
+
+        // re-open the stream to read the measure this time
+        final var measure = sensor.update(0L);
+
+        assertEquals(0, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.ANE));
+        assertEquals(19, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.DRAM));
+        assertEquals(36, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.DCS));
+        assertEquals(10, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.CPU));
+        assertEquals(0, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.GPU));
+        assertEquals(25, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.PACKAGE));
+        assertEquals(1.0, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.CPU_SHARE));
+        assertEquals(startUpdateEpoch + 1012, measure.lastMeasuredUpdateEndEpoch());
     }
 
     @Test
@@ -129,5 +149,9 @@ class MacOSPowermetricsSensorTest {
     private static double getComponent(Measures measure, RegisteredPID pid1, SensorMetadata.ComponentMetadata metadata) {
         final var index = metadata.index();
         return measure.getOrDefault(pid1).components()[index];
+    }
+
+    private static double getTotalSystemComponent(Measures measure, SensorMetadata metadata, String componentName) {
+        return getComponent(measure, Measures.SYSTEM_TOTAL_REGISTERED_PID, metadata.metadataFor(componentName));
     }
 }
