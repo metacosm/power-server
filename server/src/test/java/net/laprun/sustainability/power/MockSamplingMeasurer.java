@@ -1,11 +1,11 @@
 package net.laprun.sustainability.power;
 
 import io.quarkus.test.Mock;
-import net.laprun.sustainability.power.sensors.PowerMeasurer;
+import net.laprun.sustainability.power.sensors.SamplingMeasurer;
 
 @Mock
 @SuppressWarnings("unused")
-public class MockPowerMeasurer extends PowerMeasurer {
+public class MockSamplingMeasurer extends SamplingMeasurer {
 
     @Override
     public long validPIDOrFail(String pid) {

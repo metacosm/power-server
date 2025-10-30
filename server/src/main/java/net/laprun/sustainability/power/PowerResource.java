@@ -19,12 +19,12 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Multi;
 import net.laprun.sustainability.power.persistence.Measure;
 import net.laprun.sustainability.power.persistence.Persistence;
-import net.laprun.sustainability.power.sensors.PowerMeasurer;
+import net.laprun.sustainability.power.sensors.SamplingMeasurer;
 
 @Path("/power")
 public class PowerResource {
     @Inject
-    PowerMeasurer measurer;
+    SamplingMeasurer measurer;
 
     public void onStartup(@Observes StartupEvent event) {
         Log.info("\nConfigured sampling period: " + samplingPeriod() +

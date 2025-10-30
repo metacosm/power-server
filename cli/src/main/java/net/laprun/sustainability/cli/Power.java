@@ -14,6 +14,7 @@ import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.total.TotalSyntheticComponent;
 import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
 import net.laprun.sustainability.power.persistence.Persistence;
+import net.laprun.sustainability.power.sensors.SamplingMeasurer;
 import picocli.CommandLine;
 
 @CommandLine.Command
@@ -30,9 +31,9 @@ public class Power implements Runnable {
             "--command" }, required = true, description = "Command to measure energy consumption for")
     String cmd;
 
-    private final net.laprun.sustainability.power.sensors.PowerMeasurer measurer;
+    private final SamplingMeasurer measurer;
 
-    public Power(net.laprun.sustainability.power.sensors.PowerMeasurer measurer) throws IOException {
+    public Power(SamplingMeasurer measurer) {
         this.measurer = measurer;
     }
 

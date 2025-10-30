@@ -23,7 +23,7 @@ import org.junit.jupiter.api.condition.OS;
 
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
-import net.laprun.sustainability.power.sensors.PowerMeasurer;
+import net.laprun.sustainability.power.sensors.SamplingMeasurer;
 
 @QuarkusTest
 public class PowerResourceTest {
@@ -61,7 +61,7 @@ public class PowerResourceTest {
                 .then()
                 .statusCode(200)
                 .extract().body().as(Duration.class);
-        assertEquals(Duration.parse(PowerMeasurer.DEFAULT_SAMPLING_PERIOD), duration);
+        assertEquals(Duration.parse(SamplingMeasurer.DEFAULT_SAMPLING_PERIOD), duration);
     }
 
     protected long getPid() {
