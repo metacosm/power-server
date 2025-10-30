@@ -19,8 +19,6 @@ class ProcessRecord {
             // Trim leading/trailing whitespace
             line = line.trim();
 
-            Log.info(line);
-
             // Find first whitespace block after process name (marks start of ID)
             int idStart = findFirstWhitespace(line);
             if (idStart == -1) {

@@ -22,7 +22,7 @@ public class Persistence {
         persisted.startTime = measure.startMs();
         persisted.endTime = measure.endMs();
         persisted.persist();
-        Log.infof("Persisted %s, measure duration: %sms", persisted, persisted.endTime - persisted.startTime);
+        Log.debugf("Persisted %s, measure duration: %sms", persisted, persisted.endTime - persisted.startTime);
         return persisted;
     }
 
