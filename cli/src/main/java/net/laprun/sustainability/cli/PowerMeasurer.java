@@ -45,8 +45,12 @@ public class PowerMeasurer {
         return periodicSensorCheck.map(measures -> measures.getOrDefault(registeredPID));
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public Cancellable startTrackingApp(String appName, long pid, String session) throws Exception {
-        final var tracked = uncheckedStream(pid).subscribe().with(m -> persistence.save(m, appName, session));
+        final var tracked = uncheckedStream(pid)
+                .filter(m -> SensorMeasure.missing != m)
+                .subscribe()
+                .with(m -> persistence.save(m, appName, session));
         manuallyTrackedProcesses.put(pid, tracked);
         return tracked;
     }
