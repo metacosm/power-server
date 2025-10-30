@@ -17,7 +17,7 @@ import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.persistence.Persistence;
 
 @ApplicationScoped
-public class PowerMeasurer {
+public class SamplingMeasurer {
 
     public static final String DEFAULT_SAMPLING_PERIOD = "PT0.5S";
     @Inject
