@@ -1,4 +1,4 @@
-package net.laprun.sustainability.cli;
+package net.laprun.sustainability.power.sensors;
 
 import java.time.Duration;
 import java.util.Map;
@@ -15,9 +15,6 @@ import io.smallrye.mutiny.subscription.Cancellable;
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.persistence.Persistence;
-import net.laprun.sustainability.power.sensors.Measures;
-import net.laprun.sustainability.power.sensors.PowerSensor;
-import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 @ApplicationScoped
 public class PowerMeasurer {

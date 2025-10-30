@@ -23,6 +23,7 @@ import org.junit.jupiter.api.condition.OS;
 
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
+import net.laprun.sustainability.power.sensors.PowerMeasurer;
 
 @QuarkusTest
 public class PowerResourceTest {

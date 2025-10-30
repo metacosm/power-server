@@ -30,9 +30,9 @@ public class Power implements Runnable {
             "--command" }, required = true, description = "Command to measure energy consumption for")
     String cmd;
 
-    private final PowerMeasurer measurer;
+    private final net.laprun.sustainability.power.sensors.PowerMeasurer measurer;
 
-    public Power(PowerMeasurer measurer) throws IOException {
+    public Power(net.laprun.sustainability.power.sensors.PowerMeasurer measurer) throws IOException {
         this.measurer = measurer;
     }
 
