@@ -11,6 +11,10 @@
   <name>power-server : backend</name>
   <description>Power consumption measuring backend</description>
 
+  <properties>
+    <nuprocess.version>3.0.0</nuprocess.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>net.laprun.sustainability</groupId>
@@ -18,18 +22,23 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>net.laprun.sustainability</groupId>
+      <artifactId>power-server-persistence</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>nuprocess</artifactId>
+      <version>${nuprocess.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.zaxxer</groupId>
-      <artifactId>nuprocess</artifactId>
-      <version>3.0.0</version>
     </dependency>
   </dependencies>
   <build>
