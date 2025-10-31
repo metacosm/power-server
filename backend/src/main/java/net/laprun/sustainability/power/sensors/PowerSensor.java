@@ -8,6 +8,16 @@ import net.laprun.sustainability.power.SensorMetadata;
 public interface PowerSensor {
 
     /**
+     * Whether the sensor supports process attribution of power, i.e. is measured power imputed to each process or does
+     * attribution need to be performed externally to the sensor.
+     *
+     * @return {@code true} if this sensor attributes power to each individual processes, {@code false} otherwise
+     */
+    default boolean supportsProcessAttribution() {
+        return false;
+    }
+
+    /**
      * Stops measuring power consumption
      */
     default void stop() {

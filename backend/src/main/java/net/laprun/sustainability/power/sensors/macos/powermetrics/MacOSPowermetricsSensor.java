@@ -61,6 +61,11 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
         super(new MapMeasures());
     }
 
+    @Override
+    public boolean supportsProcessAttribution() {
+        return true;
+    }
+
     void initMetadata(InputStream inputStream) {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
