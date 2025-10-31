@@ -12,6 +12,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
+import net.laprun.sustainability.power.ProcessUtils;
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.persistence.Persistence;
@@ -81,9 +82,7 @@ public class SamplingMeasurer {
     }
 
     public long validPIDOrFail(String pid) {
-        final var parsedPID = Long.parseLong(pid);
-        ProcessHandle.of(parsedPID).orElseThrow(() -> new IllegalArgumentException("Unknown process: " + pid));
-        return parsedPID;
+        return ProcessUtils.validPIDOrFail(pid);
     }
 
     public SensorMetadata metadata() {
