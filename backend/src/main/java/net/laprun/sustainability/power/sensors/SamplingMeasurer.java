@@ -75,7 +75,7 @@ public class SamplingMeasurer {
     /**
      * Starts measuring even in the absence of registered PID. This will record the system's total energy consumption.
      *
-     * @throws Exception
+     * @throws Exception if an exception occurred while measuring the energy consumption
      */
     public void start(String session) throws Exception {
         startTrackingApp(Persistence.SYSTEM_TOTAL_APP_NAME, Measures.SYSTEM_TOTAL_PID, session);
