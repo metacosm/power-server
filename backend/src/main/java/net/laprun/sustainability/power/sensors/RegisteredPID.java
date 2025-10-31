@@ -18,4 +18,8 @@ public record RegisteredPID(String stringForMatching) {
     public long pid() {
         return Long.parseLong(stringForMatching().trim());
     }
+
+    public String pidAsString() {
+        return stringForMatching().trim();
+    }
 }
