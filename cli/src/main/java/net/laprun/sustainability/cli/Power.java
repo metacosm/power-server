@@ -99,7 +99,7 @@ public class Power implements Runnable {
         private long duration;
 
         public ExternalProcessHandler(String cmd) {
-            super("/bin/bash", "-c", stripped(cmd).orElseThrow());
+            super("/bin/sh", "-c", stripped(cmd).orElseThrow());
         }
 
         @Override
