@@ -1,5 +1,6 @@
 package net.laprun.sustainability.cli;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -9,6 +10,7 @@ import com.zaxxer.nuprocess.NuProcessBuilder;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.Quarkus;
 import net.laprun.sustainability.power.Measure;
+import net.laprun.sustainability.power.ProcessUtils;
 import net.laprun.sustainability.power.SensorUnit;
 import net.laprun.sustainability.power.analysis.total.TotalSyntheticComponent;
 import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
@@ -105,7 +107,9 @@ public class Power implements Runnable {
         @Override
         public void onStart(NuProcess nuProcess) {
             super.onStart(nuProcess);
-            this.startTime = System.currentTimeMillis();
+            final var start = System.currentTimeMillis();
+            ProcessUtils.processHandleOf(nuProcess.getPID()).onExit()
+                    .thenAccept(ph -> startTime = ph.info().startInstant().map(Instant::toEpochMilli).orElse(start));
         }
 
         @Override
