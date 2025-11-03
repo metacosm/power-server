@@ -116,9 +116,7 @@ jobs:
       - name: 'Release with JReleaser'
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-#          mvn -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -pl server,cli
-          mvn -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -pl server
+        run: mvn -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -pl server
 
       - name: 'JReleaser output'
         if: always()
