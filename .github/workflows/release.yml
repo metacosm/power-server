@@ -109,7 +109,7 @@ jobs:
       - name: 'Set up Java'
         uses: actions/setup-java@v5
         with:
-          java-version: 17
+          java-version: 21
           distribution: 'temurin'
           cache: maven
 
@@ -117,7 +117,7 @@ jobs:
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mvn -ntp -B --file server/pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
+          mvn -ntp -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release -pl server,cli
 
       - name: 'JReleaser output'
         if: always()

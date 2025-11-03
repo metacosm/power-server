@@ -1,6 +1,5 @@
 package net.laprun.sustainability.cli;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 

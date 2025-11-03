@@ -1,4 +1,4 @@
-name: Native build test
+name: Native build
 
 on:
   workflow_dispatch:
@@ -43,18 +43,14 @@ jobs:
 
       - name: 'Build Native Image'
         run: |
-          pushd server
-          mvn -ntp -B --file pom.xml -Pnative package -DskipTests
-          popd
+          mvn -ntp -B --file pom.xml -Pnative package -DskipTests -pl server,cli
 
       - name: 'Create distribution'
         run: |
-          pushd server
-          mvn -ntp -B --file pom.xml -Pdist package -DskipTests
-          popd
+          mvn -ntp -B --file pom.xml -Pdist package -DskipTests -pl server,cli
 
       - name: 'Upload build artifact'
         uses: actions/upload-artifact@v5
         with:
           name: power-server-${{ runner.os }}-${{ runner.arch }}
-          path: server/target/distributions/*.tar.gz
+          path: **/target/distributions/*.tar.gz

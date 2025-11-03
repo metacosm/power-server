@@ -10,6 +10,10 @@
   <artifactId>power-server-cli</artifactId>
   <name>power-server : cli</name>
   <description>A CLI command to measure power consumption of the specified process</description>
+  <properties>
+    <distribution.directory>${project.build.directory}/distributions</distribution.directory>
+    <executable-suffix/>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>net.laprun.sustainability</groupId>
@@ -33,6 +37,13 @@
   </dependencies>
 
   <build>
+    <extensions>
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>${os-maven-plugin.version}</version>
+      </extension>
+    </extensions>
     <plugins>
       <plugin>
         <groupId>net.revelc.code.formatter</groupId>
@@ -43,5 +54,47 @@
       </plugin>
     </plugins>
   </build>
-
+  <profiles>
+    <profile>
+      <id>dist</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>${maven-assembly-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>make-distribution</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <attach>false</attach>
+              <appendAssemblyId>false</appendAssemblyId>
+              <finalName>${project.artifactId}-${project.version}-${os.detected.classifier}</finalName>
+              <outputDirectory>${distribution.directory}</outputDirectory>
+              <workDirectory>${project.build.directory}/assembly/work</workDirectory>
+              <descriptors>
+                <descriptor>src/main/assembly/assembly.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>dist-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <executable-suffix>.exe</executable-suffix>
+      </properties>
+    </profile>
+  </profiles>
 </project>
