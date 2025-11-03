@@ -100,7 +100,7 @@ jobs:
       # checkout will clobber downloaded artifacts
       # we have to download them again
       - name: 'Download all build artifacts'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts
           pattern: power-server-*
