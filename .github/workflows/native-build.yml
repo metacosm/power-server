@@ -53,4 +53,6 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: power-server-${{ runner.os }}-${{ runner.arch }}
-          path: **/target/distributions/*.tar.gz
+          path: |
+            server/target/distributions/*.tar.gz
+            cli/target/distributions/*.tar.gz
