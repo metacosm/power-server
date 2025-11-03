@@ -43,11 +43,13 @@ jobs:
 
       - name: 'Build Native Image'
         run: |
-          mvn -ntp -B --file pom.xml -Pnative package -DskipTests -pl server,cli
+#          mvn -ntp -B --file pom.xml -Pnative package -DskipTests -pl server,cli
+          mvn -ntp -B --file pom.xml -Pnative package -DskipTests -pl server
 
       - name: 'Create distribution'
         run: |
-          mvn -ntp -B --file pom.xml -Pdist package -DskipTests -pl server,cli
+#          mvn -ntp -B --file pom.xml -Pdist package -DskipTests -pl server,cli
+          mvn -ntp -B --file pom.xml -Pdist package -DskipTests -pl server
 
       - name: 'Upload build artifact'
         uses: actions/upload-artifact@v5
@@ -55,4 +57,4 @@ jobs:
           name: power-server-${{ runner.os }}-${{ runner.arch }}
           path: |
             server/target/distributions/*.tar.gz
-            cli/target/distributions/*.tar.gz
+#            cli/target/distributions/*.tar.gz
