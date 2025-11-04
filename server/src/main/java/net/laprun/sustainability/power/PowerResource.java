@@ -35,7 +35,9 @@ public class PowerResource {
     }
 
     /**
-     * Streams power consumption measures associated with the specified process id, if such process is currently running on the system.
+     * Streams power consumption measures associated with the specified process id, if such process is currently running on the
+     * system.
+     *
      * @param pid the process identified for which we want to stream measures
      * @return a stream of {@link SensorMeasure}
      * @throws Exception if an error occurred while measuring the power consumption
@@ -53,6 +55,7 @@ public class PowerResource {
 
     /**
      * Starts measuring the power consumption of the specified application as identified with the specified name and process id
+     *
      * @param appName the application name, used to correlate several measures across different runs
      * @param pid the process id associated with the current run of the application
      * @throws Exception if an error occurred while measuring the power consumption
@@ -69,6 +72,7 @@ public class PowerResource {
 
     /**
      * Retrieves the metadata associated with the power sensors of the underlying platform
+     *
      * @return the {@link SensorMetadata} associated with the platform's sensors
      */
     @GET
@@ -79,6 +83,7 @@ public class PowerResource {
 
     /**
      * Retrieves the currently used sampling period
+     *
      * @return the sampling period
      */
     @GET
@@ -89,6 +94,7 @@ public class PowerResource {
 
     /**
      * Retrieves all recorded measures associated with the specified application
+     *
      * @param appName the application identifier as provided to {@link #startMeasure(String, String)}
      * @return the chronological list of measures associated with the specified application
      */
