@@ -1,33 +1,25 @@
 # power-server
 
-This project is meant to provide a REST endpoint streaming power consumption, inspired
-by [JoularJX](https://github.com/joular/joularjx) but focusing on exposing power information and metadata over REST
-without further processing.
+This project is meant to provide abstractions over power measurement details, which are platform specific, to enable simplified measure of power consumption, inspired by [JoularJX](https://github.com/joular/joularjx) but focusing on exposing power information and metadata. Several tools are provided, included a REST endpoint and a command-line interface.
 
-This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java Framework and comprises 3 modules:
+This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java Framework and comprises several modules:
 
-- `analysis`, which contains utilities helpful to analyze power measures (computations, statistics, histograms, etc…)
-- `if-manifest-export`, which provides a means to export a stopped measure as
+- `analysis` contains utilities helpful to analyze power measures (computations, statistics, histograms, etc…)
+- `backend` provides the core functionality of the power measurement, including the sampling and sensor logic
+-  `cli` provides a command-line interface to measure power consumption of a specified command
+- `if-manifest-export` provides a means to export a stopped measure as
   a [Green Software Foundation](https://greensoftware.foundation/) [Impact Framework](https://if.greensoftware.foundation/)
   manifest
-- `measure`, which provides classes to help record and process measures in client applications
-- `metadata`, which contains the metadata API that the RESTful server uses to provide information about what is returned
+- `measure` provides classes to help record and process measures in client applications
+- `metadata` defines the metadata API that the RESTful server uses to provide information about what is returned
   by the power sensors. This artifact contains classes that can be reused in client projects.
+- `persistence` provides support to persist measure data to databases (currently, only to SQLite)
 - `server` contains the RESTful server, listening by default on port `20432` (as specified
   in
   `[application.properties](https://github.com/metacosm/power-server/blob/87bba3196fa0e552665b4f1d22006377779b0959/server/src/main/resources/application.properties#L1)`)
 
-The server provides the following endpoints:
 
-- `/power/{pid}` where `pid` is a String representation of a process identifier, identifying a process running on the
-  machine where `power-server` is running.
-- `/power/metadata` provides information about how measures streamed from the main endpoint is formatted as well as
-  information about power components.
-- `/power/sampling` provides the currently configured power measure sampling period, which can be configured using the
-  `net.laprun.sustainability.power.sampling-period` property, passing it a `String` that can be converted to a Java
-  `Duration`.
-
-The main endpoint streams `SensorMeasure` objects as defined in the `metadata`module as an array of double measures.
+The main endpoint streams `SensorMeasure` objects as defined in the `metadata` module as an array of double measures.
 Typically, main sensor components are measured in milli Watts for easier consumption but clients should check the
 information provided by the metadata endpoint to learn the layout of the measures array and which meaning they carry.
 For example, the macOS implementation provides a decimal percentage
