@@ -3,14 +3,18 @@ package net.laprun.sustainability.power.nuprocess;
 import java.nio.ByteBuffer;
 
 class GrowableBuffer {
+    private static final int DEFAULT_SIZE = 20000;
     private ByteBuffer buffer;
 
     public GrowableBuffer() {
-        this(20000);
+        this(DEFAULT_SIZE);
     }
 
     public GrowableBuffer(int size) {
-        buffer  = ByteBuffer.allocateDirect(size);
+        if (size <= 0) {
+            size = DEFAULT_SIZE;
+        }
+        buffer = ByteBuffer.allocate(size);
     }
 
     public void put(ByteBuffer input) {
