@@ -16,7 +16,7 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
         if (Measures.SYSTEM_TOTAL_PID == pid) {
             return Measures.SYSTEM_TOTAL_REGISTERED_PID;
         }
-        Log.info("Registered pid: " + pid);
+        Log.debugf("Registered pid: %d", pid);
         return measures.register(pid);
     }
 
@@ -24,7 +24,7 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
     public void unregister(RegisteredPID registeredPID) {
         if (Measures.SYSTEM_TOTAL_REGISTERED_PID != registeredPID) {
             measures.unregister(registeredPID);
-            Log.info("Unregistered pid: " + registeredPID.pid());
+            Log.debugf("Unregistered pid: %d", registeredPID.pid());
         }
     }
 
