@@ -12,14 +12,6 @@ public enum ProcessUtils {
         return parsedPID;
     }
 
-    public static Optional<Duration> cpuUsageOf(long pid) {
-        return cpuUsageOf(processHandleOf(pid));
-    }
-
-    public static Optional<Duration> cpuUsageOf(ProcessHandle ph) {
-        return ph.info().totalCpuDuration();
-    }
-
     public static ProcessHandle processHandleOf(long parsedPID) {
         return ProcessHandle.of(parsedPID).orElseThrow(() -> new IllegalArgumentException("Unknown process: " + parsedPID));
     }
