@@ -1,8 +1,5 @@
 package net.laprun.sustainability.power;
 
-import java.time.Duration;
-import java.util.Optional;
-
 public enum ProcessUtils {
     ;
 
