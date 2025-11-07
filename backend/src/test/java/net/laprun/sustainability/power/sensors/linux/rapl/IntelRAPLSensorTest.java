@@ -2,7 +2,6 @@ package net.laprun.sustainability.power.sensors.linux.rapl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.File;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
@@ -21,8 +20,9 @@ public class IntelRAPLSensorTest {
     }
 
     private SensorMetadata loadMetadata(String... fileNames) {
+        Class<? extends IntelRAPLSensorTest> clazz = getClass();
         final var files = Arrays.stream(fileNames)
-                .map(name -> new File(getClass().getClassLoader().getResource(name).getFile()).getAbsolutePath())
+                .map(name -> ResourceHelper.getResourcePathAsString(clazz, name))
                 .toArray(String[]::new);
         return new IntelRAPLSensor(files).metadata();
     }

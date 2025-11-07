@@ -5,7 +5,9 @@ import java.nio.file.Path;
 interface RAPLFile {
     long extractEnergyInMicroJoules();
 
+    String contentAsString();
+
     static RAPLFile createFrom(Path file) {
-        return ByteBufferRAPLFile.createFrom(file);
+        return new ProcessReadRAPLFile(file);
     }
 }

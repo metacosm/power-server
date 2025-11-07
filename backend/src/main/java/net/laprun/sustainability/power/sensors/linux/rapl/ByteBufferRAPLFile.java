@@ -25,6 +25,23 @@ class ByteBufferRAPLFile implements RAPLFile {
         }
     }
 
+    @Override
+    public String contentAsString() {
+        // todo: untested
+        try {
+            channel.read(buffer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (buffer.hasRemaining()) {
+            buffer.flip();
+            var bytes = new byte[buffer.remaining()];
+            buffer.get(bytes);
+            return new String(bytes);
+        }
+        return "";
+    }
+
     public long extractEnergyInMicroJoules() {
         try {
             channel.read(buffer);

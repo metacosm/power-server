@@ -12,19 +12,23 @@ import org.junit.jupiter.api.Test;
 public class RAPLFileTest {
     @Test
     void periodicReadingShouldWork() throws IOException, InterruptedException {
+        final var file = Path.of("target/test.txt");
+        final var raplFile = RAPLFile.createFrom(file);
         for (int i = 0; i < 5; i++) {
-            writeThenRead();
+            writeThenRead(raplFile, file);
         }
     }
 
-    private static void writeThenRead() throws IOException, InterruptedException {
-        final var file = Path.of("target/test.txt");
+    private static void writeThenRead(RAPLFile raplFile, Path file) throws IOException, InterruptedException {
         final var value = Math.abs(new Random().nextLong());
         Files.writeString(file, value + "\n");
-        Thread.sleep(50);
+        Thread.sleep(25);
 
-        final var raplFile = ByteBufferRAPLFile.createFrom(file);
         final var measure = raplFile.extractEnergyInMicroJoules();
         assertEquals(value, measure);
+
+        Files.writeString(file, "foo\n");
+        Thread.sleep(25);
+        assertEquals("foo", raplFile.contentAsString());
     }
 }
