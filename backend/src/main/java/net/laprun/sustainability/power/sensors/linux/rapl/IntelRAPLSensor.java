@@ -2,7 +2,6 @@ package net.laprun.sustainability.power.sensors.linux.rapl;
 
 import static net.laprun.sustainability.power.SensorUnit.*;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -78,28 +77,25 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
     }
 
     private static boolean addFileIfReadable(String raplFileAsString, SortedMap<String, RAPLFile> files) {
-        final var raplFile = Path.of(raplFileAsString);
-        if (isReadable(raplFile)) {
+        final var path = Path.of(raplFileAsString);
+        if (Files.exists(path)) {
             // get metric name
-            final var nameFile = raplFile.resolveSibling("name");
-            if (!isReadable(nameFile)) {
+            final var nameFile = path.resolveSibling("name");
+            if (!Files.exists(nameFile)) {
                 throw new IllegalStateException("No name associated with " + raplFileAsString);
             }
 
             try {
-                final var name = Files.readString(nameFile).trim();
-                files.put(name, RAPLFile.createFrom(raplFile));
-            } catch (IOException e) {
-                Log.debug("Couldn't read file: " + nameFile, e);
+                final var raplFile = RAPLFile.createFrom(path);
+                final var name = RAPLFile.createFrom(nameFile).contentAsString().trim();
+                files.put(name, raplFile);
+            } catch (Exception e) {
+                Log.debugf("Couldn't read file: %s, cause: %s", nameFile, e);
                 return false;
             }
             return true;
         }
         return false;
-    }
-
-    private static boolean isReadable(Path file) {
-        return Files.exists(file) && Files.isReadable(file);
     }
 
     @Override

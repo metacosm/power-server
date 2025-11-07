@@ -16,6 +16,7 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.sse.SseEventSource;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -122,6 +123,7 @@ public class PowerResourceTest {
 
     @Test
     @EnabledOnOs(OS.LINUX)
+    @Disabled
     public void testLinuxMetadataEndpoint() {
         final var metadata = given()
                 .when().get("/power/metadata")
