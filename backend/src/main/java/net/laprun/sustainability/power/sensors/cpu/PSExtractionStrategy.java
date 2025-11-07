@@ -8,7 +8,7 @@ import java.util.Set;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 
 import io.quarkus.logging.Log;
-import net.laprun.sustainability.power.nuprocess.OutputRecordingProcessHandler;
+import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
 
 public class PSExtractionStrategy implements ExtractionStrategy {
     public static final ExtractionStrategy INSTANCE = new PSExtractionStrategy();
@@ -18,8 +18,7 @@ public class PSExtractionStrategy implements ExtractionStrategy {
         final var cpuShares = new HashMap<String, Double>(pids.size());
         final var pidList = String.join(",", pids);
         final var cmd = new String[] { "ps", "-p", pidList, "-o", "pid=,pcpu=" };
-        //                        final var cmd = new String[] {"top", "-pid", "" + pid, "-l", "4", "-stats", "cpu"};
-        final var psHandler = new OutputRecordingProcessHandler(256, cmd) {
+        final var psHandler = new BaseProcessHandler(cmd) {
 
             @Override
             public void onStdout(ByteBuffer buffer, boolean closed) {
