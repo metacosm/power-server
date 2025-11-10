@@ -13,7 +13,7 @@ public class MapMeasures implements Measures {
 
     @Override
     public RegisteredPID register(long pid) {
-        final var key = new RegisteredPID(pid);
+        final var key = RegisteredPID.create(pid);
         measures.put(key, SensorMeasure.missing);
         return key;
     }

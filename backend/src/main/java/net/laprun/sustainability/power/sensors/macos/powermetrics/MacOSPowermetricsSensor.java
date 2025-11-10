@@ -130,7 +130,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             // copy the pids so that we can remove them as soon as we've processed them
             final var pidsToProcess = new HashSet<>(measures.trackedPIDs());
             // remove total system "pid"
-            pidsToProcess.remove(Measures.SYSTEM_TOTAL_REGISTERED_PID);
+            pidsToProcess.remove(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID);
             // start measure
             final var pidMeasures = new HashMap<RegisteredPID, ProcessRecord>(measures.numberOfTrackedPIDs());
             final var metadata = cpu.metadata();
@@ -209,7 +209,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             final var endMs = endUpdateEpoch != -1 ? endUpdateEpoch : newUpdateEpoch;
 
             // handle total system measure separately
-            measures.record(Measures.SYSTEM_TOTAL_REGISTERED_PID,
+            measures.record(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID,
                     new SensorMeasure(getSystemTotalMeasure(metadata, powerComponents), start, endMs));
 
             pidMeasures.forEach((pid, record) -> {
