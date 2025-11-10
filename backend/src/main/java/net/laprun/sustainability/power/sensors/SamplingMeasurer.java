@@ -78,7 +78,7 @@ public class SamplingMeasurer {
      * @throws Exception if an exception occurred while measuring the energy consumption
      */
     public void start(String session) throws Exception {
-        startTrackingApp(Persistence.SYSTEM_TOTAL_APP_NAME, Measures.SYSTEM_TOTAL_PID, session);
+        startTrackingApp(Persistence.SYSTEM_TOTAL_APP_NAME, RegisteredPID.SYSTEM_TOTAL_PID, session);
     }
 
     public long validPIDOrFail(String pid) {
@@ -103,7 +103,7 @@ public class SamplingMeasurer {
     }
 
     public void stopTrackingProcess(long processId) {
-        sensor.unregister(new RegisteredPID(processId));
+        sensor.unregister(RegisteredPID.create(processId));
         // cancel associated process tracking
         manuallyTrackedProcesses.remove(processId).cancel();
     }

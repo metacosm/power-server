@@ -19,7 +19,7 @@ class SingleMeasureMeasures implements Measures {
 
     @Override
     public RegisteredPID register(long pid) {
-        final var registeredPID = new RegisteredPID(pid);
+        final var registeredPID = RegisteredPID.create(pid);
         trackedPIDs.add(registeredPID);
         pids.add(registeredPID.pidAsString());
         return registeredPID;

@@ -152,6 +152,6 @@ class MacOSPowermetricsSensorTest {
     }
 
     private static double getTotalSystemComponent(Measures measure, SensorMetadata metadata, String componentName) {
-        return getComponent(measure, Measures.SYSTEM_TOTAL_REGISTERED_PID, metadata.metadataFor(componentName));
+        return getComponent(measure, RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID, metadata.metadataFor(componentName));
     }
 }
