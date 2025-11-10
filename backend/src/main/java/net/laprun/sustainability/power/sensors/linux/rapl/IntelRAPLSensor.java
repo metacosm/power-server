@@ -5,6 +5,7 @@ import static net.laprun.sustainability.power.SensorUnit.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.BiConsumer;
 
 import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMeasure;
@@ -18,8 +19,7 @@ import net.laprun.sustainability.power.sensors.Measures;
 public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> {
     private final RAPLFile[] raplFiles;
     private final SensorMetadata metadata;
-    private final double[] lastMeasuredSensorValues;
-    private long frequency;
+    private final long[] lastMeasuredSensorValues;
 
     /**
      * Initializes the RAPL sensor
@@ -55,7 +55,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
         return files;
     }
 
-    private IntelRAPLSensor(SortedMap<String, RAPLFile> files) {
+    IntelRAPLSensor(SortedMap<String, RAPLFile> files) {
         super(new SingleMeasureMeasures());
         if (files.isEmpty())
             throw new RuntimeException("Failed to get RAPL energy readings, probably due to lack of read access ");
@@ -73,7 +73,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
         }
         this.metadata = new SensorMetadata(metadata,
                 "Linux RAPL derived information, see https://www.kernel.org/doc/html/latest/power/powercap/powercap.html");
-        lastMeasuredSensorValues = new double[raplFiles.length];
+        lastMeasuredSensorValues = new long[raplFiles.length];
     }
 
     private static boolean addFileIfReadable(String raplFileAsString, SortedMap<String, RAPLFile> files) {
@@ -100,10 +100,8 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
 
     @Override
     public void doStart(long frequency) {
-        this.frequency = frequency;
-
         // perform an initial measure to prime the data
-        update(0L);
+        readAndRecordSensor(null, lastUpdateEpoch());
     }
 
     /**
@@ -114,8 +112,16 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
      * @param newMeasureTime the epoch of the new measure being taken
      * @return the power over the interval defined by the sampling frequency in mW
      */
-    private double computePowerInMilliWatt(int componentIndex, long sensorValue, long newMeasureTime) {
-        return (sensorValue - lastMeasuredSensorValues[componentIndex]) / (newMeasureTime - lastUpdateEpoch()) / 1000;
+    private double computePowerInMilliWatts(int componentIndex, long sensorValue, long newMeasureTime) {
+        return computePowerInMilliWatts(sensorValue, lastMeasuredSensorValues[componentIndex], newMeasureTime,
+                lastUpdateEpoch());
+    }
+
+    static double computePowerInMilliWatts(long newValue, long prevValue, long newMeasureTime, long prevMeasureTime) {
+        assert newValue > prevValue : "RAPL overflow occurred, need to deal with it!";
+        assert newMeasureTime > prevMeasureTime : "Not enough time elapsed between measures or order of times problem";
+        final var msBetweenMeasures = newMeasureTime - prevMeasureTime;
+        return (double) (newValue - prevValue) / msBetweenMeasures / 1000;
     }
 
     @Override
@@ -124,20 +130,27 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
     }
 
     @Override
-    public boolean isStarted() {
-        return frequency > 0;
-    }
-
-    @Override
     protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
         final var measure = new double[raplFiles.length];
-        for (int i = 0; i < raplFiles.length; i++) {
-            final var value = raplFiles[i].extractEnergyInMicroJoules();
-            final var newComponentValue = computePowerInMilliWatt(i, value, newUpdateStartEpoch);
-            measure[i] = newComponentValue;
-            lastMeasuredSensorValues[i] = newComponentValue;
-        }
+        readAndRecordSensor((value, index) -> measure[index] = computePowerInMilliWatts(index, value, newUpdateStartEpoch),
+                newUpdateStartEpoch);
         measures.singleMeasure(new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch));
         return measures;
+    }
+
+    protected void readAndRecordSensor(BiConsumer<Long, Integer> onReadingSensorValueAtIndex, long newUpdateStartEpoch) {
+        for (int i = 0; i < raplFiles.length; i++) {
+            final var value = raplFiles[i].extractEnergyInMicroJoules();
+            if (onReadingSensorValueAtIndex != null) {
+                onReadingSensorValueAtIndex.accept(value, i);
+            }
+            // record sensor value for next measure
+            lastMeasuredSensorValues[i] = value;
+        }
+    }
+
+    // for test purposes
+    protected RAPLFile raplFile(int index) {
+        return raplFiles[index];
     }
 }
