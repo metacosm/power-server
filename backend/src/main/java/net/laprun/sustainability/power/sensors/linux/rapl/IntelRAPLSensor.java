@@ -150,7 +150,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
     }
 
     // for test purposes
-    protected RAPLFile raplFile(int index) {
+    RAPLFile raplFile(int index) {
         return raplFiles[index];
     }
 }

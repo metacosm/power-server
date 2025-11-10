@@ -13,7 +13,7 @@ public class RAPLFileTest {
     @Test
     void periodicReadingShouldWork() throws IOException, InterruptedException {
         final var file = Path.of("target/test.txt");
-        final var raplFile = RAPLFile.createFrom(file);
+        final var raplFile = new ProcessReadRAPLFile(file, false);
         for (int i = 0; i < 5; i++) {
             writeThenRead(raplFile, file);
         }
