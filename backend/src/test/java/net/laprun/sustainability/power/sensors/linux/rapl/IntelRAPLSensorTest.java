@@ -76,7 +76,7 @@ public class IntelRAPLSensorTest {
     @Test
     void basicWattComputationShouldWork() {
         final var power = IntelRAPLSensor.computePowerInMilliWatts(200, 100, 2000, 1000);
-        assertEquals((double) 100 / 1000 / 1000, power);
+        assertEquals((double) 100 / 1000, power);
     }
 
     private static class TestIntelRAPLSensor extends IntelRAPLSensor {
@@ -107,7 +107,7 @@ public class IntelRAPLSensorTest {
         assertEquals(1, components.length);
         assertEquals(2, raplFile.callCount());
         final var interval = raplFile.measureTimeFor(1) - raplFile.measureTimeFor(0);
-        final var expected = (double) (raplFile.valueAt(1) - raplFile.valueAt(0)) / interval / 1000;
+        final var expected = (double) (raplFile.valueAt(1) - raplFile.valueAt(0)) / interval;
         assertEquals(expected, components[0]);
     }
 

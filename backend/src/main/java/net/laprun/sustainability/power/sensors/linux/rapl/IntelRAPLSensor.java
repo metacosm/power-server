@@ -117,11 +117,12 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
                 lastUpdateEpoch());
     }
 
-    static double computePowerInMilliWatts(long newValue, long prevValue, long newMeasureTime, long prevMeasureTime) {
-        assert newValue > prevValue : "RAPL overflow occurred, need to deal with it!";
-        assert newMeasureTime > prevMeasureTime : "Not enough time elapsed between measures or order of times problem";
-        final var msBetweenMeasures = newMeasureTime - prevMeasureTime;
-        return (double) (newValue - prevValue) / msBetweenMeasures / 1000;
+    static double computePowerInMilliWatts(long newMicroJoules, long prevMicroJoules, long newMeasureTimeMS,
+            long prevMeasureTimeMS) {
+        assert newMicroJoules > prevMicroJoules : "RAPL overflow occurred, need to deal with it!";
+        assert newMeasureTimeMS > prevMeasureTimeMS : "Not enough time elapsed between measures or order of times problem";
+        final var msBetweenMeasures = newMeasureTimeMS - prevMeasureTimeMS;
+        return (double) (newMicroJoules - prevMicroJoules) / msBetweenMeasures;
     }
 
     @Override
