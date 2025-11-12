@@ -15,6 +15,10 @@ public class Persistence {
 
     @Transactional
     public Measure save(SensorMeasure measure, String appName, String session) {
+        if (SensorMeasure.missing == measure) {
+            Log.debugf("Ignoring missing measure for app: %s, session: %s", appName, session);
+            return null;
+        }
         final var persisted = new Measure();
         persisted.components = measure.components();
         persisted.appName = appName;
@@ -35,7 +39,6 @@ public class Persistence {
     public Optional<Double> synthesizeAndAggregateForSession(String appName, String session,
             Function<Measure, Double> synthesizer) {
         return Measure.forApplicationSession(appName, session)
-                .filter(measure -> measure.components.length != 1)
                 .map(synthesizer)
                 .reduce(Double::sum);
     }
