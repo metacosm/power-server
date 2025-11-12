@@ -100,7 +100,7 @@ public class Power implements Runnable {
 
     private class ExternalProcessHandler extends BaseProcessHandler {
         private long startTime;
-        private long duration;
+        private long endTime;
 
         public ExternalProcessHandler(String cmd) {
             super("/bin/sh", "-c", stripped(cmd).orElseThrow());
@@ -119,13 +119,13 @@ public class Power implements Runnable {
             try {
                 super.onExit(statusCode);
             } finally {
-                duration = System.currentTimeMillis() - this.startTime;
+                endTime = System.currentTimeMillis();
                 measurer.stop();
             }
         }
 
         public long duration() {
-            return duration;
+            return endTime - startTime;
         }
 
         private static Optional<String> stripped(String s) {
