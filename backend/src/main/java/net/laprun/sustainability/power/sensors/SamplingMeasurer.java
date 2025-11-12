@@ -54,6 +54,8 @@ public class SamplingMeasurer {
     }
 
     RegisteredPID track(long pid) throws Exception {
+        final var registeredPID = sensor.register(pid);
+
         if (!sensor.isStarted()) {
             sensor.start(samplingPeriod.toMillis());
             periodicSensorCheck = Multi.createFrom().ticks()
@@ -65,9 +67,7 @@ public class SamplingMeasurer {
                     .toAtLeast(1)
                     .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
         }
-        final var registeredPID = sensor.register(pid);
-        // todo: the timing of things could make it so that the pid has been removed before the map operation occurs so
-        //  currently return -1 instead of null but this needs to be properly addressed
+
         periodicSensorCheck = periodicSensorCheck.onCancellation().invoke(() -> sensor.unregister(registeredPID));
         return registeredPID;
     }
