@@ -32,6 +32,39 @@ class TotalComputationTest {
     }
 
     @Test
+    void attributedShouldWork() {
+        final var metadata = SensorMetadata
+                .withNewComponent("cp1", null, true, "mW")
+                .withNewComponent("cp2", null, true, "mJ")
+                .withNewComponent("cp3", null, true, "mW")
+                .withNewComponent("cp24", null, false, "W")
+                .build();
+
+        final var expectedResultUnit = SensorUnit.W;
+        var totaler = new Totaler(metadata, expectedResultUnit, 0, 2);
+        assertTrue(totaler.isAttributed());
+        totaler = new Totaler(metadata, expectedResultUnit, 3);
+        assertFalse(totaler.isAttributed());
+        totaler = new Totaler(metadata, expectedResultUnit, 0, 2, 3);
+        assertFalse(totaler.isAttributed());
+    }
+
+    @Test
+    void shouldAutomaticallyPickCommensurateComponentsIfNoIndicesAreProvided() {
+        final var metadata = SensorMetadata
+                .withNewComponent("cp1", null, true, "mW")
+                .withNewComponent("cp2", null, true, "mJ")
+                .withNewComponent("cp3", null, true, "mW")
+                .withNewComponent("cp24", null, false, "W")
+                .build();
+
+        final var expectedResultUnit = SensorUnit.W;
+        var totaler = new Totaler(metadata, expectedResultUnit);
+        assertFalse(totaler.isAttributed());
+        assertArrayEquals(new int[] { 0, 2, 3 }, totaler.componentIndices());
+    }
+
+    @Test
     void testTotal() {
         final var metadata = SensorMetadata
                 .withNewComponent("cp1", null, true, "mW")

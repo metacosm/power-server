@@ -10,18 +10,14 @@ public class TotalSyntheticComponent implements SyntheticComponent {
     private final SensorMetadata.ComponentMetadata metadata;
 
     public TotalSyntheticComponent(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
-        this.totaler = new Totaler(metadata, expectedResultUnit, totalComponentIndices);
-        final var isAttributed = metadata.components().values().stream()
-                .map(SensorMetadata.ComponentMetadata::isAttributed)
-                .reduce(Boolean::logicalAnd).orElse(false);
+        this(new Totaler(metadata, expectedResultUnit, totalComponentIndices));
+    }
+
+    private TotalSyntheticComponent(Totaler totaler) {
+        this.totaler = totaler;
         final var name = totaler.name();
-        if (metadata.exists(name)) {
-            totaler.addError("Component " + name + " already exists");
-        }
-
-        totaler.validate();
-
-        this.metadata = new SensorMetadata.ComponentMetadata(name, "Aggregated " + name, isAttributed, expectedResultUnit);
+        this.metadata = new SensorMetadata.ComponentMetadata(name, "Aggregated " + name, totaler.isAttributed(),
+                totaler.expectedResultUnit());
     }
 
     @Override
