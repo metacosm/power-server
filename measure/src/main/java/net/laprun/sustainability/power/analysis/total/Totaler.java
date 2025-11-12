@@ -9,7 +9,7 @@ import net.laprun.sustainability.power.Errors;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
 
-class Totaler {
+public class Totaler {
     private final SensorUnit expectedResultUnit;
     private final Function<double[], Double> formula;
     private final String name;
@@ -17,7 +17,7 @@ class Totaler {
     private final boolean isAttributed;
     private Errors errors;
 
-    Totaler(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
+    public Totaler(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
         this.expectedResultUnit = Objects.requireNonNull(expectedResultUnit, "Must specify expected result unit");
 
         errors = new Errors();

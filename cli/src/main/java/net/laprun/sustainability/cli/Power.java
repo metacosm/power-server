@@ -12,7 +12,7 @@ import io.quarkus.runtime.Quarkus;
 import net.laprun.sustainability.power.Measure;
 import net.laprun.sustainability.power.ProcessUtils;
 import net.laprun.sustainability.power.SensorUnit;
-import net.laprun.sustainability.power.analysis.total.TotalSyntheticComponent;
+import net.laprun.sustainability.power.analysis.total.Totaler;
 import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
 import net.laprun.sustainability.power.persistence.Persistence;
 import net.laprun.sustainability.power.sensors.SamplingMeasurer;
@@ -83,13 +83,12 @@ public class Power implements Runnable {
         // first read metadata
         final var metadata = measurer.metadata();
 
-        // create a synthetic component to get the total power
-        final var totaler = new TotalSyntheticComponent(metadata, SensorUnit.W, 0, 1, 2);
-
+        // get the total power
+        final var totaler = new Totaler(metadata, SensorUnit.W);
         final var appPower = measurer.persistence()
                 .synthesizeAndAggregateForSession(applicationName, session,
-                        m -> totaler.synthesizeFrom(m.components, m.startTime))
-                .map(measure -> new Measure(measure, totaler.metadata().unit()))
+                        m -> totaler.computeTotalFrom(m.components))
+                .map(measure -> new Measure(measure, totaler.expectedResultUnit()))
                 .orElseThrow(() -> new RuntimeException("Could not extract power consumption"));
 
         Quarkus.asyncExit();
