@@ -33,9 +33,12 @@ public class Power implements Runnable {
     String cmd;
 
     private final SamplingMeasurer measurer;
+    private final Totaler totaler;
 
     public Power(SamplingMeasurer measurer) {
         this.measurer = measurer;
+        final var metadata = measurer.metadata();
+        totaler = new Totaler(metadata, SensorUnit.W);
     }
 
     @Override
@@ -65,11 +68,16 @@ public class Power implements Runnable {
             final var measureTime = measurer.persistence()
                     .synthesizeAndAggregateForSession(Persistence.SYSTEM_TOTAL_APP_NAME, session, m -> (double) m.duration())
                     .orElseThrow(() -> new RuntimeException("Could not compute measure duration"));
-            final var appPower = extractPowerConsumption(name);
             final var systemPower = extractPowerConsumption(Persistence.SYSTEM_TOTAL_APP_NAME);
             Log.infof("Command ran for: %dms, measure time: %3fms", commandHandler.duration(), measureTime);
-            Log.infof("App '%s' power consumption: %3.2f%s", cmd, appPower.value(), appPower.unit());
             Log.infof("Total system power consumption: %3.2f%s", systemPower.value(), systemPower.unit());
+            if (totaler.isAttributed()) {
+                final var appPower = extractPowerConsumption(name);
+                Log.infof("App '%s' power consumption: %3.2f%s", cmd, appPower.value(), appPower.unit());
+            } else {
+                Log.info(
+                        "Power consumption for this platform is not currently attributed: no per-process power is currently measured");
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -80,11 +88,6 @@ public class Power implements Runnable {
     }
 
     private Measure extractPowerConsumption(String applicationName) {
-        // first read metadata
-        final var metadata = measurer.metadata();
-
-        // get the total power
-        final var totaler = new Totaler(metadata, SensorUnit.W);
         final var appPower = measurer.persistence()
                 .synthesizeAndAggregateForSession(applicationName, session,
                         m -> totaler.computeTotalFrom(m.components))
