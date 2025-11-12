@@ -61,7 +61,6 @@ public class SamplingMeasurer {
             periodicSensorCheck = Multi.createFrom().ticks()
                     .every(samplingPeriod)
                     .map(sensor::update)
-                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                     .broadcast()
                     .withCancellationAfterLastSubscriberDeparture()
                     .toAtLeast(1)
