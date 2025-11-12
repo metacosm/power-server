@@ -1,11 +1,13 @@
 package net.laprun.sustainability.power.analysis.total;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
+import net.laprun.sustainability.power.Errors;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
 
@@ -45,8 +47,10 @@ class TotalComputationTest {
         assertTrue(totaler.isAttributed());
         totaler = new Totaler(metadata, expectedResultUnit, 3);
         assertFalse(totaler.isAttributed());
-        totaler = new Totaler(metadata, expectedResultUnit, 0, 2, 3);
-        assertFalse(totaler.isAttributed());
+
+        assertThatThrownBy(() -> new Totaler(metadata, expectedResultUnit, 0, 2, 3))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(Errors.ATTRIBUTION_MIX_ERROR);
     }
 
     @Test
@@ -54,14 +58,14 @@ class TotalComputationTest {
         final var metadata = SensorMetadata
                 .withNewComponent("cp1", null, true, "mW")
                 .withNewComponent("cp2", null, true, "mJ")
-                .withNewComponent("cp3", null, true, "mW")
-                .withNewComponent("cp24", null, false, "W")
+                .withNewComponent("cp3", null, true, "µW")
+                .withNewComponent("cp4", null, false, "W")
                 .build();
 
         final var expectedResultUnit = SensorUnit.W;
         var totaler = new Totaler(metadata, expectedResultUnit);
-        assertFalse(totaler.isAttributed());
-        assertArrayEquals(new int[] { 0, 2, 3 }, totaler.componentIndices());
+        assertTrue(totaler.isAttributed());
+        assertArrayEquals(new int[] { 0, 2 }, totaler.componentIndices());
     }
 
     @Test

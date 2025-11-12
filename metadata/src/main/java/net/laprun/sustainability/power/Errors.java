@@ -6,12 +6,15 @@ import java.util.stream.Collectors;
 
 public class Errors {
     private List<String> errors;
+    public static final String ATTRIBUTION_MIX_ERROR = "Cannot aggregate attributed and non-attributed components";
 
     public void addError(String error) {
         if (errors == null) {
             errors = new ArrayList<>();
         }
-        errors.add(error);
+        if (!errors.contains(error)) {
+            errors.add(error);
+        }
     }
 
     public boolean hasErrors() {
