@@ -9,6 +9,10 @@ import net.laprun.sustainability.power.Errors;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
 
+/**
+ * Totaler provides a way to compute the aggregated total for a subset of sensor measures, ensuring that the proper conversions
+ * between commensurate units are used.
+ */
 public class Totaler {
     private final SensorUnit expectedResultUnit;
     private final Function<double[], Double> formula;
@@ -17,6 +21,19 @@ public class Totaler {
     private final boolean isAttributed;
     private Errors errors;
 
+    /**
+     * Create a new Totaler instance working with the specified {@link SensorMetadata} and computing a total measure using the
+     * provided expected result unit, adding (and converting to the target unit, if needed) values for the provided component
+     * indices. If no indices are provided, components will be automatically chosen as follows: only components using units
+     * compatible with the target unit will be used, and, among these, as mixing attributed and non-attributed values will
+     * result in useless results, priority will be given to attributed components. If no attributed component is found, then
+     * unattributed components will be considered.
+     *
+     * @param metadata the sensor metadata providing the component information to use as basis to compute an aggregate value
+     * @param expectedResultUnit a {@link SensorUnit} representing the unit with which the aggregate should be calculated
+     * @param totalComponentIndices optional list of component indices to take into account, if no such indices are provided,
+     *        the Totaler will select "appropriate" indices automatically, if possible
+     */
     public Totaler(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
         this.expectedResultUnit = Objects.requireNonNull(expectedResultUnit, "Must specify expected result unit");
 
@@ -26,12 +43,21 @@ public class Totaler {
         final var attributed = new Boolean[1];
         if (totalComponentIndices == null || totalComponentIndices.length == 0) {
             // automatically aggregate components commensurate with the expected result unit
-            totalComponents = metadata.components().values().stream()
-                    .filter(cm -> cm.unit().isCommensurableWith(expectedResultUnit))
-                    .map(cm -> new TotalComponent(cm.name(), cm.index(), cm.unit().factor(),
-                            checkAggregatedAttribution(cm.isAttributed(), attributed)))
-                    .toArray(TotalComponent[]::new);
+            // first, only select attributed components
+            var maybeComponents = createTotalComponents(metadata, expectedResultUnit, true);
+            attributed[0] = true;
+            // if there are no commensurate attributed components, look for unattributed ones
+            if (maybeComponents.length == 0) {
+                maybeComponents = createTotalComponents(metadata, expectedResultUnit, false);
+                attributed[0] = false;
+            }
+            if (maybeComponents.length == 0) {
+                addError("No components are compatible with the expected result unit " + expectedResultUnit);
+                validate(); // exit immediately
+            }
+
             // record total indices
+            totalComponents = maybeComponents;
             totalComponentIndices = new int[totalComponents.length];
             int i = 0;
             for (var component : totalComponents) {
@@ -61,12 +87,23 @@ public class Totaler {
         validate();
     }
 
-    private static boolean checkAggregatedAttribution(boolean isComponentAttributed, Boolean[] aggregateAttribution) {
+    private TotalComponent[] createTotalComponents(SensorMetadata metadata, SensorUnit expectedResultUnit,
+            boolean attributed) {
+        return metadata.components().values().stream()
+                .filter(cm -> attributed == cm.isAttributed())
+                .filter(cm -> cm.unit().isCommensurableWith(expectedResultUnit))
+                .map(cm -> new TotalComponent(cm.name(), cm.index(), cm.unit().factor(), cm.isAttributed()))
+                .toArray(TotalComponent[]::new);
+    }
+
+    private boolean checkAggregatedAttribution(boolean isComponentAttributed, Boolean[] aggregateAttribution) {
         var currentAttribution = aggregateAttribution[0];
         if (currentAttribution == null) {
             currentAttribution = isComponentAttributed;
         } else {
-            currentAttribution = currentAttribution && isComponentAttributed;
+            if (currentAttribution != isComponentAttributed) {
+                addError(Errors.ATTRIBUTION_MIX_ERROR);
+            }
         }
         aggregateAttribution[0] = currentAttribution;
         return isComponentAttributed;
