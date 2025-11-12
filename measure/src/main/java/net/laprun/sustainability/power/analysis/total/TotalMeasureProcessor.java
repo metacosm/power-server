@@ -12,7 +12,6 @@ public class TotalMeasureProcessor implements MeasureProcessor {
 
     public TotalMeasureProcessor(SensorMetadata metadata, SensorUnit expectedResultUnit, int... totalComponentIndices) {
         this.totaler = new Totaler(metadata, expectedResultUnit, totalComponentIndices);
-        totaler.validate();
     }
 
     public double total() {
