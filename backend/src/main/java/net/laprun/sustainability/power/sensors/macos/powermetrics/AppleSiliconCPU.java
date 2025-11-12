@@ -14,7 +14,7 @@ class AppleSiliconCPU extends CPU {
     private static final SensorMetadata.ComponentMetadata gpuComponent = new SensorMetadata.ComponentMetadata(GPU, 1,
             "GPU power", true, mW);
     private static final SensorMetadata.ComponentMetadata aneComponent = new SensorMetadata.ComponentMetadata(ANE, 2,
-            "Apple Neural Engine power", false, mW);
+            "Apple Neural Engine power", true, mW);
     private static final SensorMetadata.ComponentMetadata cpuShareComponent = new SensorMetadata.ComponentMetadata(CPU_SHARE, 3,
             "Computed share of CPU", false, decimalPercentage);
     private static final String COMBINED = "Combined";
