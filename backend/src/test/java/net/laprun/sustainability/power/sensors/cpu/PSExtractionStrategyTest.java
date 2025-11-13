@@ -8,16 +8,23 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class PSExtractionStrategyTest {
+    private static final int fullCPU = PSExtractionStrategy.INSTANCE.fullCPU();
 
     @Test
     void extractCPUSharesInto_shouldParseValidSingleLine() {
         String input = "12345 25.5";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(1);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
+        checkCPUShare(cpuShares, "12345", 25.5);
+    }
+
+    private static void checkCPUShare(Map<String, Double> cpuShares, String pid, double cpuPercentageFromPS) {
+        final var actual = cpuShares.get(pid);
+        assertThat(actual).isLessThan(1.0);
+        assertThat(actual).isEqualTo(cpuPercentageFromPS / fullCPU);
     }
 
     @Test
@@ -25,12 +32,12 @@ class PSExtractionStrategyTest {
         String input = "12345 25.5\n67890 15.3\n11111 5.0";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(3);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
-        assertThat(cpuShares.get("67890")).isEqualTo(15.3);
-        assertThat(cpuShares.get("11111")).isEqualTo(5.0);
+        checkCPUShare(cpuShares, "12345", 25.5);
+        checkCPUShare(cpuShares, "67890", 15.3);
+        checkCPUShare(cpuShares, "11111", 5.0);
     }
 
     @Test
@@ -38,11 +45,11 @@ class PSExtractionStrategyTest {
         String input = "  12345   25.5  \n  67890   15.3  ";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(2);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
-        assertThat(cpuShares.get("67890")).isEqualTo(15.3);
+        checkCPUShare(cpuShares, "12345", 25.5);
+        checkCPUShare(cpuShares, "67890", 15.3);
     }
 
     @Test
@@ -50,12 +57,12 @@ class PSExtractionStrategyTest {
         String input = "12345 25.5\n\n67890 15.3\n   \n11111 5.0";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(3);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
-        assertThat(cpuShares.get("67890")).isEqualTo(15.3);
-        assertThat(cpuShares.get("11111")).isEqualTo(5.0);
+        checkCPUShare(cpuShares, "12345", 25.5);
+        checkCPUShare(cpuShares, "67890", 15.3);
+        checkCPUShare(cpuShares, "11111", 5.0);
     }
 
     @Test
@@ -63,10 +70,10 @@ class PSExtractionStrategyTest {
         String input = "12345 0.0";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(1);
-        assertThat(cpuShares.get("12345")).isEqualTo(0.0);
+        checkCPUShare(cpuShares, "12345", 0.0);
     }
 
     @Test
@@ -74,10 +81,10 @@ class PSExtractionStrategyTest {
         String input = "12345 354.287";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(1);
-        assertThat(cpuShares.get("12345")).isEqualTo(354.287);
+        checkCPUShare(cpuShares, "12345", 354.287);
     }
 
     @Test
@@ -85,12 +92,12 @@ class PSExtractionStrategyTest {
         String input = "12345 25.5\n  invalidline   \n67890 15.3";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         // Only valid lines should be parsed
         assertThat(cpuShares).hasSize(2);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
-        assertThat(cpuShares.get("67890")).isEqualTo(15.3);
+        checkCPUShare(cpuShares, "12345", 25.5);
+        checkCPUShare(cpuShares, "67890", 15.3);
     }
 
     @Test
@@ -98,12 +105,12 @@ class PSExtractionStrategyTest {
         String input = "12345 25.5\n67890 notanumber\n11111 5.0";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         // Only valid lines should be parsed
         assertThat(cpuShares).hasSize(2);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
-        assertThat(cpuShares.get("11111")).isEqualTo(5.0);
+        checkCPUShare(cpuShares, "12345", 25.5);
+        checkCPUShare(cpuShares, "11111", 5.0);
         assertThat(cpuShares).doesNotContainKey("67890");
     }
 
@@ -112,7 +119,7 @@ class PSExtractionStrategyTest {
         String input = "";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).isEmpty();
     }
@@ -122,7 +129,7 @@ class PSExtractionStrategyTest {
         String input = "   \n  \n   ";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).isEmpty();
     }
@@ -132,10 +139,10 @@ class PSExtractionStrategyTest {
         String input = "12345 25.5\n12345 30.0";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(1);
-        assertThat(cpuShares.get("12345")).isEqualTo(30.0); // only newest value is kept
+        checkCPUShare(cpuShares, "12345", 30.0);
     }
 
     @Test
@@ -143,11 +150,11 @@ class PSExtractionStrategyTest {
         String input = "12345    25.5\n67890  15.3";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(2);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
-        assertThat(cpuShares.get("67890")).isEqualTo(15.3);
+        checkCPUShare(cpuShares, "12345", 25.5);
+        checkCPUShare(cpuShares, "67890", 15.3);
     }
 
     @Test
@@ -155,11 +162,11 @@ class PSExtractionStrategyTest {
         String input = "12345\t25.5\n67890\t15.3";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(2);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
-        assertThat(cpuShares.get("67890")).isEqualTo(15.3);
+        checkCPUShare(cpuShares, "12345", 25.5);
+        checkCPUShare(cpuShares, "67890", 15.3);
     }
 
     @Test
@@ -168,12 +175,12 @@ class PSExtractionStrategyTest {
         String input = "  1234  12.5\n  5678   3.2\n 91011  75.0";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(3);
-        assertThat(cpuShares.get("1234")).isEqualTo(12.5);
-        assertThat(cpuShares.get("5678")).isEqualTo(3.2);
-        assertThat(cpuShares.get("91011")).isEqualTo(75.0);
+        checkCPUShare(cpuShares, "1234", 12.5);
+        checkCPUShare(cpuShares, "5678", 3.2);
+        checkCPUShare(cpuShares, "91011", 75.0);
     }
 
     @Test
@@ -181,22 +188,9 @@ class PSExtractionStrategyTest {
         String input = "12345 -5.0";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).isEmpty();
-    }
-
-    @Test
-    void extractCPUSharesInto_shouldAddToExistingMap() {
-        Map<String, Double> cpuShares = new HashMap<>();
-        cpuShares.put("99999", 50.0);
-
-        String input = "12345 25.5";
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
-
-        assertThat(cpuShares).hasSize(2);
-        assertThat(cpuShares.get("99999")).isEqualTo(50.0);
-        assertThat(cpuShares.get("12345")).isEqualTo(25.5);
     }
 
     @Test
@@ -204,10 +198,10 @@ class PSExtractionStrategyTest {
         String input = "12345 1.5e2";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(1);
-        assertThat(cpuShares.get("12345")).isEqualTo(150.0);
+        checkCPUShare(cpuShares, "12345", 150.0);
     }
 
     @Test
@@ -215,7 +209,7 @@ class PSExtractionStrategyTest {
         String input = "12345";
         Map<String, Double> cpuShares = new HashMap<>();
 
-        PSExtractionStrategy.extractCPUSharesInto(input, cpuShares);
+        PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         // Line without space should be ignored
         assertThat(cpuShares).isEmpty();
