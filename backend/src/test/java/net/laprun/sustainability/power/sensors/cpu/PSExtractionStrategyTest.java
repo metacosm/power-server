@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.random.RandomGenerator;
 
 import org.junit.jupiter.api.Test;
 
@@ -78,13 +80,14 @@ class PSExtractionStrategyTest {
 
     @Test
     void extractCPUSharesInto_shouldHandleHighCpuPercentage() {
-        String input = "12345 354.287";
+        double cpuPercentage = fullCPU < 200 ? 100.0 : 125.287;
+        String input = "12345 " + cpuPercentage;
         Map<String, Double> cpuShares = new HashMap<>();
 
         PSExtractionStrategy.INSTANCE.extractCPUSharesInto(input, cpuShares);
 
         assertThat(cpuShares).hasSize(1);
-        checkCPUShare(cpuShares, "12345", 354.287);
+        checkCPUShare(cpuShares, "12345", cpuPercentage);
     }
 
     @Test
