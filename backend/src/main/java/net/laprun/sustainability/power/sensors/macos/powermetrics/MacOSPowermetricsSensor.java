@@ -105,7 +105,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
     }
 
     @Override
-    public SensorMetadata metadata() {
+    protected SensorMetadata nativeMetadata() {
         return cpu.metadata();
     }
 
@@ -118,7 +118,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
         boolean done;
     }
 
-    Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch) {
+    Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch,
+            Map<String, Double> cpuShares) {
         final long start = lastUpdateEpoch;
         try {
             // Should not be closed since it closes the process
@@ -133,7 +134,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             pidsToProcess.remove(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID);
             // start measure
             final var pidMeasures = new HashMap<RegisteredPID, ProcessRecord>(measures.numberOfTrackedPIDs());
-            final var metadata = cpu.metadata();
+            final var metadata = metadata();
             final var powerComponents = new HashMap<String, Number>(metadata.componentCardinality());
             var endUpdateEpoch = -1L;
             Section processes = null;
@@ -208,6 +209,12 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
             double finalTotalSampledCPU = totalSampledCPU;
             final var endMs = endUpdateEpoch != -1 ? endUpdateEpoch : newUpdateEpoch;
 
+            // handle external cpu share if enabled
+            if (cpuShares != null && !cpuShares.isEmpty()) {
+                measures.trackedPIDsAsString().forEach(name -> powerComponents.put(EXTERNAL_CPU_SHARE_COMPONENT_NAME,
+                        cpuShares.getOrDefault(name, MISSING_CPU_SHARE)));
+            }
+
             // handle total system measure separately
             measures.record(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID,
                     new SensorMeasure(getSystemTotalMeasure(metadata, powerComponents), start, endMs));
@@ -227,7 +234,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
         final var measure = new double[metadata.componentCardinality()];
         metadata.components().forEach((name, cm) -> {
             final var index = cm.index();
-            final var value = CPU_SHARE.equals(name) ? 1.0 : powerComponents.getOrDefault(name, 0).doubleValue();
+            final var value = CPU_SHARE.equals(name) || EXTERNAL_CPU_SHARE_COMPONENT_NAME.equals(name) ? 1.0
+                    : powerComponents.getOrDefault(name, 0).doubleValue();
             measure[index] = value;
         });
 
@@ -235,8 +243,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
-        return extractPowerMeasure(getInputStream(), lastUpdateEpoch, newUpdateStartEpoch);
+    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch, Map<String, Double> cpuShares) {
+        return extractPowerMeasure(getInputStream(), lastUpdateEpoch, newUpdateStartEpoch, cpuShares);
     }
 
     protected abstract InputStream getInputStream();

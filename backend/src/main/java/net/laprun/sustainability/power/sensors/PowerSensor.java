@@ -1,11 +1,16 @@
 package net.laprun.sustainability.power.sensors;
 
+import java.util.Map;
+import java.util.Set;
+
 import net.laprun.sustainability.power.SensorMetadata;
 
 /**
  * A representation of a power-consumption sensor.
  */
 public interface PowerSensor {
+    String EXTERNAL_CPU_SHARE_COMPONENT_NAME = "externalCpuShare";
+    Double MISSING_CPU_SHARE = -1.0;
 
     /**
      * Whether the sensor supports process attribution of power, i.e. is measured power imputed to each process or does
@@ -61,9 +66,10 @@ public interface PowerSensor {
      *
      * @param tick an ordinal value tracking the number of recorded measures being taken by the sensor since it started
      *        measuring power consumption
+     * @param cpuShares externally provided (if available) cpu attribution for each process id
      * @return the {@link Measures} object recording the measures this sensor has taken since it started measuring
      */
-    Measures update(Long tick);
+    Measures update(Long tick, Map<String, Double> cpuShares);
 
     /**
      * Unregisters the specified {@link RegisteredPID} with this sensor thus signaling that clients are not interested in
@@ -73,4 +79,6 @@ public interface PowerSensor {
      *        registered with this sensor
      */
     void unregister(RegisteredPID registeredPID);
+
+    Set<String> getRegisteredPIDs();
 }

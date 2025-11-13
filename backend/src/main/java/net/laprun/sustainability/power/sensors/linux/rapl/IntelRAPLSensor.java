@@ -30,6 +30,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
 
     protected IntelRAPLSensor(String... raplFilePaths) {
         this(fromPaths(raplFilePaths));
+        cpuSharesEnabled = false;
     }
 
     private static SortedMap<String, RAPLFile> fromPaths(String... raplFilePaths) {
@@ -126,12 +127,12 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
     }
 
     @Override
-    public SensorMetadata metadata() {
+    protected SensorMetadata nativeMetadata() {
         return metadata;
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
+    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch, Map<String, Double> cpuShares) {
         final var measure = new double[raplFiles.length];
         readAndRecordSensor((value, index) -> measure[index] = computePowerInMilliWatts(index, value, newUpdateStartEpoch),
                 newUpdateStartEpoch);

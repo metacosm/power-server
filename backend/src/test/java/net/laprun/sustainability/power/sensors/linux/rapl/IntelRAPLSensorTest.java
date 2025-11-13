@@ -102,7 +102,7 @@ public class IntelRAPLSensorTest {
         final var sensor = new TestIntelRAPLSensor(new TreeMap<>(Map.of("sensor", raplFile)));
         sensor.start(500);
         final var pid = sensor.register(1234L);
-        final var measures = sensor.update(1L);
+        final var measures = sensor.update(1L, Map.of());
         final var components = measures.getOrDefault(pid).components();
         assertEquals(1, components.length);
         assertEquals(2, raplFile.callCount());
