@@ -1,6 +1,7 @@
 package net.laprun.sustainability.power.sensors.cpu;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -8,10 +9,11 @@ import java.util.Set;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 
 import io.quarkus.logging.Log;
+import io.vertx.core.impl.cpu.CpuCoreSensor;
 import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
 
 public class PSExtractionStrategy implements ExtractionStrategy {
-    public static final ExtractionStrategy INSTANCE = new PSExtractionStrategy();
+    public static final PSExtractionStrategy INSTANCE = new PSExtractionStrategy();
 
     @Override
     public Map<String, Double> cpuSharesFor(Set<String> pids) {
@@ -36,11 +38,11 @@ public class PSExtractionStrategy implements ExtractionStrategy {
         return cpuShares;
     }
 
-    static void extractCPUSharesInto(byte[] bytes, Map<String, Double> cpuShares) {
+    void extractCPUSharesInto(byte[] bytes, Map<String, Double> cpuShares) {
         extractCPUSharesInto(new String(bytes), cpuShares);
     }
 
-    static void extractCPUSharesInto(String input, Map<String, Double> cpuShares) {
+    void extractCPUSharesInto(String input, Map<String, Double> cpuShares) {
         final var lines = input.split("\n");
         for (var line : lines) {
             if (line.isBlank()) {
@@ -50,7 +52,7 @@ public class PSExtractionStrategy implements ExtractionStrategy {
         }
     }
 
-    private static void extractCPUShare(String line, Map<String, Double> cpuShares) {
+    private void extractCPUShare(String line, Map<String, Double> cpuShares) {
         try {
             line = line.trim();
             int spaceIndex = line.indexOf(' ');
@@ -66,8 +68,8 @@ public class PSExtractionStrategy implements ExtractionStrategy {
 
             var pid = line.substring(0, spaceIndex).trim();
             var cpuPercentage = line.substring(spaceIndex + 1).trim();
-            Log.info(pid + " / " + cpuPercentage);
-            final var value = Double.parseDouble(cpuPercentage);
+            Log.infof("pid: %s / cpu: %s%%", pid, cpuPercentage);
+            final var value = Double.parseDouble(cpuPercentage) / fullCPU();
             if (value < 0) {
                 Log.warnf("Invalid CPU share percentage: %s", cpuPercentage);
                 return;
@@ -79,5 +81,11 @@ public class PSExtractionStrategy implements ExtractionStrategy {
         } catch (NumberFormatException e) {
             Log.warnf("Failed to parse CPU percentage for line: '%s', cause: %s", line, e);
         }
+    }
+
+    int fullCPU() {
+        final var fullCPU = CpuCoreSensor.availableProcessors() * 100;
+        Log.infof("'potential' full CPU: %d%%", fullCPU);
+        return fullCPU; // each core contributes 100%
     }
 }
