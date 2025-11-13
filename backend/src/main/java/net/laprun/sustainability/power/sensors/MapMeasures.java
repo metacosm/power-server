@@ -10,22 +10,30 @@ import net.laprun.sustainability.power.SensorMeasure;
 public class MapMeasures implements Measures {
     private final ConcurrentMap<RegisteredPID, SensorMeasure> measures = new ConcurrentHashMap<>();
     private long lastMeasuredUpdateStartEpoch;
+    private final PIDRegistry registry = new PIDRegistry();
 
     @Override
     public RegisteredPID register(long pid) {
         final var key = RegisteredPID.create(pid);
         measures.put(key, SensorMeasure.missing);
+        registry.register(key);
         return key;
     }
 
     @Override
     public void unregister(RegisteredPID registeredPID) {
         measures.remove(registeredPID);
+        registry.unregister(registeredPID);
     }
 
     @Override
     public Set<RegisteredPID> trackedPIDs() {
         return measures.keySet();
+    }
+
+    @Override
+    public Set<String> trackedPIDsAsString() {
+        return registry.pids();
     }
 
     @Override

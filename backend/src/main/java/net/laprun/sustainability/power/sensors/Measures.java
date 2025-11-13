@@ -35,6 +35,8 @@ public interface Measures {
      */
     Set<RegisteredPID> trackedPIDs();
 
+    Set<String> trackedPIDsAsString();
+
     /**
      * Retrieves the number of tracked processes
      *
