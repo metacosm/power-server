@@ -3,6 +3,7 @@ package net.laprun.sustainability.power.sensors.test;
 import static net.laprun.sustainability.power.SensorUnit.mW;
 
 import java.util.List;
+import java.util.Map;
 
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
@@ -28,7 +29,7 @@ public class TestPowerSensor extends AbstractPowerSensor<MapMeasures> {
     }
 
     @Override
-    public SensorMetadata metadata() {
+    protected SensorMetadata nativeMetadata() {
         return metadata;
     }
 
@@ -38,7 +39,7 @@ public class TestPowerSensor extends AbstractPowerSensor<MapMeasures> {
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
+    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch, Map<String, Double> cpuShares) {
         measures.trackedPIDs().forEach(pid -> measures.record(pid,
                 new SensorMeasure(new double[] { Math.random() }, lastUpdateEpoch, newUpdateStartEpoch)));
         return measures;
