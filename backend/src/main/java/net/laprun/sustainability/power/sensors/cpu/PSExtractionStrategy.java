@@ -15,6 +15,9 @@ public class PSExtractionStrategy implements ExtractionStrategy {
 
     @Override
     public Map<String, Double> cpuSharesFor(Set<String> pids) {
+        if (pids.isEmpty()) {
+            return Collections.emptyMap();
+        }
         final var cpuShares = new HashMap<String, Double>(pids.size());
         final var pidList = String.join(",", pids);
         final var cmd = new String[] { "ps", "-p", pidList, "-o", "pid=,pcpu=" };
