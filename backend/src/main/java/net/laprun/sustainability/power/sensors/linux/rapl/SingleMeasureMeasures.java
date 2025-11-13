@@ -6,12 +6,13 @@ import java.util.function.Consumer;
 
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.sensors.Measures;
+import net.laprun.sustainability.power.sensors.PIDRegistry;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 class SingleMeasureMeasures implements Measures {
     private final Set<RegisteredPID> trackedPIDs = new HashSet<>();
-    private final Set<String> pids = new HashSet<>();
     private SensorMeasure measure;
+    private final PIDRegistry registry = new PIDRegistry();
 
     void singleMeasure(SensorMeasure sensorMeasure) {
         this.measure = sensorMeasure;
@@ -21,14 +22,14 @@ class SingleMeasureMeasures implements Measures {
     public RegisteredPID register(long pid) {
         final var registeredPID = RegisteredPID.create(pid);
         trackedPIDs.add(registeredPID);
-        pids.add(registeredPID.pidAsString());
+        registry.register(registeredPID);
         return registeredPID;
     }
 
     @Override
     public void unregister(RegisteredPID registeredPID) {
         trackedPIDs.remove(registeredPID);
-        pids.remove(registeredPID.pidAsString());
+        registry.unregister(registeredPID);
     }
 
     @Override
@@ -36,8 +37,9 @@ class SingleMeasureMeasures implements Measures {
         return trackedPIDs;
     }
 
-    public Set<String> pids() {
-        return pids;
+    @Override
+    public Set<String> trackedPIDsAsString() {
+        return registry.pids();
     }
 
     @Override
