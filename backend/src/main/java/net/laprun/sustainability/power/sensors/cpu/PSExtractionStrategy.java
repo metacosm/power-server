@@ -77,8 +77,8 @@ public class PSExtractionStrategy implements ExtractionStrategy {
 
             var pid = line.substring(0, spaceIndex).trim();
             var cpuPercentage = line.substring(spaceIndex + 1).trim();
-            Log.infof("pid: %s / cpu: %s%%", pid, cpuPercentage);
             final var value = Double.parseDouble(cpuPercentage) / fullCPU();
+            Log.infof("pid: %s -> cpu: %s/%d%% = %3.2f", pid, cpuPercentage, fullCPU(), value);
             if (value < 0) {
                 Log.warnf("Invalid CPU share percentage: %s", cpuPercentage);
                 return;
