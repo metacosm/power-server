@@ -134,7 +134,7 @@ public class Totaler {
     public double computeTotalFrom(double[] measure) {
         if (measure.length < totalComponentIndices.length) {
             throw new IllegalArgumentException("Provided measure " + Arrays.toString(measure) +
-                    " doesn't countain components for required total indices: " + Arrays.toString(totalComponentIndices));
+                    " doesn't contain components for required total indices: " + Arrays.toString(totalComponentIndices));
         }
 
         checkValidated();
