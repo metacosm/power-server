@@ -9,8 +9,8 @@ import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
 
-public abstract class AbstractPowerSensor<M extends Measures> implements PowerSensor {
-    protected final M measures;
+public abstract class AbstractPowerSensor implements PowerSensor {
+    protected final Measures measures;
     private long lastUpdateEpoch;
     private boolean started;
     @ConfigProperty(name = "net.laprun.sustainability.power.enable-cpu-share-sampling", defaultValue = "false")
@@ -18,8 +18,12 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
     private SensorMetadata metadata;
     private int externalCPUShareComponentIndex = -1;
 
-    public AbstractPowerSensor(M measures) {
+    public AbstractPowerSensor(Measures measures) {
         this.measures = measures;
+    }
+
+    public AbstractPowerSensor() {
+        this(new MapMeasures());
     }
 
     @Override
