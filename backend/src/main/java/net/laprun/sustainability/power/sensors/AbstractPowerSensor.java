@@ -46,13 +46,11 @@ public abstract class AbstractPowerSensor implements PowerSensor {
 
     @Override
     public boolean wantsCPUShareSamplingEnabled() {
-        Log.infof("CPU Share sampling enabled: %b", cpuSharesEnabled);
         return cpuSharesEnabled;
     }
 
     @Override
     public void enableCPUShareSampling(boolean enable) {
-        Log.infof("Enabling CPU Share sampling: %b", enable);
         cpuSharesEnabled = enable;
     }
 
