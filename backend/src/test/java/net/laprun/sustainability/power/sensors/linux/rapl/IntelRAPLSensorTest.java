@@ -101,6 +101,7 @@ public class IntelRAPLSensorTest {
         final var raplFile = new TestRAPLFile(10000L, 20000L, 30000L);
         final var sensor = new TestIntelRAPLSensor(new TreeMap<>(Map.of("sensor", raplFile)));
         sensor.start(500);
+        Thread.sleep(10); // ensure we get enough time between the measure performed during start and the first update
         final var pid = sensor.register(1234L);
         final var measures = sensor.update(1L, Map.of());
         final var components = measures.getOrDefault(pid).components();
