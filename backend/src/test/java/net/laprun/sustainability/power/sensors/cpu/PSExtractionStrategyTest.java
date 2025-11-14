@@ -4,13 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
-import java.util.random.RandomGenerator;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 class PSExtractionStrategyTest {
     private static final int fullCPU = PSExtractionStrategy.INSTANCE.fullCPU();
+
+    @Test
+    void failureToExtractCPUSharesShouldReturnEmptyMap() {
+        final var cpuShares = PSExtractionStrategy.INSTANCE.cpuSharesFor(Set.of("-1"));
+        assertThat(cpuShares).isEmpty();
+    }
 
     @Test
     void extractCPUSharesInto_shouldParseValidSingleLine() {
