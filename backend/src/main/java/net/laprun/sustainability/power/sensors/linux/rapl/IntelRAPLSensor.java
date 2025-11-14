@@ -12,6 +12,7 @@ import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.Measures;
+import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 /**
  * A sensor using Intel's RAPL accessed via Linux' powercap system.
@@ -21,6 +22,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
     private final int rawOffset;
     private SensorMetadata nativeMetadata;
     private final long[] lastMeasuredSensorValues;
+    private boolean needMultipleMeasures;
 
     /**
      * Initializes the RAPL sensor
@@ -103,6 +105,8 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
     public void doStart(long frequency) {
         // perform an initial measure to prime the data
         readAndRecordSensor(null, lastUpdateEpoch());
+        // also record whether we need multiple measures
+        needMultipleMeasures = wantsCPUShareSamplingEnabled() && externalCPUShareComponentIndex() > 0;
     }
 
     /**
@@ -145,15 +149,22 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
         },
                 newUpdateStartEpoch);
 
-        int cpuShareIndex = externalCPUShareComponentIndex();
-        boolean needMultipleMeasures = wantsCPUShareSamplingEnabled() && cpuShareIndex > 0 && cpuShares != null
-                && !cpuShares.isEmpty();
         final var single = new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
         measures.trackedPIDs().forEach(pid -> {
             final SensorMeasure m;
             if (needMultipleMeasures) {
-                measure[cpuShareIndex] = cpuShares.get(pid.pidAsString());
-                m = new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
+                double cpuShare;
+                if(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID.equals(pid)) {
+                    cpuShare = 1.0;
+                } else {
+                    cpuShare = cpuShares.getOrDefault(pid.pidAsString(), 0.0);
+                }
+                // todo: avoid copying array, external cpu share should be recorded as a separate value, not a component maybe?
+                // copy array
+                final var copy = new double[measure.length];
+                System.arraycopy(measure, 0, copy, 0, measure.length);
+                copy[externalCPUShareComponentIndex()] = cpuShare;
+                m = new SensorMeasure(copy, lastUpdateEpoch, newUpdateStartEpoch);
             } else {
                 m = single;
             }
