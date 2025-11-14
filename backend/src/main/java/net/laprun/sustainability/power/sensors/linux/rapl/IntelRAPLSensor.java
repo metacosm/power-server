@@ -22,7 +22,6 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
     private final int rawOffset;
     private SensorMetadata nativeMetadata;
     private final long[] lastMeasuredSensorValues;
-    private boolean needMultipleMeasures;
 
     /**
      * Initializes the RAPL sensor
@@ -105,8 +104,6 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
     public void doStart(long frequency) {
         // perform an initial measure to prime the data
         readAndRecordSensor(null, lastUpdateEpoch());
-        // also record whether we need multiple measures
-        needMultipleMeasures = wantsCPUShareSamplingEnabled() && externalCPUShareComponentIndex() > 0;
     }
 
     /**
@@ -149,12 +146,13 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
         },
                 newUpdateStartEpoch);
 
+        final var needMultipleMeasures = wantsCPUShareSamplingEnabled() && externalCPUShareComponentIndex() > 0;
         final var single = new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
         measures.trackedPIDs().forEach(pid -> {
             final SensorMeasure m;
             if (needMultipleMeasures) {
                 double cpuShare;
-                if(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID.equals(pid)) {
+                if (RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID.equals(pid)) {
                     cpuShare = 1.0;
                 } else {
                     cpuShare = cpuShares.getOrDefault(pid.pidAsString(), 0.0);
