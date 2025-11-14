@@ -18,7 +18,8 @@ import net.laprun.sustainability.power.sensors.Measures;
  */
 public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> {
     private final RAPLFile[] raplFiles;
-    private final SensorMetadata metadata;
+    private final int rawOffset;
+    private SensorMetadata nativeMetadata;
     private final long[] lastMeasuredSensorValues;
 
     /**
@@ -62,7 +63,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
             throw new RuntimeException("Failed to get RAPL energy readings, probably due to lack of read access ");
 
         raplFiles = files.values().toArray(new RAPLFile[0]);
-        final var rawOffset = files.size();
+        rawOffset = files.size();
         final var metadata = new ArrayList<SensorMetadata.ComponentMetadata>(rawOffset * 2);
         int fileNb = 0;
         for (String name : files.keySet()) {
@@ -72,7 +73,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
                     name + " (raw micro Joule data)", false, µJ));
             fileNb++;
         }
-        this.metadata = new SensorMetadata(metadata,
+        this.nativeMetadata = new SensorMetadata(metadata,
                 "Linux RAPL derived information, see https://www.kernel.org/doc/html/latest/power/powercap/powercap.html");
         lastMeasuredSensorValues = new long[raplFiles.length];
     }
@@ -128,13 +129,21 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
 
     @Override
     protected SensorMetadata nativeMetadata() {
-        return metadata;
+        try {
+            return nativeMetadata;
+        } finally {
+            // "forget" metadata once it's used in parent
+            nativeMetadata = null;
+        }
     }
 
     @Override
     protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch, Map<String, Double> cpuShares) {
-        final var measure = new double[raplFiles.length];
-        readAndRecordSensor((value, index) -> measure[index] = computePowerInMilliWatts(index, value, newUpdateStartEpoch),
+        final var measure = new double[metadata().componentCardinality()];
+        readAndRecordSensor((value, index) -> {
+            measure[index] = computePowerInMilliWatts(index, value, newUpdateStartEpoch);
+            measure[index + rawOffset] = value;
+        },
                 newUpdateStartEpoch);
         measures.singleMeasure(new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch));
         return measures;
