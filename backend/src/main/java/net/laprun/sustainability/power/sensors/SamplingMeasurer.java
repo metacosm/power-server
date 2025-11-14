@@ -39,6 +39,10 @@ public class SamplingMeasurer {
     private Multi<Measures> periodicSensorCheck;
     private final Map<Long, Cancellable> manuallyTrackedProcesses = new ConcurrentHashMap<>();
 
+    public PowerSensor sensor() {
+        return sensor;
+    }
+
     public Multi<SensorMeasure> stream(String pid) throws Exception {
         final var parsedPID = validPIDOrFail(pid);
         return uncheckedStream(parsedPID);
@@ -65,39 +69,45 @@ public class SamplingMeasurer {
         if (!sensor.isStarted()) {
             sensor.start(samplingPeriod.toMillis());
 
-            final var overSamplingFactor = 3;
-            final var cpuSharesMulti = Multi.createFrom().ticks()
-                    // over sample but over a shorter period to ensure we have an average that covers most of the sampling period
-                    .every(samplingPeriod.minus(50, ChronoUnit.MILLIS).dividedBy(overSamplingFactor))
-                    .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-                    .map(tick -> CPUShare.cpuSharesFor(sensor.getRegisteredPIDs()))
-                    .group()
-                    .intoLists()
-                    .of(overSamplingFactor)
-                    .map(cpuShares -> {
-                        // first convert list of mappings pid -> cpu to mapping pid -> list of cpu shares
-                        Map<String, List<Double>> pidToRecordedCPUShares = new HashMap<>();
-                        cpuShares.forEach(cpuShare -> cpuShare.forEach(
-                                (p, cpu) -> {
-                                    if (cpu != null && cpu > 0) { // drop null values to avoid skewing average even more
-                                        pidToRecordedCPUShares.computeIfAbsent(p, unused -> new ArrayList<>()).add(cpu);
-                                    }
-                                }));
-                        // then reduce each cpu shares list to their average
-                        Map<String, Double> averages = new HashMap<>(pidToRecordedCPUShares.size());
-                        pidToRecordedCPUShares.forEach((p, values) -> averages.put(p,
-                                values.stream().mapToDouble(Double::doubleValue).average().orElse(0)));
-                        return averages;
-                    });
+            final var samplingTicks = Multi.createFrom().ticks().every(samplingPeriod);
 
-            final var samplingTicks = Multi.createFrom().ticks()
-                    .every(samplingPeriod);
-            periodicSensorCheck = Multi.createBy()
-                    .combining()
-                    .streams(samplingTicks, cpuSharesMulti)
-                    .asTuple()
-                    .log()
-                    .map(this::updateSensor)
+            if (sensor.wantsCPUShareSamplingEnabled()) {
+                final var overSamplingFactor = 3;
+                final var cpuSharesMulti = Multi.createFrom().ticks()
+                        // over sample but over a shorter period to ensure we have an average that covers most of the sampling period
+                        .every(samplingPeriod.minus(50, ChronoUnit.MILLIS).dividedBy(overSamplingFactor))
+                        .runSubscriptionOn(Infrastructure.getDefaultExecutor())
+                        .map(tick -> CPUShare.cpuSharesFor(sensor.getRegisteredPIDs()))
+                        .group()
+                        .intoLists()
+                        .of(overSamplingFactor)
+                        .map(cpuShares -> {
+                            // first convert list of mappings pid -> cpu to mapping pid -> list of cpu shares
+                            Map<String, List<Double>> pidToRecordedCPUShares = new HashMap<>();
+                            cpuShares.forEach(cpuShare -> cpuShare.forEach(
+                                    (p, cpu) -> {
+                                        if (cpu != null && cpu > 0) { // drop null values to avoid skewing average even more
+                                            pidToRecordedCPUShares.computeIfAbsent(p, unused -> new ArrayList<>()).add(cpu);
+                                        }
+                                    }));
+                            // then reduce each cpu shares list to their average
+                            Map<String, Double> averages = new HashMap<>(pidToRecordedCPUShares.size());
+                            pidToRecordedCPUShares.forEach((p, values) -> averages.put(p,
+                                    values.stream().mapToDouble(Double::doubleValue).average().orElse(0)));
+                            return averages;
+                        });
+                periodicSensorCheck = Multi.createBy()
+                        .combining()
+                        .streams(samplingTicks, cpuSharesMulti)
+                        .asTuple()
+                        .log()
+                        .map(this::updateSensor);
+            } else {
+                periodicSensorCheck = samplingTicks
+                        .map(tick -> sensor.update(tick, Map.of()));
+            }
+
+            periodicSensorCheck = periodicSensorCheck
                     .broadcast()
                     .withCancellationAfterLastSubscriberDeparture()
                     .toAtLeast(1)
