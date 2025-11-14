@@ -14,6 +14,7 @@ import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
 
 public class PSExtractionStrategy implements ExtractionStrategy {
     public static final PSExtractionStrategy INSTANCE = new PSExtractionStrategy();
+    private final int fullCPU = CpuCoreSensor.availableProcessors() * 100;// each core contributes 100%
 
     @Override
     public Map<String, Double> cpuSharesFor(Set<String> pids) {
@@ -92,8 +93,6 @@ public class PSExtractionStrategy implements ExtractionStrategy {
     }
 
     int fullCPU() {
-        final var fullCPU = CpuCoreSensor.availableProcessors() * 100;
-        Log.infof("'potential' full CPU: %d%%", fullCPU);
-        return fullCPU; // each core contributes 100%
+        return fullCPU;
     }
 }
