@@ -39,8 +39,8 @@ public class PSExtractionStrategy implements ExtractionStrategy {
             public void onExit(int statusCode) {
                 if (statusCode != 0) {
                     Log.warnf("Failed to extract CPU shares for pids: %s", pids);
+                    cpuShares.clear();
                 }
-                cpuShares.clear();
             }
         };
         new NuProcessBuilder(psHandler, psHandler.command()).run();
