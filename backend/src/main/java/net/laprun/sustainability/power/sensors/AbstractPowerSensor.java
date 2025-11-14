@@ -16,6 +16,7 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
     @ConfigProperty(name = "net.laprun.sustainability.power.enable-cpu-share-sampling", defaultValue = "false")
     protected boolean cpuSharesEnabled;
     private SensorMetadata metadata;
+    private int externalCPUShareComponentIndex = -1;
 
     public AbstractPowerSensor(M measures) {
         this.measures = measures;
@@ -31,6 +32,7 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
                                 "CPU share estimate based on currently configured strategy used in CPUShare", false,
                                 SensorUnit.decimalPercentage)
                         .build();
+                externalCPUShareComponentIndex = metadata.metadataFor(EXTERNAL_CPU_SHARE_COMPONENT_NAME).index();
             }
         }
         return metadata;
@@ -48,6 +50,10 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
     public void enableCPUShareSampling(boolean enable) {
         Log.infof("Enabling CPU Share sampling: %b", enable);
         cpuSharesEnabled = enable;
+    }
+
+    protected int externalCPUShareComponentIndex() {
+        return externalCPUShareComponentIndex;
     }
 
     @Override
