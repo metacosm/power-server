@@ -14,7 +14,6 @@ import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
-import net.laprun.sustainability.power.sensors.MapMeasures;
 import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
@@ -22,7 +21,7 @@ import net.laprun.sustainability.power.sensors.RegisteredPID;
 /**
  * A macOS powermetrics based {@link PowerSensor} implementation.
  */
-public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMeasures> {
+public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     /**
      * The Central Processing Unit component name
      */
@@ -56,10 +55,6 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<MapMea
     public static final String CPU_USAGE_SECTION_MARKER = "**** Processor usage ****";
 
     private CPU cpu;
-
-    public MacOSPowermetricsSensor() {
-        super(new MapMeasures());
-    }
 
     @Override
     public boolean supportsProcessAttribution() {

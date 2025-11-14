@@ -12,7 +12,7 @@ import net.laprun.sustainability.power.sensors.MapMeasures;
 import net.laprun.sustainability.power.sensors.Measures;
 
 @SuppressWarnings("unused")
-public class TestPowerSensor extends AbstractPowerSensor<MapMeasures> {
+public class TestPowerSensor extends AbstractPowerSensor {
     public static final String CPU = "cpu";
     public static final SensorMetadata DEFAULT = new SensorMetadata(
             List.of(new SensorMetadata.ComponentMetadata(CPU, 0, "CPU", true, mW)),

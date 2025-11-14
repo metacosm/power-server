@@ -104,11 +104,31 @@ public class IntelRAPLSensorTest {
         final var pid = sensor.register(1234L);
         final var measures = sensor.update(1L, Map.of());
         final var components = measures.getOrDefault(pid).components();
-        assertEquals(1, components.length);
+        assertEquals(2, components.length);
         assertEquals(2, raplFile.callCount());
         final var interval = raplFile.measureTimeFor(1) - raplFile.measureTimeFor(0);
         final var expected = (double) (raplFile.valueAt(1) - raplFile.valueAt(0)) / interval;
         assertEquals(expected, components[0]);
+        assertEquals(20000, components[1]);
+    }
+
+    @Test
+    void shouldIncludeCPUShareIfRequested() throws Exception {
+        final var raplFile = new TestRAPLFile(10000L, 20000L, 30000L);
+        final var sensor = new TestIntelRAPLSensor(new TreeMap<>(Map.of("sensor", raplFile)));
+        sensor.enableCPUShareSampling(true);
+        sensor.start(500);
+        final var pid = sensor.register(1234L);
+        double cpuShare = 0.3;
+        final var measures = sensor.update(1L, Map.of("1234", cpuShare));
+        final var components = measures.getOrDefault(pid).components();
+        assertEquals(3, components.length);
+        assertEquals(2, raplFile.callCount());
+        final var interval = raplFile.measureTimeFor(1) - raplFile.measureTimeFor(0);
+        final var expected = (double) (raplFile.valueAt(1) - raplFile.valueAt(0)) / interval;
+        assertEquals(expected, components[0]);
+        assertEquals(20000, components[1]);
+        assertEquals(cpuShare, components[2]);
     }
 
     private SensorMetadata loadMetadata(String... fileNames) {

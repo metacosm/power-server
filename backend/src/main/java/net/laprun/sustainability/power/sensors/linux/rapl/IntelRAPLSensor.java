@@ -16,7 +16,7 @@ import net.laprun.sustainability.power.sensors.Measures;
 /**
  * A sensor using Intel's RAPL accessed via Linux' powercap system.
  */
-public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> {
+public class IntelRAPLSensor extends AbstractPowerSensor {
     private final RAPLFile[] raplFiles;
     private final int rawOffset;
     private SensorMetadata nativeMetadata;
@@ -58,7 +58,6 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
     }
 
     IntelRAPLSensor(SortedMap<String, RAPLFile> files) {
-        super(new SingleMeasureMeasures());
         if (files.isEmpty())
             throw new RuntimeException("Failed to get RAPL energy readings, probably due to lack of read access ");
 
@@ -145,7 +144,22 @@ public class IntelRAPLSensor extends AbstractPowerSensor<SingleMeasureMeasures> 
             measure[index + rawOffset] = value;
         },
                 newUpdateStartEpoch);
-        measures.singleMeasure(new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch));
+
+        int cpuShareIndex = externalCPUShareComponentIndex();
+        boolean needMultipleMeasures = wantsCPUShareSamplingEnabled() && cpuShareIndex > 0 && cpuShares != null
+                && !cpuShares.isEmpty();
+        final var single = new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
+        measures.trackedPIDs().forEach(pid -> {
+            final SensorMeasure m;
+            if (needMultipleMeasures) {
+                measure[cpuShareIndex] = cpuShares.get(pid.pidAsString());
+                m = new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
+            } else {
+                m = single;
+            }
+            measures.record(pid, m);
+        });
+
         return measures;
     }
 
