@@ -11,7 +11,7 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
     protected final M measures;
     private long lastUpdateEpoch;
     private boolean started;
-    protected boolean cpuSharesEnabled = true;
+    protected boolean cpuSharesEnabled = false;
     private SensorMetadata metadata;
 
     public AbstractPowerSensor(M measures) {
