@@ -22,6 +22,10 @@ public interface PowerSensor {
         return false;
     }
 
+    boolean wantsCPUShareSamplingEnabled();
+
+    void enableCPUShareSampling(boolean enable);
+
     /**
      * Stops measuring power consumption
      */

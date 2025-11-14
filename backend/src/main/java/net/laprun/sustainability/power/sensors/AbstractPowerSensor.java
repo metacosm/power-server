@@ -3,6 +3,8 @@ package net.laprun.sustainability.power.sensors;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.SensorUnit;
@@ -11,7 +13,8 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
     protected final M measures;
     private long lastUpdateEpoch;
     private boolean started;
-    protected boolean cpuSharesEnabled = false;
+    @ConfigProperty(name = "net.laprun.sustainability.power.enable-cpu-share-sampling", defaultValue = "false")
+    protected boolean cpuSharesEnabled;
     private SensorMetadata metadata;
 
     public AbstractPowerSensor(M measures) {
@@ -34,6 +37,18 @@ public abstract class AbstractPowerSensor<M extends Measures> implements PowerSe
     }
 
     abstract protected SensorMetadata nativeMetadata();
+
+    @Override
+    public boolean wantsCPUShareSamplingEnabled() {
+        Log.infof("CPU Share sampling enabled: %b", cpuSharesEnabled);
+        return cpuSharesEnabled;
+    }
+
+    @Override
+    public void enableCPUShareSampling(boolean enable) {
+        Log.infof("Enabling CPU Share sampling: %b", enable);
+        cpuSharesEnabled = enable;
+    }
 
     @Override
     public RegisteredPID register(long pid) {
