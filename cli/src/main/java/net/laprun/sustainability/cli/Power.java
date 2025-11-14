@@ -1,5 +1,7 @@
 package net.laprun.sustainability.cli;
 
+import static net.laprun.sustainability.power.sensors.PowerSensor.EXTERNAL_CPU_SHARE_COMPONENT_NAME;
+
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +39,10 @@ public class Power implements Runnable {
 
     public Power(SamplingMeasurer measurer) {
         this.measurer = measurer;
+        final var sensor = measurer.sensor();
+        if (!sensor.supportsProcessAttribution()) {
+            sensor.enableCPUShareSampling(true);
+        }
         final var metadata = measurer.metadata();
         totaler = new Totaler(metadata, SensorUnit.W);
     }
@@ -68,15 +74,20 @@ public class Power implements Runnable {
             final var measureTime = measurer.persistence()
                     .synthesizeAndAggregateForSession(Persistence.SYSTEM_TOTAL_APP_NAME, session, m -> (double) m.duration())
                     .orElseThrow(() -> new RuntimeException("Could not compute measure duration"));
-            final var systemPower = extractPowerConsumption(Persistence.SYSTEM_TOTAL_APP_NAME);
+            final var systemPower = extractPowerConsumption(Persistence.SYSTEM_TOTAL_APP_NAME, false);
             Log.infof("Command ran for: %dms, measure time: %3fms", commandHandler.duration(), measureTime);
             Log.infof("Total system power consumption: %3.2f%s", systemPower.value(), systemPower.unit());
             if (totaler.isAttributed()) {
-                final var appPower = extractPowerConsumption(name);
+                final var appPower = extractPowerConsumption(name, false);
                 Log.infof("App '%s' power consumption: %3.2f%s", cmd, appPower.value(), appPower.unit());
             } else {
-                Log.info(
-                        "Power consumption for this platform is not currently attributed: no per-process power is currently measured");
+                if (measurer.sensor().wantsCPUShareSamplingEnabled()) {
+                    final var appPower = extractPowerConsumption(name, true);
+                    Log.infof("App '%s' power consumption: %3.2f%s", cmd, appPower.value(), appPower.unit());
+                } else {
+                    Log.info(
+                            "Power consumption for this platform is not currently attributed: no per-process power is currently measured");
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -87,10 +98,14 @@ public class Power implements Runnable {
         Quarkus.waitForExit();
     }
 
-    private Measure extractPowerConsumption(String applicationName) {
+    private Measure extractPowerConsumption(String applicationName, boolean useExternalCPUShare) {
+        int cpuShareComponent = measurer.metadata().metadataFor(EXTERNAL_CPU_SHARE_COMPONENT_NAME).index();
         final var appPower = measurer.persistence()
                 .synthesizeAndAggregateForSession(applicationName, session,
-                        m -> totaler.computeTotalFrom(m.components))
+                        m -> {
+                            double factor = useExternalCPUShare ? m.components[cpuShareComponent] : 1.0;
+                            return factor * totaler.computeTotalFrom(m.components);
+                        })
                 .map(measure -> new Measure(measure, totaler.expectedResultUnit()))
                 .orElseThrow(() -> new RuntimeException("Could not extract power consumption"));
 
