@@ -34,17 +34,15 @@ public class Power implements Runnable {
             "--command" }, required = true, description = "Command to measure energy consumption for")
     String cmd;
 
+    @CommandLine.Option(names = { "-e",
+            "--external-cpu-share" }, description = "Whether to use 'external' (as opposed to intrinsecally) defined CPU share attribution for processes. Note that this option is automatically activated on Linux since the mechanism measuring energy consumption only allows for system-wide measures.", defaultValue = CommandLine.Option.NULL_VALUE)
+    Optional<Boolean> wantsCPUShareSamplingEnabled;
+
     private final SamplingMeasurer measurer;
-    private final Totaler totaler;
+    private Totaler totaler;
 
     public Power(SamplingMeasurer measurer) {
         this.measurer = measurer;
-        final var sensor = measurer.sensor();
-        if (!sensor.supportsProcessAttribution()) {
-            sensor.enableCPUShareSampling(true);
-        }
-        final var metadata = measurer.metadata();
-        totaler = new Totaler(metadata, SensorUnit.W);
     }
 
     @Override
@@ -56,6 +54,22 @@ public class Power implements Runnable {
 
         name = name == null ? String.join(" ", cmd) : name;
         session = session == null ? Persistence.defaultSession(name) : session;
+
+        // check whether we need to activate external CPU share attribution
+        final var sensor = measurer.sensor();
+        wantsCPUShareSamplingEnabled.ifPresent(enableCPUShareSampling -> {
+            if (enableCPUShareSampling || !sensor.supportsProcessAttribution()) {
+                sensor.enableCPUShareSampling(true);
+            }
+            // if user explicitly required external CPU share to be disabled, disable it
+            if (!enableCPUShareSampling) {
+                sensor.enableCPUShareSampling(false);
+            }
+        });
+
+        // need to wait until after external attribution use is decided to get the metadata and create the totaler
+        final var metadata = measurer.metadata();
+        totaler = new Totaler(metadata, SensorUnit.W);
 
         try {
             measurer.start(session);
@@ -77,14 +91,18 @@ public class Power implements Runnable {
             final var systemPower = extractPowerConsumption(Persistence.SYSTEM_TOTAL_APP_NAME, false);
             Log.infof("Command ran for: %dms, measure time: %3fms", commandHandler.duration(), measureTime);
             Log.infof("Total system power consumption: %3.2f%s", systemPower.value(), systemPower.unit());
-            if (totaler.isAttributed()) {
+            final var attributed = totaler.isAttributed();
+            if (attributed) {
                 final var appPower = extractPowerConsumption(name, false);
                 Log.infof("App '%s' power consumption: %3.2f%s", cmd, appPower.value(), appPower.unit());
+            }
+            // make it possible to see energy measured both intrinsically (if sensor supports native per-process CPU attribution) and externally (if explicitly asked)
+            if (measurer.sensor().wantsCPUShareSamplingEnabled()) {
+                final var appPower = extractPowerConsumption(name, true);
+                Log.infof("App '%s' power consumption (using inferred CPU share): %3.2f%s", cmd, appPower.value(),
+                        appPower.unit());
             } else {
-                if (measurer.sensor().wantsCPUShareSamplingEnabled()) {
-                    final var appPower = extractPowerConsumption(name, true);
-                    Log.infof("App '%s' power consumption: %3.2f%s", cmd, appPower.value(), appPower.unit());
-                } else {
+                if (!attributed) {
                     Log.info(
                             "Power consumption for this platform is not currently attributed: no per-process power is currently measured");
                 }
@@ -99,7 +117,8 @@ public class Power implements Runnable {
     }
 
     private Measure extractPowerConsumption(String applicationName, boolean useExternalCPUShare) {
-        int cpuShareComponent = measurer.metadata().metadataFor(EXTERNAL_CPU_SHARE_COMPONENT_NAME).index();
+        int cpuShareComponent = useExternalCPUShare ? measurer.metadata().metadataFor(EXTERNAL_CPU_SHARE_COMPONENT_NAME).index()
+                : -1;
         final var appPower = measurer.persistence()
                 .synthesizeAndAggregateForSession(applicationName, session,
                         m -> {
