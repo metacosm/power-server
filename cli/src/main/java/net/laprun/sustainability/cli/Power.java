@@ -34,6 +34,7 @@ public class Power implements Runnable {
             "--command" }, required = true, description = "Command to measure energy consumption for")
     String cmd;
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @CommandLine.Option(names = { "-e",
             "--external-cpu-share" }, description = "Whether to use 'external' (as opposed to intrinsecally) defined CPU share attribution for processes. Note that this option is automatically activated on Linux since the mechanism measuring energy consumption only allows for system-wide measures.", defaultValue = CommandLine.Option.NULL_VALUE)
     Optional<Boolean> wantsCPUShareSamplingEnabled;
