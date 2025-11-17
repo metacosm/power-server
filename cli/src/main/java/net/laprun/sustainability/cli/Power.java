@@ -1,3 +1,20 @@
+///usr/bin/env jbang "$0" "$@" ; exit $?
+//JAVA 21+
+
+//DESCRIPTION power: a command line tool to measure power consumption of processes
+
+//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.29.3}@pom
+//DEPS io.quarkus:quarkus-picocli
+//DEPS net.laprun.sustainability:power-server-backend:0.3.1-SNAPSHOT
+//DEPS net.laprun.sustainability:power-server-measure:0.3.1-SNAPSHOT
+
+//Q:CONFIG quarkus.banner.enabled=false
+//Q:CONFIG quarkus.log.level=INFO
+
+//RUNTIME_OPTIONS --add-opens java.base/java.lang=ALL-UNNAMED
+
+//FILES application.properties=../../../../../resources/application.properties
+
 package net.laprun.sustainability.cli;
 
 import static net.laprun.sustainability.power.sensors.PowerSensor.EXTERNAL_CPU_SHARE_COMPONENT_NAME;
