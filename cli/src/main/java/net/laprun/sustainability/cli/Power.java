@@ -5,8 +5,9 @@
 
 //DEPS io.quarkus:quarkus-bom:${quarkus.version:3.29.3}@pom
 //DEPS io.quarkus:quarkus-picocli
-//DEPS net.laprun.sustainability:power-server-backend:0.3.1-SNAPSHOT
-//DEPS net.laprun.sustainability:power-server-measure:0.3.1-SNAPSHOT
+//DEPS net.laprun.sustainability:power-server-bom:${power-server.version:0.3.1-SNAPSHOT}@pom
+//DEPS net.laprun.sustainability:power-server-backend
+//DEPS net.laprun.sustainability:power-server-measure
 
 //Q:CONFIG quarkus.banner.enabled=false
 //Q:CONFIG quarkus.log.level=INFO

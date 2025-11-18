@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>net.laprun.sustainability</groupId>
+    <artifactId>power-server-parent</artifactId>
+    <version>0.3.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>power-server-bom</artifactId>
+  <packaging>pom</packaging>
+
+  <name>power-server : BOM</name>
+  <description>BOM module for the power-server project</description>
+
+  <licenses>
+    <license>
+      <name>Apache 2 License</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Christophe Laprun</name>
+      <email>metacosm@gmail.com</email>
+      <roles>
+        <role>author</role>
+      </roles>
+    </developer>
+  </developers>
+  <inceptionYear>2023</inceptionYear>
+
+  <scm>
+    <connection>scm:git:git://github.com/metacosm/power-server.git</connection>
+    <developerConnection>scm:git:git@github.com/metacosm/power-server.git</developerConnection>
+    <url>https://github.com/metacosm/power-server/tree/main</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>net.laprun.sustainability</groupId>
+        <artifactId>power-server-analysis</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.laprun.sustainability</groupId>
+        <artifactId>power-server-backend</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.laprun.sustainability</groupId>
+        <artifactId>power-server-cli</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.laprun.sustainability</groupId>
+        <artifactId>power-server-if-manifest-export</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.laprun.sustainability</groupId>
+        <artifactId>power-server-measure</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.laprun.sustainability</groupId>
+        <artifactId>power-server-metadata</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.laprun.sustainability</groupId>
+        <artifactId>power-server-persistence</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.laprun.sustainability</groupId>
+        <artifactId>power-server</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+</project>

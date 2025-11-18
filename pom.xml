@@ -7,8 +7,7 @@
     <packaging>pom</packaging>
 
     <name>power-server : parent</name>
-    <description>An application allowing to retrieve power consumption and associated metadata on a per-process basis,
-        via a RESTful endpoint</description>
+    <description>A set of tools and libraries to help measuring the power consumption of applications</description>
     <url>https://github.com/metacosm/power-server</url>
 
     <licenses>
@@ -77,6 +76,7 @@
         <module>cli</module>
         <module>if-manifest-export</module>
         <module>persistence</module>
+        <module>bom</module>
     </modules>
 
     <dependencyManagement>
