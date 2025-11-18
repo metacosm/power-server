@@ -340,7 +340,7 @@
                                             </artifact>
                                         </artifacts>
                                     </power-server>
-                                    <power-server-cli>
+                                    <!--<power-server-cli>
                                         <name>power-server-cli</name>
                                         <stereotype>CLI</stereotype>
                                         <executable>
@@ -360,15 +360,6 @@
                                                 <transform>artifacts/{{distributionName}}-{{projectEffectiveVersion}}-linux-x86_64.tar.gz</transform>
                                                 <platform>linux-x86_64</platform>
                                             </artifact>
-                                            <!--<artifact>
-                                                <path>
-                                                    {{artifactsDir}}/{{distributionName}}-{{projectVersion}}-windows-x86_64.zip
-                                                </path>
-                                                <transform>
-                                                    artifacts/{{distributionName}}-{{projectEffectiveVersion}}-windows-x86_64.zip
-                                                </transform>
-                                                <platform>windows-x86_64</platform>
-                                            </artifact>-->
                                             <artifact>
                                                 <path>{{artifactsDir}}/{{distributionName}}-{{projectVersion}}-osx-x86_64.tar.gz</path>
                                                 <transform>artifacts/{{distributionName}}-{{projectEffectiveVersion}}-osx-x86_64.tar.gz</transform>
@@ -381,7 +372,7 @@
                                                 <platform>osx-aarch_64</platform>
                                             </artifact>
                                         </artifacts>
-                                    </power-server-cli>
+                                    </power-server-cli>-->
                                 </distributions>
                             </jreleaser>
                         </configuration>
