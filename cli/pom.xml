@@ -4,7 +4,7 @@
   <parent>
     <groupId>net.laprun.sustainability</groupId>
     <artifactId>power-server-parent</artifactId>
-    <version>0.3.1-SNAPSHOT</version>
+    <version>0.5.0</version>
   </parent>
 
   <artifactId>power-server-cli</artifactId>
@@ -12,7 +12,7 @@
   <description>A CLI command to measure power consumption of the specified process</description>
   <properties>
     <distribution.directory>${project.build.directory}/distributions</distribution.directory>
-    <executable-suffix/>
+    <executable-suffix />
   </properties>
   <dependencies>
     <dependency>
