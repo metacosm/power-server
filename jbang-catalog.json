@@ -1,0 +1,8 @@
+{
+  "aliases": {
+    "power": {
+      "script-ref": "cli/src/main/java/net/laprun/sustainability/cli/Power.java",
+      "description": "A command line tool to measure power consumption of processes"
+    }
+  }
+}
