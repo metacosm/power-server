@@ -33,7 +33,7 @@ public class SamplingMeasurer {
     @Inject
     Persistence persistence;
 
-    @ConfigProperty(name = "net.laprun.sustainability.power.sampling-period", defaultValue = DEFAULT_SAMPLING_PERIOD)
+    @ConfigProperty(name = "power-server.sampling-period", defaultValue = DEFAULT_SAMPLING_PERIOD)
     Duration samplingPeriod;
 
     private Multi<Measures> periodicSensorCheck;

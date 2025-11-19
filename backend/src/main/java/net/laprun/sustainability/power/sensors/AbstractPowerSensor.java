@@ -13,7 +13,7 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     protected final Measures measures;
     private long lastUpdateEpoch;
     private boolean started;
-    @ConfigProperty(name = "net.laprun.sustainability.power.enable-cpu-share-sampling", defaultValue = "false")
+    @ConfigProperty(name = "power-server.enable-cpu-share-sampling", defaultValue = "false")
     protected boolean cpuSharesEnabled;
     private SensorMetadata metadata;
     private int externalCPUShareComponentIndex = -1;
@@ -71,11 +71,11 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     }
 
     @Override
-    public void start(long samplingFrequencyInMillis) throws Exception {
+    public void start(long samplingPeriodInMillis) throws Exception {
         if (!started) {
             lastUpdateEpoch = System.currentTimeMillis();
             started = true;
-            doStart(samplingFrequencyInMillis);
+            doStart(samplingPeriodInMillis);
         }
     }
 

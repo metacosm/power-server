@@ -51,8 +51,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     public static final String CPU_SHARE = "cpuShare";
     private static final String DURATION_SUFFIX = "ms elapsed) ***";
     private static final int DURATION_SUFFIX_LENGTH = DURATION_SUFFIX.length();
-    public static final String TASKS_SECTION_MARKER = "*** Running tasks ***";
-    public static final String CPU_USAGE_SECTION_MARKER = "**** Processor usage ****";
+    private static final String TASKS_SECTION_MARKER = "*** Running tasks ***";
+    private static final String CPU_USAGE_SECTION_MARKER = "**** Processor usage ****";
 
     private CPU cpu;
 

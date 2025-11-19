@@ -48,6 +48,7 @@ public class PSExtractionStrategy implements ExtractionStrategy {
     }
 
     void extractCPUSharesInto(byte[] bytes, Map<String, Double> cpuShares) {
+        // todo: avoid creating a string?
         extractCPUSharesInto(new String(bytes), cpuShares);
     }
 
