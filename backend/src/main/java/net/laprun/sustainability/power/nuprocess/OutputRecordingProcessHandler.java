@@ -10,10 +10,6 @@ public class OutputRecordingProcessHandler extends BaseProcessHandler {
     private final GrowableBuffer stdOutBuffer;
     private final CompletableFuture<InputStream> output = new CompletableFuture<>();
 
-    public OutputRecordingProcessHandler(String... command) {
-        this(-1, command);
-    }
-
     public OutputRecordingProcessHandler(int bufferSize, String... command) {
         super(command);
         stdOutBuffer = new GrowableBuffer(bufferSize);

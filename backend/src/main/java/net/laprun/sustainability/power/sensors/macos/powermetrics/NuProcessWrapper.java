@@ -7,13 +7,8 @@ import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 
 public class NuProcessWrapper implements ProcessWrapper {
-    private final PowermetricsProcessHandler metadataHandler;
     private PowermetricsProcessHandler measureHandler;
     private String periodInMilliSecondsAsString;
-
-    public NuProcessWrapper() {
-        metadataHandler = new PowermetricsProcessHandler("cpu_power", "-i", "10", "-n", "1");
-    }
 
     private NuProcess exec(PowermetricsProcessHandler handler) {
         if (handler == null)
@@ -23,6 +18,7 @@ public class NuProcessWrapper implements ProcessWrapper {
 
     @Override
     public InputStream streamForMetadata() {
+        final var metadataHandler = new PowermetricsProcessHandler(6500, "cpu_power", "-i", "10", "-n", "1");
         exec(metadataHandler);
         try {
             return metadataHandler.getInputStream().get();
@@ -54,7 +50,7 @@ public class NuProcessWrapper implements ProcessWrapper {
     @Override
     public InputStream streamForMeasure() {
         if (!isRunning()) {
-            measureHandler = new PowermetricsProcessHandler("cpu_power,tasks",
+            measureHandler = new PowermetricsProcessHandler(27000, "cpu_power,tasks",
                     "--show-process-samp-norm", "--show-process-gpu", "-i",
                     periodInMilliSecondsAsString, "-n", "1");
             exec(measureHandler);
