@@ -20,7 +20,7 @@ public class OutputRecordingProcessHandler extends BaseProcessHandler {
 
     @Override
     public void onStdout(ByteBuffer buffer, boolean closed) {
-        if (buffer.hasRemaining()) {
+        if (buffer.hasRemaining() && !closed) {
             if (debug) {
                 final var remaining = buffer.remaining();
                 var bytes = new byte[remaining];
