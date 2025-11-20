@@ -41,7 +41,9 @@ public class ProcessMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
 
     @Override
     public void stop() {
-        processWrapper.stop();
-        super.stop();
+        if (isStarted()) {
+            processWrapper.stop();
+            super.stop();
+        }
     }
 }
