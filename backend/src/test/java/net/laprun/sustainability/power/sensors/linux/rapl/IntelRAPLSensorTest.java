@@ -132,6 +132,7 @@ public class IntelRAPLSensorTest {
         assertEquals(cpuShare, components[2]);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private SensorMetadata loadMetadata(String... fileNames) {
         Class<? extends IntelRAPLSensorTest> clazz = getClass();
         final var files = Arrays.stream(fileNames)

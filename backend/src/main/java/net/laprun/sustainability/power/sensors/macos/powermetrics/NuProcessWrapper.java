@@ -10,6 +10,7 @@ public class NuProcessWrapper implements ProcessWrapper {
     private PowermetricsProcessHandler measureHandler;
     private String periodInMilliSecondsAsString;
 
+    @SuppressWarnings("UnusedReturnValue")
     private NuProcess exec(PowermetricsProcessHandler handler) {
         if (handler == null)
             throw new IllegalArgumentException("Handler cannot be null");

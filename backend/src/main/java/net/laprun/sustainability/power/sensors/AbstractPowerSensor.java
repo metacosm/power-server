@@ -100,7 +100,7 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     @Override
     public Measures update(Long tick, Map<String, Double> cpuShares) {
         final long newUpdateStartEpoch = System.currentTimeMillis();
-        Log.infof("Sensor update for tick: %d, last called: %dms ago", tick, newUpdateStartEpoch - lastUpdateEpoch);
+        Log.debugf("Sensor update last called: %dms ago", newUpdateStartEpoch - lastUpdateEpoch);
         final var measures = doUpdate(lastUpdateEpoch, newUpdateStartEpoch, cpuShares);
         lastUpdateEpoch = newUpdateStartEpoch;
         return measures;

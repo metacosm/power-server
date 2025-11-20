@@ -1,7 +1,6 @@
 package net.laprun.sustainability.power.sensors;
 
 import java.util.Set;
-import java.util.function.Consumer;
 
 import net.laprun.sustainability.power.SensorMeasure;
 
@@ -63,9 +62,8 @@ public interface Measures {
      */
     SensorMeasure getOrDefault(RegisteredPID pid);
 
+    @SuppressWarnings("unused")
     default SensorMeasure getSystemTotal() {
         return getOrDefault(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID);
     }
-
-    void forEach(Consumer<? super SensorMeasure> consumer);
 }

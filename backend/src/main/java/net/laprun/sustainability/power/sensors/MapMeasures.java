@@ -3,7 +3,6 @@ package net.laprun.sustainability.power.sensors;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Consumer;
 
 import net.laprun.sustainability.power.SensorMeasure;
 
@@ -48,10 +47,5 @@ public class MapMeasures implements Measures {
     @Override
     public SensorMeasure getOrDefault(RegisteredPID pid) {
         return measures.getOrDefault(pid, SensorMeasure.missing);
-    }
-
-    @Override
-    public void forEach(Consumer<? super SensorMeasure> consumer) {
-        measures.keySet().forEach(pid -> consumer.accept(getOrDefault(pid)));
     }
 }
