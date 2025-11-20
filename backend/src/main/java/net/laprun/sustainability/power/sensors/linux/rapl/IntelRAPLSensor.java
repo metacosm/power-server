@@ -101,7 +101,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
     }
 
     @Override
-    public void doStart(long frequency) {
+    public void doStart() {
         // perform an initial measure to prime the data
         readAndRecordSensor(null, lastUpdateEpoch());
     }

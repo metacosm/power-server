@@ -26,6 +26,10 @@ public interface PowerSensor {
 
     void enableCPUShareSampling(boolean enable);
 
+    default long adjustSamplingPeriodIfNeeded(long requestedSamplingPeriodInMillis) {
+        return requestedSamplingPeriodInMillis;
+    }
+
     /**
      * Stops measuring power consumption
      */
@@ -50,10 +54,9 @@ public interface PowerSensor {
     /**
      * Starts emitting power consumption measures at the given frequency
      *
-     * @param samplingFrequencyInMillis the number of milliseconds between emitted measures
      * @throws Exception if the sensor couldn't be started for some reason
      */
-    void start(long samplingFrequencyInMillis) throws Exception;
+    void start() throws Exception;
 
     /**
      * Registers the provided process identifier (pid) with the sensor in case it can provide per-process measures. For sensors

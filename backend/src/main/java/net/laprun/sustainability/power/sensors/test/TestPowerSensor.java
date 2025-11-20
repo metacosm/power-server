@@ -34,7 +34,7 @@ public class TestPowerSensor extends AbstractPowerSensor {
     }
 
     @Override
-    public void doStart(long samplingFrequencyInMillis) {
+    public void doStart() {
         // nothing to do
     }
 

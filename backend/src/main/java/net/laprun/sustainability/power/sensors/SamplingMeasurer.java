@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -26,7 +27,7 @@ import net.laprun.sustainability.power.sensors.cpu.CPUShare;
 @ApplicationScoped
 public class SamplingMeasurer {
 
-    public static final String DEFAULT_SAMPLING_PERIOD = "PT0.5S";
+    public static final String DEFAULT_SAMPLING_PERIOD = "PT1S";
     @Inject
     PowerSensor sensor;
 
@@ -67,7 +68,9 @@ public class SamplingMeasurer {
         final var registeredPID = sensor.register(pid);
 
         if (!sensor.isStarted()) {
-            sensor.start(samplingPeriod.toMillis());
+            final var adjusted = sensor.adjustSamplingPeriodIfNeeded(samplingPeriod.toMillis());
+            Log.infof("%s sensor adjusted its sampling period to %dms", sensor.getClass().getSimpleName(), adjusted);
+            sensor.start();
 
             final var samplingTicks = Multi.createFrom().ticks().every(samplingPeriod);
 

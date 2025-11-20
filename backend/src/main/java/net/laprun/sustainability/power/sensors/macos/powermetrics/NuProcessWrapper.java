@@ -29,8 +29,6 @@ public class NuProcessWrapper implements ProcessWrapper {
 
     @Override
     public void start(long periodInMilliSeconds) {
-        // todo? check if asked period is the same as the current used one
-        periodInMilliSeconds = periodInMilliSeconds > 100 ? periodInMilliSeconds - 50 : periodInMilliSeconds;
         this.periodInMilliSecondsAsString = Long.toString(periodInMilliSeconds);
     }
 
