@@ -3,8 +3,8 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 import net.laprun.sustainability.power.nuprocess.OutputRecordingProcessHandler;
 
 public class PowermetricsProcessHandler extends OutputRecordingProcessHandler {
-    public PowermetricsProcessHandler(String... command) {
-        super(command);
+    public PowermetricsProcessHandler(int bufferSize, String... command) {
+        super(bufferSize, command);
     }
 
     @Override

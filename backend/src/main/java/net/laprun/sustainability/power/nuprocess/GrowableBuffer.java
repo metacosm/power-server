@@ -2,30 +2,28 @@ package net.laprun.sustainability.power.nuprocess;
 
 import java.nio.ByteBuffer;
 
+import io.quarkus.logging.Log;
+
 class GrowableBuffer {
-    private static final int DEFAULT_SIZE = 20000;
     private ByteBuffer buffer;
 
-    public GrowableBuffer() {
-        this(DEFAULT_SIZE);
-    }
-
     public GrowableBuffer(int size) {
-        if (size <= 0) {
-            size = DEFAULT_SIZE;
-        }
         buffer = ByteBuffer.allocate(size);
     }
 
     public void put(ByteBuffer input) {
+        final var start = System.nanoTime();
         if (buffer.remaining() < input.remaining()) {
-            var newBuffer = ByteBuffer.allocate(buffer.capacity() + input.remaining());
+            final var sizeIncrease = input.remaining() - buffer.remaining();
+            Log.debugf("Growing buffer. remaining: %d, asked: %d, capacity: %d, new capacity: %d", buffer.remaining(),
+                    input.remaining(), buffer.capacity(), buffer.capacity() + sizeIncrease);
+            var newBuffer = ByteBuffer.allocate(buffer.capacity() + sizeIncrease);
             buffer.flip();
             newBuffer.put(buffer);
             buffer = newBuffer;
-        } else {
-            buffer.put(input);
         }
+        buffer.put(input);
+        Log.debugf("putting buffer took %d ns", System.nanoTime() - start);
     }
 
     public byte[] array() {
