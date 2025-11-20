@@ -61,9 +61,4 @@ class SingleMeasureMeasures implements Measures {
     public void forEach(Consumer<? super SensorMeasure> consumer) {
         throw new UnsupportedOperationException("todo: not implemented yet");
     }
-
-    @Override
-    public long lastMeasuredUpdateEndEpoch() {
-        return -1;
-    }
 }

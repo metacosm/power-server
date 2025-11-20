@@ -74,7 +74,6 @@ class MacOSPowermetricsSensorTest {
         // Process CPU power should be equal to sample ms/s divided for process (here: 116.64) by total samples (1222.65) times total CPU power
         final var pidCPUShare = 224.05 / totalCPUTime;
         assertEquals(pidCPUShare * totalCPUPower, getComponent(measure, pid0, cpu));
-        assertEquals(startUpdateEpoch + 10458, measure.lastMeasuredUpdateEndEpoch());
     }
 
     @Test
@@ -94,7 +93,6 @@ class MacOSPowermetricsSensorTest {
         assertEquals(0, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.GPU));
         assertEquals(25, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.PACKAGE));
         assertEquals(1.0, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.CPU_SHARE));
-        assertEquals(startUpdateEpoch + 1012, measure.lastMeasuredUpdateEndEpoch());
     }
 
     @Test
@@ -145,7 +143,6 @@ class MacOSPowermetricsSensorTest {
             assertEquals(0.0, getComponent(measure, pid1, gpuMetadata));
             assertEquals(0.0, getComponent(measure, pid2, gpuMetadata));
         }
-        assertEquals(startUpdateEpoch + expectedMeasureDuration, measure.lastMeasuredUpdateEndEpoch());
     }
 
     private static double getComponent(Measures measure, RegisteredPID pid1, SensorMetadata.ComponentMetadata metadata) {

@@ -9,7 +9,6 @@ import net.laprun.sustainability.power.SensorMeasure;
 
 public class MapMeasures implements Measures {
     private final ConcurrentMap<RegisteredPID, SensorMeasure> measures = new ConcurrentHashMap<>();
-    private long lastMeasuredUpdateStartEpoch;
     private final PIDRegistry registry = new PIDRegistry();
 
     @Override
@@ -43,18 +42,12 @@ public class MapMeasures implements Measures {
 
     @Override
     public void record(RegisteredPID pid, SensorMeasure sensorMeasure) {
-        lastMeasuredUpdateStartEpoch = sensorMeasure.endMs();
         measures.put(pid, sensorMeasure);
     }
 
     @Override
     public SensorMeasure getOrDefault(RegisteredPID pid) {
         return measures.getOrDefault(pid, SensorMeasure.missing);
-    }
-
-    @Override
-    public long lastMeasuredUpdateEndEpoch() {
-        return lastMeasuredUpdateStartEpoch;
     }
 
     @Override
