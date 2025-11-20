@@ -63,13 +63,6 @@ public interface Measures {
      */
     SensorMeasure getOrDefault(RegisteredPID pid);
 
-    /**
-     * Returns the last measured end epoch of an update, if it exists.
-     *
-     * @return the last measured end epoch of an update, or {@code -1} if the measure didn't provide that information
-     */
-    long lastMeasuredUpdateEndEpoch();
-
     default SensorMeasure getSystemTotal() {
         return getOrDefault(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID);
     }

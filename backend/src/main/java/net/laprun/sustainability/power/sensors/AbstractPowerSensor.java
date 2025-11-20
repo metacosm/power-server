@@ -101,8 +101,7 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     public Measures update(Long tick, Map<String, Double> cpuShares) {
         final long newUpdateStartEpoch = System.currentTimeMillis();
         final var measures = doUpdate(lastUpdateEpoch, newUpdateStartEpoch, cpuShares);
-        lastUpdateEpoch = measures.lastMeasuredUpdateEndEpoch() > 0 ? measures.lastMeasuredUpdateEndEpoch()
-                : newUpdateStartEpoch;
+        lastUpdateEpoch = newUpdateStartEpoch;
         return measures;
     }
 
