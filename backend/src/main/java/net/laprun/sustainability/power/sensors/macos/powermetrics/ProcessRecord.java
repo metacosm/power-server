@@ -126,4 +126,9 @@ class ProcessRecord {
     private static boolean isNumberChar(char c) {
         return Character.isDigit(c) || c == '.' || c == '-' || c == 'e' || c == 'E';
     }
+
+    @Override
+    public String toString() {
+        return "ProcessRecord (pid:" + pid + ") -> cpu=" + cpu + ", gpu=" + gpu;
+    }
 }
