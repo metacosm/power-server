@@ -1,0 +1,16 @@
+name: Weekly Native Build
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+jobs:
+  native-check:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-latest, macOS-latest, macos-14 ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Perform native build check with default platform
+        uses: ./.github/workflows/native-build.yml
+        with:
+          platform: ${{ matrix.os }}
