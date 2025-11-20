@@ -50,12 +50,12 @@ class MacOSPowermetricsSensorTest {
 
     @Test
     void extractPowerMeasureForM1Max() {
-        checkPowerMeasure("sonoma-m1max.txt", 211, MacOSPowermetricsSensor.CPU, 1012);
+        checkPowerMeasure("sonoma-m1max.txt", 211, MacOSPowermetricsSensor.CPU);
     }
 
     @Test
     void extractPowerMeasureForM2() {
-        checkPowerMeasure("monterey-m2.txt", 10, MacOSPowermetricsSensor.CPU, 1012);
+        checkPowerMeasure("monterey-m2.txt", 10, MacOSPowermetricsSensor.CPU);
     }
 
     @Test
@@ -97,7 +97,7 @@ class MacOSPowermetricsSensorTest {
 
     @Test
     void extractPowerMeasureForIntel() {
-        checkPowerMeasure("sonoma-intel.txt", 8.53f, MacOSPowermetricsSensor.PACKAGE, 1002);
+        checkPowerMeasure("sonoma-intel.txt", 8.53f, MacOSPowermetricsSensor.PACKAGE);
     }
 
     @Test
@@ -118,8 +118,7 @@ class MacOSPowermetricsSensorTest {
         assertEquals(pidCPUShare * 211, getComponent(measure, pid1, cpu));
     }
 
-    private static void checkPowerMeasure(String testFileName, float total, String totalMeasureName,
-            long expectedMeasureDuration) {
+    private static void checkPowerMeasure(String testFileName, float total, String totalMeasureName) {
         final var startUpdateEpoch = System.currentTimeMillis();
         final var sensor = new ResourceMacOSPowermetricsSensor(testFileName, startUpdateEpoch);
         final var metadata = sensor.metadata();
