@@ -15,6 +15,7 @@ import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
 public class PSExtractionStrategy implements ExtractionStrategy {
     public static final PSExtractionStrategy INSTANCE = new PSExtractionStrategy();
     private final int fullCPU = CpuCoreSensor.availableProcessors() * 100;// each core contributes 100%
+    private long lastUpdate = System.currentTimeMillis();
 
     @Override
     public Map<String, Double> cpuSharesFor(Set<String> pids) {
@@ -37,6 +38,9 @@ public class PSExtractionStrategy implements ExtractionStrategy {
 
             @Override
             public void onExit(int statusCode) {
+                final var now = System.currentTimeMillis();
+                Log.debugf("ps called again after: %d", now - lastUpdate);
+                lastUpdate = now;
                 if (statusCode != 0) {
                     Log.warnf("Failed to extract CPU shares for pids: %s", pids);
                     cpuShares.clear();
@@ -79,7 +83,7 @@ public class PSExtractionStrategy implements ExtractionStrategy {
             var pid = line.substring(0, spaceIndex).trim();
             var cpuPercentage = line.substring(spaceIndex + 1).trim();
             final var value = Double.parseDouble(cpuPercentage) / fullCPU();
-            Log.infof("pid: %s -> cpu: %s/%d%% = %3.2f", pid, cpuPercentage, fullCPU(), value);
+            Log.debugf("pid: %s -> cpu: %s/%d%% = %3.2f", pid, cpuPercentage, fullCPU(), value);
             if (value < 0) {
                 Log.warnf("Invalid CPU share percentage: %s", cpuPercentage);
                 return;

@@ -55,6 +55,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     private static final String CPU_USAGE_SECTION_MARKER = "**** Processor usage ****";
 
     private CPU cpu;
+    private long lastCalled;
 
     @Override
     public boolean supportsProcessAttribution() {
@@ -105,8 +106,9 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     }
 
     @Override
-    protected void doStart(long samplingFrequencyInMillis) {
+    protected void doStart() {
         // nothing to do here by default
+        lastCalled = System.currentTimeMillis();
     }
 
     private static class Section {
@@ -115,6 +117,9 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
 
     Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch,
             Map<String, Double> cpuShares) {
+        final var startMs = System.currentTimeMillis();
+        Log.debugf("powermetrics measure extraction last called %dms ago", (startMs - lastCalled));
+        lastCalled = startMs;
         final long start = lastUpdateEpoch;
         try {
             // Should not be closed since it closes the process
