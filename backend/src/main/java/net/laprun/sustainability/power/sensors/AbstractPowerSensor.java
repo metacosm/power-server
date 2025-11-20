@@ -71,11 +71,11 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     }
 
     @Override
-    public void start(long samplingPeriodInMillis) throws Exception {
+    public void start() throws Exception {
         if (!started) {
             lastUpdateEpoch = System.currentTimeMillis();
             started = true;
-            doStart(samplingPeriodInMillis);
+            doStart();
         }
     }
 
@@ -95,11 +95,12 @@ public abstract class AbstractPowerSensor implements PowerSensor {
         return measures.trackedPIDsAsString();
     }
 
-    protected abstract void doStart(long samplingFrequencyInMillis);
+    protected abstract void doStart();
 
     @Override
     public Measures update(Long tick, Map<String, Double> cpuShares) {
         final long newUpdateStartEpoch = System.currentTimeMillis();
+        Log.infof("Sensor update for tick: %d, last called: %dms ago", tick, newUpdateStartEpoch - lastUpdateEpoch);
         final var measures = doUpdate(lastUpdateEpoch, newUpdateStartEpoch, cpuShares);
         lastUpdateEpoch = newUpdateStartEpoch;
         return measures;

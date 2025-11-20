@@ -106,7 +106,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     }
 
     @Override
-    protected void doStart(long samplingFrequencyInMillis) {
+    protected void doStart() {
         // nothing to do here by default
         lastCalled = System.currentTimeMillis();
     }
