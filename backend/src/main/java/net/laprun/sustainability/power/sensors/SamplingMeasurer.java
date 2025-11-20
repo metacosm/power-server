@@ -154,6 +154,7 @@ public class SamplingMeasurer {
         manuallyTrackedProcesses.values().forEach(Cancellable::cancel);
     }
 
+    @SuppressWarnings("unused")
     public void stopTrackingProcess(long processId) {
         sensor.unregister(RegisteredPID.create(processId));
         // cancel associated process tracking
