@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
@@ -103,7 +103,6 @@ public class SamplingMeasurer {
                         .combining()
                         .streams(samplingTicks, cpuSharesMulti)
                         .asTuple()
-                        .log()
                         .map(this::updateSensor);
             } else {
                 periodicSensorCheck = samplingTicks
