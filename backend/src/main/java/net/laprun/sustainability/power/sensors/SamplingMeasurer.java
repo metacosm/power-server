@@ -79,7 +79,7 @@ public class SamplingMeasurer {
                 final var cpuSharesMulti = Multi.createFrom().ticks()
                         // over sample but over a shorter period to ensure we have an average that covers most of the sampling period
                         .every(samplingPeriod.minus(50, ChronoUnit.MILLIS).dividedBy(overSamplingFactor))
-                        .runSubscriptionOn(Infrastructure.getDefaultExecutor())
+                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                         .map(tick -> CPUShare.cpuSharesFor(sensor.getRegisteredPIDs()))
                         .group()
                         .intoLists()
