@@ -58,6 +58,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
         return files;
     }
 
+    @SuppressWarnings("NonAsciiCharacters")
     IntelRAPLSensor(SortedMap<String, RAPLFile> files) {
         if (files.isEmpty())
             throw new RuntimeException("Failed to get RAPL energy readings, probably due to lack of read access ");
