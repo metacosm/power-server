@@ -7,13 +7,17 @@ package net.laprun.sustainability.power;
  */
 public interface SensorMeasure {
 
+    double MISSING_CPU_SHARE = -1.0;
+    double MISSING_COMPONENT_VALUE = -1.0;
+    long MISSING_TIME = -1;
+
     /**
      * Array recording the power consumption reported by each component of this sensor
      *
      * @return the values for each power component, as described in the {@link SensorMetadata} associated with the sensor
      */
     default double[] components() {
-        return new double[] { -1.0 };
+        return new double[] { MISSING_COMPONENT_VALUE };
     }
 
     /**
@@ -22,7 +26,7 @@ public interface SensorMeasure {
      * @return the start timestamp in milliseconds for this measure
      */
     default long startMs() {
-        return -1;
+        return MISSING_TIME;
     }
 
     /**
@@ -31,7 +35,7 @@ public interface SensorMeasure {
      * @return the end timestamp in milliseconds for this measure
      */
     default long endMs() {
-        return -1;
+        return MISSING_TIME;
     }
 
     /**
@@ -55,6 +59,10 @@ public interface SensorMeasure {
      */
     default boolean isPartial() {
         return false;
+    }
+
+    default double externalCPUShare() {
+        return MISSING_CPU_SHARE;
     }
 
     /**
