@@ -18,6 +18,7 @@ public class Measure extends PanacheEntity {
     public long endTime;
     public long duration;
     public double[] components;
+    public double externalCPUShare;
     public String session;
 
     public static List<Measure> forApplication(String appName) {
@@ -51,8 +52,10 @@ public class Measure extends PanacheEntity {
                 "{appName='" + appName + '\'' +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
+                ", duration=" + duration +
+                ", partial=" + isPartial() +
                 ", components=" + Arrays.toString(components) +
                 ", session='" + session + '\'' +
-                '}';
+                ", extCPU=" + externalCPUShare + '}';
     }
 }
