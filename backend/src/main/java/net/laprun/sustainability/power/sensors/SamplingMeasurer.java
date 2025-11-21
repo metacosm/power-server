@@ -21,6 +21,7 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import net.laprun.sustainability.power.ProcessUtils;
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.measures.ExternalCPUShareSensorMeasure;
 import net.laprun.sustainability.power.persistence.Persistence;
 import net.laprun.sustainability.power.sensors.cpu.CPUShare;
 
@@ -37,7 +38,7 @@ public class SamplingMeasurer {
     @ConfigProperty(name = "power-server.sampling-period", defaultValue = DEFAULT_SAMPLING_PERIOD)
     Duration samplingPeriod;
 
-    private Multi<Measures> periodicSensorCheck;
+    private Multi<Tuple2<Measures, Map<String, Double>>> periodicSensorCheck;
     private final Map<Long, Cancellable> manuallyTrackedProcesses = new ConcurrentHashMap<>();
 
     public PowerSensor sensor() {
@@ -51,7 +52,19 @@ public class SamplingMeasurer {
 
     public Multi<SensorMeasure> uncheckedStream(long pid) throws Exception {
         final var registeredPID = track(pid);
-        return periodicSensorCheck.map(measures -> measures.getOrDefault(registeredPID));
+        return periodicSensorCheck.map(combined -> withExternalCPUShareIfAvailable(registeredPID, combined));
+    }
+
+    private SensorMeasure withExternalCPUShareIfAvailable(RegisteredPID pid, Tuple2<Measures, Map<String, Double>> tuple) {
+        final var measure = tuple.getItem1().getOrDefault(pid);
+        final var cpuShares = tuple.getItem2();
+        if (!cpuShares.isEmpty()) {
+            final var cpuShare = cpuShares.get(pid.pidAsString());
+            if (cpuShare != null && cpuShare > 0) {
+                return new ExternalCPUShareSensorMeasure(measure, cpuShare);
+            }
+        }
+        return measure;
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -67,19 +80,34 @@ public class SamplingMeasurer {
     RegisteredPID track(long pid) throws Exception {
         final var registeredPID = sensor.register(pid);
 
+        startSamplingIfNeeded();
+
+        periodicSensorCheck = periodicSensorCheck.onCancellation().invoke(() -> sensor.unregister(registeredPID));
+        return registeredPID;
+    }
+
+    private void startSamplingIfNeeded() throws Exception {
         if (!sensor.isStarted()) {
-            final var adjusted = sensor.adjustSamplingPeriodIfNeeded(samplingPeriod.toMillis());
-            Log.infof("%s sensor adjusted its sampling period to %dms", sensor.getClass().getSimpleName(), adjusted);
+            // check if sensor wants a different sampling period
+            final var samplingPeriodMillis = samplingPeriod.toMillis();
+            final var adjusted = sensor.adjustSamplingPeriodIfNeeded(samplingPeriodMillis);
+            if (adjusted != samplingPeriodMillis) {
+                Log.infof("%s sensor adjusted its sampling period to %dms", sensor.getClass().getSimpleName(), adjusted);
+            }
+
+            // start sensor
             sensor.start();
 
-            final var samplingTicks = Multi.createFrom().ticks().every(samplingPeriod);
-
+            // manage external CPU share sampling
+            final var overSamplingFactor = 3;
+            final Multi<Map<String, Double>> cpuSharesMulti;
+            final var cpuSharesTicks = Multi.createFrom().ticks()
+                    // over sample but over a shorter period to ensure we have an average that covers most of the sampling period
+                    .every(samplingPeriod.minus(50, ChronoUnit.MILLIS).dividedBy(overSamplingFactor))
+                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
             if (sensor.wantsCPUShareSamplingEnabled()) {
-                final var overSamplingFactor = 3;
-                final var cpuSharesMulti = Multi.createFrom().ticks()
-                        // over sample but over a shorter period to ensure we have an average that covers most of the sampling period
-                        .every(samplingPeriod.minus(50, ChronoUnit.MILLIS).dividedBy(overSamplingFactor))
-                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                // if enabled, record a cpu share for each tick, group by the over sampling factor and average over these aggregates to produce one value for the power measure interval
+                cpuSharesMulti = cpuSharesTicks
                         .map(tick -> CPUShare.cpuSharesFor(sensor.getRegisteredPIDs()))
                         .group()
                         .intoLists()
@@ -99,29 +127,27 @@ public class SamplingMeasurer {
                                     values.stream().mapToDouble(Double::doubleValue).average().orElse(0)));
                             return averages;
                         });
-                periodicSensorCheck = Multi.createBy()
-                        .combining()
-                        .streams(samplingTicks, cpuSharesMulti)
-                        .asTuple()
-                        .map(this::updateSensor);
             } else {
-                periodicSensorCheck = samplingTicks
-                        .map(tick -> sensor.update(tick, Map.of()));
+                // otherwise, only emit an empty map to signify no external cpu share was recorded
+                cpuSharesMulti = cpuSharesTicks.map(unused -> Map.of());
             }
 
-            periodicSensorCheck = periodicSensorCheck
+            // manage periodic power sampling, measuring sensor values over the sampling period
+            final var sensorSamplerMulti = Multi.createFrom().ticks()
+                    .every(samplingPeriod)
+                    .map(sensor::update)
                     .broadcast()
                     .withCancellationAfterLastSubscriberDeparture()
                     .toAtLeast(1)
                     .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+
+            // combine both multis
+            periodicSensorCheck = Multi.createBy()
+                    .combining()
+                    .streams(sensorSamplerMulti, cpuSharesMulti)
+                    .asTuple();
+
         }
-
-        periodicSensorCheck = periodicSensorCheck.onCancellation().invoke(() -> sensor.unregister(registeredPID));
-        return registeredPID;
-    }
-
-    private Measures updateSensor(Tuple2<Long, Map<String, Double>> tuple) {
-        return sensor.update(tuple.getItem1(), tuple.getItem2());
     }
 
     /**

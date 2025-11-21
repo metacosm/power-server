@@ -106,6 +106,11 @@ public abstract class AbstractPowerSensor implements PowerSensor {
         return measures;
     }
 
+    @Override
+    public Measures update(long tick) {
+        return update(tick, Map.of());
+    }
+
     protected long lastUpdateEpoch() {
         return lastUpdateEpoch;
     }
