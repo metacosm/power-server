@@ -11,8 +11,9 @@ import java.util.HashSet;
 import java.util.Map;
 
 import io.quarkus.logging.Log;
-import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.measures.NoDurationSensorMeasure;
+import net.laprun.sustainability.power.measures.PartialSensorMeasure;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.PowerSensor;
@@ -108,7 +109,9 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     @Override
     protected void doStart() {
         // nothing to do here by default
-        lastCalled = System.currentTimeMillis();
+        if (Log.isDebugEnabled()) {
+            lastCalled = System.currentTimeMillis();
+        }
     }
 
     private static class Section {
@@ -117,10 +120,12 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
 
     Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch,
             Map<String, Double> cpuShares) {
-        final var startMs = System.currentTimeMillis();
-        Log.debugf("powermetrics measure extraction last called %dms ago", (startMs - lastCalled));
-        lastCalled = startMs;
-        final long start = lastUpdateEpoch;
+        if (Log.isDebugEnabled()) {
+            final var start = System.currentTimeMillis();
+            Log.debugf("powermetrics measure extraction last called %dms ago", (start - lastCalled));
+            lastCalled = start;
+        }
+        final long startMs = lastUpdateEpoch;
         try {
             // Should not be closed since it closes the process
             BufferedReader input = new BufferedReader(new InputStreamReader(powerMeasureInput));
@@ -136,7 +141,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
             final var pidMeasures = new HashMap<RegisteredPID, ProcessRecord>(measures.numberOfTrackedPIDs());
             final var metadata = metadata();
             final var powerComponents = new HashMap<String, Number>(metadata.componentCardinality());
-            var endUpdateEpoch = -1L;
+            var duration = -1L;
             Section processes = null;
             Section cpuSection = null;
             while ((line = input.readLine()) != null) {
@@ -146,12 +151,11 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
 
                 if (line.charAt(0) == '*') {
                     // check if we have the sample duration
-                    if (endUpdateEpoch == -1 && line.endsWith(DURATION_SUFFIX)) {
+                    if (duration == -1 && line.endsWith(DURATION_SUFFIX)) {
                         final var startLookingIndex = line.length() - DURATION_SUFFIX_LENGTH;
                         final var lastOpenParenIndex = line.lastIndexOf('(', startLookingIndex);
                         if (lastOpenParenIndex > 0) {
-                            endUpdateEpoch = start
-                                    + Math.round(Float.parseFloat(line.substring(lastOpenParenIndex + 1, startLookingIndex)));
+                            duration = Math.round(Float.parseFloat(line.substring(lastOpenParenIndex + 1, startLookingIndex)));
                         }
                         continue;
                     }
@@ -207,7 +211,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
 
             double finalTotalSampledGPU = totalSampledGPU;
             double finalTotalSampledCPU = totalSampledCPU;
-            final var endMs = endUpdateEpoch != -1 ? endUpdateEpoch : newUpdateEpoch;
+            final var endMs = newUpdateEpoch;
+            final var durationMs = duration;
 
             // handle external cpu share if enabled
             if (cpuShares != null && !cpuShares.isEmpty()) {
@@ -216,18 +221,23 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
             }
 
             // handle total system measure separately
-            measures.record(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID,
-                    new SensorMeasure(getSystemTotalMeasure(metadata, powerComponents), start, endMs));
+            final var systemTotalMeasure = getSystemTotalMeasure(metadata, powerComponents);
+            recordMeasure(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID, systemTotalMeasure, startMs, endMs, durationMs);
 
             pidMeasures.forEach((pid, record) -> {
                 final var attributedMeasure = record.asAttributedMeasure(metadata, powerComponents, finalTotalSampledCPU,
                         finalTotalSampledGPU);
-                measures.record(pid, new SensorMeasure(attributedMeasure, start, endMs));
+                recordMeasure(pid, attributedMeasure, startMs, endMs, durationMs);
             });
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
         return measures;
+    }
+
+    private void recordMeasure(RegisteredPID pid, double[] components, long startMs, long endMs, long duration) {
+        measures.record(pid, duration > 0 ? new PartialSensorMeasure(components, startMs, endMs, duration)
+                : new NoDurationSensorMeasure(components, startMs, endMs));
     }
 
     private static double[] getSystemTotalMeasure(SensorMetadata metadata, Map<String, Number> powerComponents) {
