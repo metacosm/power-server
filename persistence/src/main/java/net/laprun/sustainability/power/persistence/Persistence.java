@@ -25,6 +25,8 @@ public class Persistence {
         persisted.session = session == null ? defaultSession(appName) : session;
         persisted.startTime = measure.startMs();
         persisted.endTime = measure.endMs();
+        persisted.duration = measure.durationMs();
+        persisted.externalCPUShare = measure.externalCPUShare();
         persisted.persist();
         Log.debugf("Persisted %s, measure duration: %sms", persisted, persisted.endTime - persisted.startTime);
         return persisted;

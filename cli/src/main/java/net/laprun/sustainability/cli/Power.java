@@ -18,8 +18,6 @@
 
 package net.laprun.sustainability.cli;
 
-import static net.laprun.sustainability.power.sensors.PowerSensor.EXTERNAL_CPU_SHARE_COMPONENT_NAME;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -136,12 +134,10 @@ public class Power implements Runnable {
     }
 
     private Measure extractPowerConsumption(String applicationName, boolean useExternalCPUShare) {
-        int cpuShareComponent = useExternalCPUShare ? measurer.metadata().metadataFor(EXTERNAL_CPU_SHARE_COMPONENT_NAME).index()
-                : -1;
         final var appPower = measurer.persistence()
                 .synthesizeAndAggregateForSession(applicationName, session,
                         m -> {
-                            double factor = useExternalCPUShare ? m.components[cpuShareComponent] : 1.0;
+                            double factor = useExternalCPUShare ? m.externalCPUShare : 1.0;
                             return factor * totaler.computeTotalFrom(m.components);
                         })
                 .map(measure -> new Measure(measure, totaler.expectedResultUnit()))

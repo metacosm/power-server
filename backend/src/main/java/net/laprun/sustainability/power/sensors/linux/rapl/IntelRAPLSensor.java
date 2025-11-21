@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.measures.NoDurationSensorMeasure;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.Measures;
 import net.laprun.sustainability.power.sensors.RegisteredPID;
@@ -148,7 +149,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
                 newUpdateStartEpoch);
 
         final var needMultipleMeasures = wantsCPUShareSamplingEnabled() && externalCPUShareComponentIndex() > 0;
-        final var single = new SensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
+        final var single = new NoDurationSensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
         measures.trackedPIDs().forEach(pid -> {
             final SensorMeasure m;
             if (needMultipleMeasures) {
@@ -163,7 +164,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
                 final var copy = new double[measure.length];
                 System.arraycopy(measure, 0, copy, 0, measure.length);
                 copy[externalCPUShareComponentIndex()] = cpuShare;
-                m = new SensorMeasure(copy, lastUpdateEpoch, newUpdateStartEpoch);
+                m = new NoDurationSensorMeasure(copy, lastUpdateEpoch, newUpdateStartEpoch);
             } else {
                 m = single;
             }
