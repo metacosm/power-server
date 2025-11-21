@@ -5,8 +5,8 @@ import static net.laprun.sustainability.power.SensorUnit.mW;
 import java.util.List;
 import java.util.Map;
 
-import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
+import net.laprun.sustainability.power.measures.NoDurationSensorMeasure;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.MapMeasures;
 import net.laprun.sustainability.power.sensors.Measures;
@@ -41,7 +41,7 @@ public class TestPowerSensor extends AbstractPowerSensor {
     @Override
     protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch, Map<String, Double> cpuShares) {
         measures.trackedPIDs().forEach(pid -> measures.record(pid,
-                new SensorMeasure(new double[] { Math.random() }, lastUpdateEpoch, newUpdateStartEpoch)));
+                new NoDurationSensorMeasure(new double[] { Math.random() }, lastUpdateEpoch, newUpdateStartEpoch)));
         return measures;
     }
 }

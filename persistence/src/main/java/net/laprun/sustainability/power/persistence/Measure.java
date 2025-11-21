@@ -8,12 +8,15 @@ import jakarta.persistence.Entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import net.laprun.sustainability.power.SensorMeasure;
+import net.laprun.sustainability.power.measures.NoDurationSensorMeasure;
+import net.laprun.sustainability.power.measures.PartialSensorMeasure;
 
 @Entity
 public class Measure extends PanacheEntity {
     public String appName;
     public long startTime;
     public long endTime;
+    public long duration;
     public double[] components;
     public String session;
 
@@ -30,11 +33,16 @@ public class Measure extends PanacheEntity {
     }
 
     public SensorMeasure asSensorMeasure() {
-        return new SensorMeasure(components, startTime, endTime);
+        return isPartial() ? new PartialSensorMeasure(components, startTime, endTime, duration)
+                : new NoDurationSensorMeasure(components, startTime, endTime);
     }
 
     public long duration() {
-        return endTime - startTime;
+        return isPartial() ? duration : endTime - startTime;
+    }
+
+    public boolean isPartial() {
+        return duration > 0;
     }
 
     @Override

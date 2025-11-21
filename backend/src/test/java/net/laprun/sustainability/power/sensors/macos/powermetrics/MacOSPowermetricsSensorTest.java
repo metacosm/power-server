@@ -74,6 +74,8 @@ class MacOSPowermetricsSensorTest {
         // Process CPU power should be equal to sample ms/s divided for process (here: 116.64) by total samples (1222.65) times total CPU power
         final var pidCPUShare = 224.05 / totalCPUTime;
         assertEquals(pidCPUShare * totalCPUPower, getComponent(measure, pid0, cpu));
+        assertEquals(10458, measure.getOrDefault(pid0).durationMs());
+        assertEquals(10458, measure.getSystemTotal().durationMs());
     }
 
     @Test
