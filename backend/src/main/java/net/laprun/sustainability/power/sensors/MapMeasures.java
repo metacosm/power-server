@@ -48,4 +48,9 @@ public class MapMeasures implements Measures {
     public SensorMeasure getOrDefault(RegisteredPID pid) {
         return measures.getOrDefault(pid, SensorMeasure.missing);
     }
+
+    @Override
+    public String toString() {
+        return measures.toString();
+    }
 }

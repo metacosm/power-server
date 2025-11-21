@@ -78,6 +78,8 @@ public interface PowerSensor {
      */
     Measures update(Long tick, Map<String, Double> cpuShares);
 
+    Measures update(long tick);
+
     /**
      * Unregisters the specified {@link RegisteredPID} with this sensor thus signaling that clients are not interested in
      * tracking the consumption of the associated process anymore
