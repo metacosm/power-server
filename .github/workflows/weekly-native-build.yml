@@ -2,6 +2,8 @@ name: Weekly Native Build
 on:
   schedule:
     - cron: '30 8 * * 0'
+  workflow_dispatch:
+
 jobs:
   native-check:
     strategy:
