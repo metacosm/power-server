@@ -24,7 +24,7 @@ jobs:
       already_released: ${{steps.released.outputs.already_released}}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: radcortez/project-metadata-action@main
         name: Retrieve project metadata
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Check out repository'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
