@@ -22,6 +22,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
+import io.quarkus.logging.Log;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import net.laprun.sustainability.power.sensors.SamplingMeasurer;
@@ -105,6 +106,8 @@ public class PowerResourceTest {
                 .then()
                 .statusCode(200)
                 .extract().body().as(SensorMetadata.class);
+        Log.infof("Metadata: %s", metadata);
+
         assertEquals(2, metadata.componentCardinality());
         assertTrue(metadata.documentation().contains("powermetrics"));
         assertTrue(metadata.components().keySet().containsAll(Set.of("Package", "cpuShare")));
