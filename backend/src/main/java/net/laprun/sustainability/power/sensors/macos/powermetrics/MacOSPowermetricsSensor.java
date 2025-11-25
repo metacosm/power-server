@@ -118,8 +118,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
         boolean done;
     }
 
-    Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch,
-            Map<String, Double> cpuShares) {
+    Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch) {
         if (Log.isDebugEnabled()) {
             final var start = System.currentTimeMillis();
             Log.debugf("powermetrics measure extraction last called %dms ago", (start - lastCalled));
@@ -214,12 +213,6 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
             final var endMs = newUpdateEpoch;
             final var durationMs = duration;
 
-            // handle external cpu share if enabled
-            if (cpuShares != null && !cpuShares.isEmpty()) {
-                measures.trackedPIDsAsString().forEach(name -> powerComponents.put(EXTERNAL_CPU_SHARE_COMPONENT_NAME,
-                        cpuShares.getOrDefault(name, MISSING_CPU_SHARE)));
-            }
-
             // handle total system measure separately
             final var systemTotalMeasure = getSystemTotalMeasure(metadata, powerComponents);
             recordMeasure(RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID, systemTotalMeasure, startMs, endMs, durationMs);
@@ -244,7 +237,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
         final var measure = new double[metadata.componentCardinality()];
         metadata.components().forEach((name, cm) -> {
             final var index = cm.index();
-            final var value = CPU_SHARE.equals(name) || EXTERNAL_CPU_SHARE_COMPONENT_NAME.equals(name) ? 1.0
+            final var value = CPU_SHARE.equals(name) ? 1.0
                     : powerComponents.getOrDefault(name, 0).doubleValue();
             measure[index] = value;
         });
@@ -253,8 +246,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch, Map<String, Double> cpuShares) {
-        return extractPowerMeasure(getInputStream(), lastUpdateEpoch, newUpdateStartEpoch, cpuShares);
+    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
+        return extractPowerMeasure(getInputStream(), lastUpdateEpoch, newUpdateStartEpoch);
     }
 
     protected abstract InputStream getInputStream();
