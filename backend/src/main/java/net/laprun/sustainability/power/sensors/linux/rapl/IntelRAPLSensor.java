@@ -8,12 +8,10 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 import io.quarkus.logging.Log;
-import net.laprun.sustainability.power.SensorMeasure;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.measures.NoDurationSensorMeasure;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.Measures;
-import net.laprun.sustainability.power.sensors.RegisteredPID;
 
 /**
  * A sensor using Intel's RAPL accessed via Linux' powercap system.
@@ -140,7 +138,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch, Map<String, Double> cpuShares) {
+    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
         final var measure = new double[metadata().componentCardinality()];
         readAndRecordSensor((value, index) -> {
             measure[index] = computePowerInMilliWatts(index, value, newUpdateStartEpoch);
@@ -148,28 +146,8 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
         },
                 newUpdateStartEpoch);
 
-        final var needMultipleMeasures = wantsCPUShareSamplingEnabled() && externalCPUShareComponentIndex() > 0;
         final var single = new NoDurationSensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
-        measures.trackedPIDs().forEach(pid -> {
-            final SensorMeasure m;
-            if (needMultipleMeasures) {
-                double cpuShare;
-                if (RegisteredPID.SYSTEM_TOTAL_REGISTERED_PID.equals(pid)) {
-                    cpuShare = 1.0;
-                } else {
-                    cpuShare = cpuShares.getOrDefault(pid.pidAsString(), 0.0);
-                }
-                // todo: avoid copying array, external cpu share should be recorded as a separate value, not a component maybe?
-                // copy array
-                final var copy = new double[measure.length];
-                System.arraycopy(measure, 0, copy, 0, measure.length);
-                copy[externalCPUShareComponentIndex()] = cpuShare;
-                m = new NoDurationSensorMeasure(copy, lastUpdateEpoch, newUpdateStartEpoch);
-            } else {
-                m = single;
-            }
-            measures.record(pid, m);
-        });
+        measures.trackedPIDs().forEach(pid -> measures.record(pid, single));
 
         return measures;
     }

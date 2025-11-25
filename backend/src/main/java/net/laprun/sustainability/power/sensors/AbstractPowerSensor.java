@@ -1,13 +1,11 @@
 package net.laprun.sustainability.power.sensors;
 
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMetadata;
-import net.laprun.sustainability.power.SensorUnit;
 
 public abstract class AbstractPowerSensor implements PowerSensor {
     protected final Measures measures;
@@ -16,7 +14,6 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     @ConfigProperty(name = "power-server.enable-cpu-share-sampling", defaultValue = "false")
     protected boolean cpuSharesEnabled;
     private SensorMetadata metadata;
-    private int externalCPUShareComponentIndex = -1;
 
     public AbstractPowerSensor(Measures measures) {
         this.measures = measures;
@@ -30,14 +27,6 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     public SensorMetadata metadata() {
         if (metadata == null) {
             metadata = nativeMetadata();
-            if (cpuSharesEnabled) {
-                metadata = SensorMetadata.from(metadata)
-                        .withNewComponent(EXTERNAL_CPU_SHARE_COMPONENT_NAME,
-                                "CPU share estimate based on currently configured strategy used in CPUShare", false,
-                                SensorUnit.decimalPercentage)
-                        .build();
-                externalCPUShareComponentIndex = metadata.metadataFor(EXTERNAL_CPU_SHARE_COMPONENT_NAME).index();
-            }
         }
         return metadata;
     }
@@ -52,10 +41,6 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     @Override
     public void enableCPUShareSampling(boolean enable) {
         cpuSharesEnabled = enable;
-    }
-
-    protected int externalCPUShareComponentIndex() {
-        return externalCPUShareComponentIndex;
     }
 
     @Override
@@ -98,22 +83,17 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     protected abstract void doStart();
 
     @Override
-    public Measures update(Long tick, Map<String, Double> cpuShares) {
+    public Measures update(long tick) {
         final long newUpdateStartEpoch = System.currentTimeMillis();
         Log.debugf("Sensor update last called: %dms ago", newUpdateStartEpoch - lastUpdateEpoch);
-        final var measures = doUpdate(lastUpdateEpoch, newUpdateStartEpoch, cpuShares);
+        final var measures = doUpdate(lastUpdateEpoch, newUpdateStartEpoch);
         lastUpdateEpoch = newUpdateStartEpoch;
         return measures;
-    }
-
-    @Override
-    public Measures update(long tick) {
-        return update(tick, Map.of());
     }
 
     protected long lastUpdateEpoch() {
         return lastUpdateEpoch;
     }
 
-    abstract protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch, Map<String, Double> cpuShares);
+    abstract protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch);
 }
