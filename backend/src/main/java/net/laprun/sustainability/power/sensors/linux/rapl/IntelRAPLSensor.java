@@ -147,7 +147,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
                 newUpdateStartEpoch);
 
         final var single = new NoDurationSensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
-        measures.trackedPIDs().forEach(pid -> measures.record(pid, single));
+        registeredPIDs().forEach(pid -> measures.record(pid, single));
 
         return measures;
     }

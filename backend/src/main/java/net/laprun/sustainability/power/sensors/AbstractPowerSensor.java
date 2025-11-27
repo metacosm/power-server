@@ -8,20 +8,13 @@ import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.SensorMetadata;
 
 public abstract class AbstractPowerSensor implements PowerSensor {
-    protected final Measures measures;
+    protected final Measures measures = new MapMeasures();
+    private final PIDRegistry registry = new PIDRegistry();
     private long lastUpdateEpoch;
     private boolean started;
     @ConfigProperty(name = "power-server.enable-cpu-share-sampling", defaultValue = "false")
     protected boolean cpuSharesEnabled;
     private SensorMetadata metadata;
-
-    public AbstractPowerSensor(Measures measures) {
-        this.measures = measures;
-    }
-
-    public AbstractPowerSensor() {
-        this(new MapMeasures());
-    }
 
     @Override
     public SensorMetadata metadata() {
@@ -46,13 +39,29 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     @Override
     public RegisteredPID register(long pid) {
         Log.debugf("Registered pid: %d", pid);
-        return measures.register(pid);
+        final var key = RegisteredPID.create(pid);
+        registry.register(key);
+        return key;
     }
 
     @Override
     public void unregister(RegisteredPID registeredPID) {
-        measures.unregister(registeredPID);
+        registry.unregister(registeredPID);
         Log.debugf("Unregistered pid: %d", registeredPID.pid());
+    }
+
+    protected int numberOfRegisteredPIDs() {
+        return registry.size();
+    }
+
+    @Override
+    public Set<RegisteredPID> registeredPIDs() {
+        return registry.pids();
+    }
+
+    @Override
+    public Set<String> registeredPIDsAsStrings() {
+        return registry.pidsAsStrings();
     }
 
     @Override
@@ -63,6 +72,8 @@ public abstract class AbstractPowerSensor implements PowerSensor {
             doStart();
         }
     }
+
+    protected abstract void doStart();
 
     @Override
     public boolean isStarted() {
@@ -75,14 +86,6 @@ public abstract class AbstractPowerSensor implements PowerSensor {
         started = false;
     }
 
-    @Override
-    public Set<String> getRegisteredPIDs() {
-        return measures.trackedPIDsAsString();
-    }
-
-    protected abstract void doStart();
-
-    @Override
     public Measures update(long tick) {
         final long newUpdateStartEpoch = System.currentTimeMillis();
         Log.debugf("Sensor update last called: %dms ago", newUpdateStartEpoch - lastUpdateEpoch);
