@@ -7,7 +7,6 @@ import java.util.List;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.measures.NoDurationSensorMeasure;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
-import net.laprun.sustainability.power.sensors.MapMeasures;
 import net.laprun.sustainability.power.sensors.Measures;
 
 @SuppressWarnings("unused")
@@ -23,7 +22,6 @@ public class TestPowerSensor extends AbstractPowerSensor {
     }
 
     public TestPowerSensor(SensorMetadata metadata) {
-        super(new MapMeasures());
         this.metadata = metadata;
     }
 
@@ -39,7 +37,7 @@ public class TestPowerSensor extends AbstractPowerSensor {
 
     @Override
     protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
-        measures.trackedPIDs().forEach(pid -> measures.record(pid,
+        registeredPIDs().forEach(pid -> measures.record(pid,
                 new NoDurationSensorMeasure(new double[] { Math.random() }, lastUpdateEpoch, newUpdateStartEpoch)));
         return measures;
     }

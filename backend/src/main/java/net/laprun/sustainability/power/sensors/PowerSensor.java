@@ -82,5 +82,7 @@ public interface PowerSensor {
      */
     void unregister(RegisteredPID registeredPID);
 
-    Set<String> getRegisteredPIDs();
+    Set<String> registeredPIDsAsStrings();
+
+    Set<RegisteredPID> registeredPIDs();
 }

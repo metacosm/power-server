@@ -108,7 +108,7 @@ public class SamplingMeasurer {
             if (sensor.wantsCPUShareSamplingEnabled()) {
                 // if enabled, record a cpu share for each tick, group by the over sampling factor and average over these aggregates to produce one value for the power measure interval
                 cpuSharesMulti = cpuSharesTicks
-                        .map(tick -> CPUShare.cpuSharesFor(sensor.getRegisteredPIDs()))
+                        .map(tick -> CPUShare.cpuSharesFor(sensor.registeredPIDsAsStrings()))
                         .group()
                         .intoLists()
                         .of(overSamplingFactor)

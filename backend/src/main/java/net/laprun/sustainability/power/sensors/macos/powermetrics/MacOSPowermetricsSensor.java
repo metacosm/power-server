@@ -72,8 +72,8 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
             Log.debugf("powermetrics measure extraction last called %dms ago", (start - lastCalled));
             lastCalled = start;
         }
-        PowerMetricsParser.extractPowerMeasure(powerMeasureInput, measures, lastUpdateEpoch, newUpdateEpoch,
-                measures.trackedPIDs(), metadata(), cpu);
+        PowerMetricsParser.extractPowerMeasure(powerMeasureInput, measures, lastUpdateEpoch, newUpdateEpoch, registeredPIDs(),
+                metadata(), cpu);
         return measures;
     }
 
@@ -88,7 +88,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     public void unregister(RegisteredPID registeredPID) {
         super.unregister(registeredPID);
         // if we're not tracking any processes anymore, stop powermetrics as well
-        if (measures.numberOfTrackedPIDs() == 0) {
+        if (numberOfRegisteredPIDs() == 0) {
             stop();
         }
     }
