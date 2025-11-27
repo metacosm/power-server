@@ -6,19 +6,20 @@ import java.util.concurrent.ExecutionException;
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 
+import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
+
 public class NuProcessWrapper implements ProcessWrapper {
     private PowermetricsProcessHandler measureHandler;
     private String periodInMilliSecondsAsString;
 
     @SuppressWarnings("UnusedReturnValue")
-    private NuProcess exec(PowermetricsProcessHandler handler) {
+    public static NuProcess exec(BaseProcessHandler handler) {
         if (handler == null)
             throw new IllegalArgumentException("Handler cannot be null");
         return new NuProcessBuilder(handler, handler.command()).start();
     }
 
-    @Override
-    public InputStream streamForMetadata() {
+    public static InputStream metadataInputStream() {
         final var metadataHandler = new PowermetricsProcessHandler(6500, "cpu_power", "-i", "10", "-n", "1");
         exec(metadataHandler);
         try {

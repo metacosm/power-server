@@ -3,7 +3,6 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 import java.io.InputStream;
 
 public interface ProcessWrapper {
-    InputStream streamForMetadata();
 
     void start(long periodInMilliSeconds);
 
@@ -23,5 +22,9 @@ public interface ProcessWrapper {
         args[4] = "--samplers";
         System.arraycopy(command, 0, args, additionalArgsCardinality, command.length);
         return args;
+    }
+
+    static String[] preparePowermetricsCommandVarArgs(String... command) {
+        return preparePowermetricsCommand(command);
     }
 }

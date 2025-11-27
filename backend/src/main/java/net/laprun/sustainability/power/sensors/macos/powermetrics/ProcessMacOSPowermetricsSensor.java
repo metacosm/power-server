@@ -10,7 +10,7 @@ public class ProcessMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     public ProcessMacOSPowermetricsSensor() {
         // extract metadata
         try {
-            initMetadata(processWrapper.streamForMetadata());
+            initMetadata(NuProcessWrapper.metadataInputStream());
         } catch (Exception e) {
             throw new RuntimeException("Couldn't extract sensor metadata", e);
         }
