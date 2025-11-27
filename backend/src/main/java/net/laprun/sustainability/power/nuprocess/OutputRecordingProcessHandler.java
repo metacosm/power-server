@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 import io.quarkus.logging.Log;
 
@@ -40,7 +39,7 @@ public class OutputRecordingProcessHandler extends BaseProcessHandler {
         }
     }
 
-    public Future<InputStream> getInputStream() {
+    public CompletableFuture<InputStream> getInputStream() {
         return output;
     }
 }
