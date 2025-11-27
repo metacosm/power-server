@@ -11,4 +11,8 @@ import net.laprun.sustainability.power.SensorMeasure;
  * @param endMs the end timestamp in milliseconds for this measure
  */
 public record NoDurationSensorMeasure(double[] components, long startMs, long endMs) implements SensorMeasure {
+    @Override
+    public String toString() {
+        return asString();
+    }
 }

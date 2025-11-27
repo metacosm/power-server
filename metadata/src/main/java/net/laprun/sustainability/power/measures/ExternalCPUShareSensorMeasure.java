@@ -32,4 +32,9 @@ public record ExternalCPUShareSensorMeasure(SensorMeasure delegate, double cpuSh
     public double externalCPUShare() {
         return cpuShare;
     }
+
+    @Override
+    public String toString() {
+        return asString() + " extCPU: " + externalCPUShare();
+    }
 }
