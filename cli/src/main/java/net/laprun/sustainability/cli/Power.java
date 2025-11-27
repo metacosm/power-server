@@ -167,6 +167,8 @@ public class Power implements Runnable {
         public void onExit(int statusCode) {
             try {
                 super.onExit(statusCode);
+                Log.infof("Application '%s' (pid: %d) exited with status %d", name, processId(),
+                        statusCode);
             } finally {
                 endTime = System.currentTimeMillis();
                 measurer.stop();
