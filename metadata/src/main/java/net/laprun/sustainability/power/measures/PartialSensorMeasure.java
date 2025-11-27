@@ -13,4 +13,13 @@ import net.laprun.sustainability.power.SensorMeasure;
  */
 public record PartialSensorMeasure(double[] components, long startMs, long endMs,
         long durationMs) implements SensorMeasure {
+    @Override
+    public boolean isPartial() {
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return asString();
+    }
 }

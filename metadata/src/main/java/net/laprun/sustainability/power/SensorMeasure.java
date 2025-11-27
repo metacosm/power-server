@@ -1,5 +1,7 @@
 package net.laprun.sustainability.power;
 
+import java.util.Arrays;
+
 /**
  * A power consumption measure as recorded by a sensor, recorded over a given period of time. The meaning of each component
  * measure is provided by the {@link SensorMetadata} information associated
@@ -70,4 +72,9 @@ public interface SensorMeasure {
      */
     SensorMeasure missing = new SensorMeasure() {
     };
+
+    default String asString() {
+        return getClass().getSimpleName() + '(' + startMs() + ',' + endMs() + " -> duration: " + durationMs() + ')'
+                + Arrays.toString(components());
+    }
 }
