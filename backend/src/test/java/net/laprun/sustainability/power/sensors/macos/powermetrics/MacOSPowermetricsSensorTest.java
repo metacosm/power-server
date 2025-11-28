@@ -65,7 +65,7 @@ class MacOSPowermetricsSensorTest {
 
         final var cpu = metadata.metadataFor(MacOSPowermetricsSensor.CPU);
         // re-open the stream to read the measure this time
-        final var measure = sensor.update(0L);
+        final var measure = sensor.update(sensor.fromResource());
 
         final var totalCPUPower = 420;
         final var totalCPUTime = 1287.34;
@@ -84,7 +84,7 @@ class MacOSPowermetricsSensorTest {
         sensor.register(-666);
 
         // re-open the stream to read the measure this time
-        final var measure = sensor.update(0L);
+        final var measure = sensor.update(sensor.fromResource());
 
         assertEquals(0, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.ANE));
         assertEquals(19, getTotalSystemComponent(measure, metadata, MacOSPowermetricsSensor.DRAM));
@@ -109,7 +109,7 @@ class MacOSPowermetricsSensorTest {
 
         final var cpu = metadata.metadataFor(MacOSPowermetricsSensor.CPU);
         // re-open the stream to read the measure this time
-        final var measure = sensor.update(0L);
+        final var measure = sensor.update(sensor.fromResource());
         // Process CPU power should be equal to sample ms/s divided for process (here: 116.64) by total samples (1222.65) times total CPU power
         var pidCPUShare = 116.64 / 1222.65;
         assertEquals(pidCPUShare * 211, getComponent(measure, pid0, cpu));
@@ -126,7 +126,7 @@ class MacOSPowermetricsSensorTest {
         final var pid2 = sensor.register(391);
 
         // re-open the stream to read the measure this time
-        final var measure = sensor.update(0L);
+        final var measure = sensor.update(sensor.fromResource());
         final var totalMeasureMetadata = metadata.metadataFor(totalMeasureName);
         final var pid1CPUShare = 23.88 / 1222.65;
         assertEquals((pid1CPUShare * total), getComponent(measure, pid1, totalMeasureMetadata));

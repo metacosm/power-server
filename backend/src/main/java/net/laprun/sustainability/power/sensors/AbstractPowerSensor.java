@@ -5,13 +5,16 @@ import java.util.Set;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.quarkus.logging.Log;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import net.laprun.sustainability.power.SensorMetadata;
 
-public abstract class AbstractPowerSensor implements PowerSensor {
-    protected final Measures measures = new MapMeasures();
+public abstract class AbstractPowerSensor<T> implements PowerSensor {
     private final PIDRegistry registry = new PIDRegistry();
+    private final Measures current = new MapMeasures();
     private long lastUpdateEpoch;
     private boolean started;
+    private Multi<Measures> measures;
     @ConfigProperty(name = "power-server.enable-cpu-share-sampling", defaultValue = "false")
     protected boolean cpuSharesEnabled;
     private SensorMetadata metadata;
@@ -65,15 +68,20 @@ public abstract class AbstractPowerSensor implements PowerSensor {
     }
 
     @Override
-    public void start() throws Exception {
+    public Multi<Measures> start() throws Exception {
         if (!started) {
             lastUpdateEpoch = System.currentTimeMillis();
             started = true;
-            doStart();
+            measures = doStart()
+                    .broadcast()
+                    .withCancellationAfterLastSubscriberDeparture()
+                    .toAtLeast(1)
+                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                    .onItem()
+                    .transform(this::update);
         }
+        return measures;
     }
-
-    protected abstract void doStart();
 
     @Override
     public boolean isStarted() {
@@ -82,21 +90,30 @@ public abstract class AbstractPowerSensor implements PowerSensor {
 
     @Override
     public void stop() {
-        PowerSensor.super.stop();
-        started = false;
+        if (started) {
+            PowerSensor.super.stop();
+            started = false;
+        }
     }
 
-    public Measures update(long tick) {
+    public Measures update(T tick) {
+        // reset revolving measure so that we don't get values for pids that are not tracked anymore
+        current.clear();
         final long newUpdateStartEpoch = System.currentTimeMillis();
-        Log.debugf("Sensor update last called: %dms ago", newUpdateStartEpoch - lastUpdateEpoch);
-        final var measures = doUpdate(lastUpdateEpoch, newUpdateStartEpoch);
+        Log.infof("Sensor update last called: %dms ago", newUpdateStartEpoch - lastUpdateEpoch);
+        Log.infof("input %s", tick);
+        // extract current values into revolving measure
+        doUpdate(tick, current, lastUpdateEpoch, newUpdateStartEpoch);
+        Log.infof("Last recorded measure: %s", current);
         lastUpdateEpoch = newUpdateStartEpoch;
-        return measures;
+        return current;
     }
+
+    protected abstract Multi<T> doStart();
 
     protected long lastUpdateEpoch() {
         return lastUpdateEpoch;
     }
 
-    abstract protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch);
+    abstract protected void doUpdate(T tick, Measures current, long lastUpdateEpoch, long newUpdateStartEpoch);
 }
