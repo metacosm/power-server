@@ -2,10 +2,12 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 
 import java.io.InputStream;
 
+import io.smallrye.mutiny.Multi;
+
 public class ProcessMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     private static final int MINIMAL_PERIOD_MS = 700;
-    private final ProcessWrapper processWrapper = new NuProcessWrapper();
     private long samplingPeriodInMillis;
+    private String periodInMilliSecondsAsString;
 
     public ProcessMacOSPowermetricsSensor() {
         // extract metadata
@@ -25,24 +27,34 @@ public class ProcessMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
                             MINIMAL_PERIOD_MS + " milliseconds to get useful results to also account for processing time.");
         }
         samplingPeriodInMillis = requestedSamplingPeriodInMillis - 600;
+        this.periodInMilliSecondsAsString = Long.toString(samplingPeriodInMillis);
         return samplingPeriodInMillis;
     }
 
     @Override
-    public void doStart() {
-        super.doStart();
-        processWrapper.start(samplingPeriodInMillis);
-    }
-
-    @Override
-    protected InputStream getInputStream() {
-        return processWrapper.streamForMeasure();
+    protected Multi<InputStream> getInputStream() {
+        /*
+         * return Multi.createBy()
+         * .repeating()
+         * .completionStage(() -> {
+         * Log.info("getInputStream() called");
+         * final var measureHandler = new PowermetricsProcessHandler(27000, "cpu_power,tasks",
+         * "--show-process-samp-norm", "--show-process-gpu", "-i",
+         * periodInMilliSecondsAsString, "-n", "1");
+         * NuProcessWrapper.exec(measureHandler);
+         * return measureHandler.getInputStream();
+         * })
+         * .indefinitely();
+         */
+        return Multi.createBy()
+                .repeating()
+                .supplier(() -> NuProcessWrapper.measureInputStream(periodInMilliSecondsAsString))
+                .indefinitely();
     }
 
     @Override
     public void stop() {
         if (isStarted()) {
-            processWrapper.stop();
             super.stop();
         }
     }
