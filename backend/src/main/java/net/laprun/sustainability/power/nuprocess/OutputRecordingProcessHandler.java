@@ -5,16 +5,25 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 
+import com.zaxxer.nuprocess.NuProcess;
+
 import io.quarkus.logging.Log;
 
 public class OutputRecordingProcessHandler extends BaseProcessHandler {
     private final GrowableBuffer stdOutBuffer;
     private final CompletableFuture<InputStream> output = new CompletableFuture<>();
-    private final boolean debug = false;
+    private final boolean debug = true;
+    private long startTime;
 
     public OutputRecordingProcessHandler(int bufferSize, String... command) {
         super(command);
         stdOutBuffer = new GrowableBuffer(bufferSize);
+    }
+
+    @Override
+    public void onStart(NuProcess nuProcess) {
+        super.onStart(nuProcess);
+        startTime = System.currentTimeMillis();
     }
 
     @Override
@@ -25,7 +34,9 @@ public class OutputRecordingProcessHandler extends BaseProcessHandler {
                 var bytes = new byte[remaining];
                 buffer.duplicate().get(bytes);
                 final var read = new String(bytes);
-                Log.infof("=== read %d:\n\n%s\n\n===\n", remaining, read);
+                final var now = System.currentTimeMillis();
+                Log.infof("=== read %d after %dms:\n\n%s\n\n===\n", remaining, now - startTime, read);
+                startTime = now;
             }
             stdOutBuffer.put(buffer);
         }
