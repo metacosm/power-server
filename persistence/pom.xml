@@ -30,6 +30,10 @@
       <artifactId>quarkus-jdbc-sqlite4j</artifactId>
       <version>${sqlite4j.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-flyway</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
