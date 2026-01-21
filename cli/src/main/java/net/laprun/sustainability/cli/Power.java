@@ -3,9 +3,9 @@
 
 //DESCRIPTION power: a command line tool to measure power consumption of processes
 
-//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.29.3}@pom
+//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.30.7}@pom
 //DEPS io.quarkus:quarkus-picocli
-//DEPS net.laprun.sustainability:power-server-bom:${power-server.version:0.5.0}@pom
+//DEPS net.laprun.sustainability:power-server-bom:${power-server.version:0.6.0}@pom
 //DEPS net.laprun.sustainability:power-server-backend
 //DEPS net.laprun.sustainability:power-server-measure
 
