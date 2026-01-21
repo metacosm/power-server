@@ -12,7 +12,7 @@ import io.quarkus.logging.Log;
 public class OutputRecordingProcessHandler extends BaseProcessHandler {
     private final GrowableBuffer stdOutBuffer;
     private final CompletableFuture<InputStream> output = new CompletableFuture<>();
-    private final boolean debug = true;
+    private final boolean debug = false;
     private long startTime;
 
     public OutputRecordingProcessHandler(int bufferSize, String... command) {
@@ -23,7 +23,9 @@ public class OutputRecordingProcessHandler extends BaseProcessHandler {
     @Override
     public void onStart(NuProcess nuProcess) {
         super.onStart(nuProcess);
-        startTime = System.currentTimeMillis();
+        if (debug) {
+            startTime = System.currentTimeMillis();
+        }
     }
 
     @Override
