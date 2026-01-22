@@ -100,7 +100,7 @@ public class Power implements Runnable {
                     session);
             measurer.startTrackingApp(name, pid, session);
 
-            process.waitFor(60, TimeUnit.SECONDS);
+            process.waitFor(0, TimeUnit.SECONDS);
 
             final var measureTime = measurer.persistence()
                     .synthesizeAndAggregateForSession(Persistence.SYSTEM_TOTAL_APP_NAME, session, m -> (double) m.duration())
