@@ -106,7 +106,9 @@ public class Power implements Runnable {
                     .synthesizeAndAggregateForSession(Persistence.SYSTEM_TOTAL_APP_NAME, session, m -> (double) m.duration())
                     .orElseThrow(() -> new RuntimeException("Could not compute measure duration"));
             final var systemPower = extractPowerConsumption(Persistence.SYSTEM_TOTAL_APP_NAME, false);
-            Log.infof("Command ran for: %dms, measure time: %3fms", commandHandler.duration(), measureTime);
+            final var commandDuration = commandHandler.duration();
+            Log.infof("Command ran for: %dms, measure time: %.0fms (%.2f ratio)", commandDuration, measureTime,
+                    measureTime / commandDuration);
             Log.infof("Total system power consumption: %3.2f%s", systemPower.value(), systemPower.unit());
             final var attributed = totaler.isAttributed();
             if (attributed) {
