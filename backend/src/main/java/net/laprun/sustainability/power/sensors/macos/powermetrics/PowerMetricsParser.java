@@ -73,6 +73,7 @@ public enum PowerMetricsParser {
             Set<RegisteredPID> registeredPIDs, SensorMetadata metadata, CPU cpu) {
         final long startMs = lastUpdateEpoch;
         try {
+            Log.infof("Parsing: %s", powerMeasureInput);
             // Should not be closed since it closes the process
             BufferedReader input = new BufferedReader(new InputStreamReader(powerMeasureInput));
             String line;
