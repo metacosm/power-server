@@ -3,6 +3,7 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 import java.io.InputStream;
 
 import io.quarkus.logging.Log;
+import io.smallrye.mutiny.Multi;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.Measures;
@@ -12,7 +13,7 @@ import net.laprun.sustainability.power.sensors.RegisteredPID;
 /**
  * A macOS powermetrics based {@link PowerSensor} implementation.
  */
-public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
+public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor<InputStream> {
     /**
      * The Central Processing Unit component name
      */
@@ -42,7 +43,7 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     public static final String CPU_SHARE = "cpuShare";
 
     private CPU cpu;
-    private long lastCalled;
+    private long lastCalled = System.currentTimeMillis();
 
     @Override
     public boolean supportsProcessAttribution() {
@@ -59,30 +60,26 @@ public abstract class MacOSPowermetricsSensor extends AbstractPowerSensor {
     }
 
     @Override
-    protected void doStart() {
-        // nothing to do here by default
-        if (Log.isDebugEnabled()) {
-            lastCalled = System.currentTimeMillis();
-        }
+    protected Multi<InputStream> doStart() {
+        return getInputStream();
     }
 
-    Measures extractPowerMeasure(InputStream powerMeasureInput, long lastUpdateEpoch, long newUpdateEpoch) {
+    void extractPowerMeasure(InputStream powerMeasureInput, Measures current, long lastUpdateEpoch, long newUpdateEpoch) {
         if (Log.isDebugEnabled()) {
             final var start = System.currentTimeMillis();
             Log.debugf("powermetrics measure extraction last called %dms ago", (start - lastCalled));
             lastCalled = start;
         }
-        PowerMetricsParser.extractPowerMeasure(powerMeasureInput, measures, lastUpdateEpoch, newUpdateEpoch, registeredPIDs(),
+        PowerMetricsParser.extractPowerMeasure(powerMeasureInput, current, lastUpdateEpoch, newUpdateEpoch, registeredPIDs(),
                 metadata(), cpu);
-        return measures;
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
-        return extractPowerMeasure(getInputStream(), lastUpdateEpoch, newUpdateStartEpoch);
+    protected void doUpdate(InputStream inputStream, Measures current, long lastUpdateEpoch, long newUpdateStartEpoch) {
+        extractPowerMeasure(inputStream, current, lastUpdateEpoch, newUpdateStartEpoch);
     }
 
-    protected abstract InputStream getInputStream();
+    protected abstract Multi<InputStream> getInputStream();
 
     @Override
     public void unregister(RegisteredPID registeredPID) {
