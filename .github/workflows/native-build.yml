@@ -48,7 +48,7 @@ jobs:
         run: mvn -ntp -B --file pom.xml -Pdist package -DskipTests -pl server
 
       - name: 'Upload build artifact'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: power-server-${{ runner.os }}-${{ runner.arch }}
           path: |
