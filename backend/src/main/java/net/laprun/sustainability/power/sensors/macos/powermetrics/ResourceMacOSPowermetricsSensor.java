@@ -2,6 +2,7 @@ package net.laprun.sustainability.power.sensors.macos.powermetrics;
 
 import java.io.InputStream;
 
+import io.smallrye.mutiny.Multi;
 import net.laprun.sustainability.power.sensors.Measures;
 
 public class ResourceMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
@@ -16,17 +17,21 @@ public class ResourceMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
         cpuSharesEnabled = false;
         this.resourceName = resourceName;
         this.start = expectedStartUpdateEpoch;
-        initMetadata(getInputStream());
+        initMetadata(fromResource());
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
+    protected void doUpdate(InputStream inputStream, Measures current, long lastUpdateEpoch, long newUpdateStartEpoch) {
         // use the expected start measured time (if provided) for the measure instead of using the provided current epoch
-        return super.doUpdate(start != -1 ? start : lastUpdateEpoch, newUpdateStartEpoch);
+        super.doUpdate(inputStream, current, start != -1 ? start : lastUpdateEpoch, newUpdateStartEpoch);
     }
 
     @Override
-    protected InputStream getInputStream() {
+    protected Multi<InputStream> getInputStream() {
+        return Multi.createFrom().item(fromResource());
+    }
+
+    InputStream fromResource() {
         return Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
     }
 }
