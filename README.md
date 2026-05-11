@@ -16,7 +16,7 @@ This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java F
 - `persistence` provides support to persist measure data to databases (currently, only to SQLite)
 - `server` contains the RESTful server, listening by default on port `20432` (as specified
   in
-  `[application.properties](https://github.com/metacosm/power-server/blob/87bba3196fa0e552665b4f1d22006377779b0959/server/src/main/resources/application.properties#L1)`)
+  [`application.properties`](https://github.com/metacosm/power-server/blob/main/server/src/main/resources/application.properties#L1))
 
 
 The main endpoint streams `SensorMeasure` objects as defined in the `metadata` module as an array of double measures.
@@ -27,7 +27,7 @@ measure of the CPU share of the measured process as part of the returned measure
 Linux implementation where the measures are actually energy counters for the whole system, the client being then in
 charge of computing the process attribution.
 
-Only Linux/amd64 and macOS (amd64/apple silicon) are supported at the moment. Of note, this tool needs to be run
+Only Linux/amd64 and macOS (amd64/Apple Silicon) are supported at the moment. Of note, this tool needs to be run
 privileged code either via running it with `sudo` (preferred) or giving it access to the read the resources it needs
 because power consumption information is considered as security sensitive (as it can
 enable [side-channel attacks](https://en.wikipedia.org/wiki/Side-channel_attack)) See below for platform-specific
@@ -37,7 +37,7 @@ information.
 
 Power monitoring is performed using the
 bundled
-`[powermetrics](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/power_efficiency_guidelines_osx/PrioritizeWorkAtTheTaskLevel.html#//apple_ref/doc/uid/TP40013929-CH35-SW10)`
+[`powermetrics`](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/power_efficiency_guidelines_osx/PrioritizeWorkAtTheTaskLevel.html#//apple_ref/doc/uid/TP40013929-CH35-SW10)
 tool, which is run with specific parameters and which output is then parsed into a usable representation.
 There are several options to give access to the tool:
 
@@ -45,14 +45,14 @@ There are several options to give access to the tool:
 - Run with `sudo` (though this is impractical during development)
 - Provide a secret to be able to run the `powermetrics` process (and only this process) using `sudo`. The server will
   look for the secret under the `power-server.sudo.secret` property key. Please look
-  at https://quarkus.io/guides/config-secrets for more details on how to do this securely with Quarkus. Note that this
+  at the [Secrets in configuration](https://quarkus.io/guides/config-secrets) Quarkus guide for more details on how to do this securely with Quarkus. Note that this
   option is only provided to facilitate development, notably dev mode, and will only work when re-building the project
   with the appropriate dependencies.
 
 ### Linux
 
 Power monitoring leverages Intel's RAPL technology via
-the `[powercap](https://www.kernel.org/doc/html/latest/power/powercap/powercap.html)` framework.
+the [`powercap`](https://www.kernel.org/doc/html/latest/power/powercap/powercap.html) framework.
 In particular, this requires read access to files located in the `/sys/class/powercap/intel-rapl` directory. For
 security purposes, some of that information is only readable by root, in particular the values that we need to get the
 power consumption, currently:
