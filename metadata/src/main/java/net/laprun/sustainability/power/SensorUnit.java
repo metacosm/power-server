@@ -6,13 +6,13 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class SensorUnit {
+public record SensorUnit(String symbol, SensorUnit base, double factor) {
 
     /**
      * Note that for simplicity's sake, we're not supporting deca prefix since it would make the prefix identification logic
-     * more complex and it's not a very used prefix. Might revisit as needed.
+     * more complex, and it's not a very used prefix. Might revisit as needed.
      */
     private final static Map<String, Double> prefixesToFactors = Map.of(
             "n", 1e-9,
@@ -31,9 +31,6 @@ public class SensorUnit {
     private final static Map<String, SensorUnit> knownUnits = new HashMap<>();
     public static final SensorUnit mW = SensorUnit.of("mW");
     public static final SensorUnit µJ = SensorUnit.of("µJ");
-    private final String symbol;
-    private final SensorUnit base;
-    private final double factor;
 
     public SensorUnit(String symbol, SensorUnit base, double factor) {
         this.symbol = Objects.requireNonNull(symbol).trim();
@@ -97,15 +94,14 @@ public class SensorUnit {
         }
     }
 
-    @JsonProperty("symbol")
-    public String symbol() {
-        return symbol;
-    }
-
+    @Override
+    @JsonIgnore
     public SensorUnit base() {
         return base;
     }
 
+    @Override
+    @JsonIgnore
     public double factor() {
         return factor;
     }
