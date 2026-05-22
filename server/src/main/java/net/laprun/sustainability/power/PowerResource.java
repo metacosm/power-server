@@ -7,7 +7,6 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
@@ -60,11 +59,12 @@ public class PowerResource {
      * @param pid the process id associated with the current run of the application
      * @throws Exception if an error occurred while measuring the power consumption
      */
-    @POST
+    @GET
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
     @Path("start/{appName}/{pid}")
-    public void startMeasure(@PathParam("appName") String appName, @PathParam("pid") String pid) throws Exception {
+    public Multi<Long> startMeasure(@PathParam("appName") String appName, @PathParam("pid") String pid) throws Exception {
         try {
-            measurer.startTrackingApp(appName, measurer.validPIDOrFail(pid), Persistence.defaultSession(appName));
+            return measurer.measureIdStream(appName, measurer.validPIDOrFail(pid), Persistence.defaultSession(appName));
         } catch (IllegalArgumentException e) {
             throw new NotFoundException("Unknown process: " + pid);
         }

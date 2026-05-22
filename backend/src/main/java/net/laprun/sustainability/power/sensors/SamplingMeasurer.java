@@ -68,14 +68,17 @@ public class SamplingMeasurer {
         return measure;
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    public Cancellable startTrackingApp(String appName, long pid, String session) throws Exception {
-        final var tracked = uncheckedStream(pid)
-                .filter(m -> SensorMeasure.missing != m)
-                .subscribe()
-                .with(m -> persistence.save(m, appName, session));
+    public Multi<Long> measureIdStream(String appName, long pid, String session) throws Exception {
+        return uncheckedStream(pid)
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .onItem()
+                .transform(m -> persistence.save(m, appName, session).id);
+    }
+
+    public void startTrackingApp(String appName, long pid, String session) throws Exception {
+        final var tracked = measureIdStream(appName, pid, session).subscribe().with(unused -> {
+        });
         manuallyTrackedProcesses.put(pid, tracked);
-        return tracked;
     }
 
     RegisteredPID track(long pid) throws Exception {
@@ -105,7 +108,7 @@ public class SamplingMeasurer {
             final var cpuSharesTicks = Multi.createFrom().ticks()
                     // over sample but over a shorter period to ensure we have an average that covers most of the sampling period
                     .every(samplingPeriod.minus(50, ChronoUnit.MILLIS).dividedBy(overSamplingFactor))
-                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+                    .emitOn(Infrastructure.getDefaultWorkerPool());
             if (sensor.wantsCPUShareSamplingEnabled()) {
                 // if enabled, record a cpu share for each tick, group by the over sampling factor and average over these aggregates to produce one value for the power measure interval
                 cpuSharesMulti = cpuSharesTicks
@@ -179,12 +182,13 @@ public class SamplingMeasurer {
     public void stop() {
         sensor.stop();
         manuallyTrackedProcesses.values().forEach(Cancellable::cancel);
+        manuallyTrackedProcesses.clear();
     }
 
     @SuppressWarnings("unused")
     public void stopTrackingProcess(long processId) {
-        sensor.unregister(RegisteredPID.create(processId));
         // cancel associated process tracking
         manuallyTrackedProcesses.remove(processId).cancel();
+        sensor.unregister(RegisteredPID.create(processId));
     }
 }
