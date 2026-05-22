@@ -52,7 +52,8 @@ public class SamplingMeasurer {
 
     public Multi<SensorMeasure> uncheckedStream(long pid) throws Exception {
         final var registeredPID = track(pid);
-        return periodicSensorCheck.map(combined -> withExternalCPUShareIfAvailable(registeredPID, combined));
+        return periodicSensorCheck.map(combined -> withExternalCPUShareIfAvailable(registeredPID, combined))
+                .filter(m -> SensorMeasure.missing != m);
     }
 
     private SensorMeasure withExternalCPUShareIfAvailable(RegisteredPID pid, Tuple2<Measures, Map<String, Double>> tuple) {
