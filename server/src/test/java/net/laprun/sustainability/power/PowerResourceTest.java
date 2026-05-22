@@ -10,7 +10,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.sse.SseEventSource;
@@ -52,7 +54,8 @@ public class PowerResourceTest {
                     res::completeExceptionally,
                     () -> res.complete(collect));
             eventSource.open();
-            Assertions.assertThat(res.get(5, TimeUnit.SECONDS)).hasSize(1);
+            final var actual = res.get(1, TimeUnit.SECONDS);
+            Assertions.assertThat(actual).hasSize(1);
         }
     }
 
@@ -67,7 +70,7 @@ public class PowerResourceTest {
     }
 
     protected long getPid() {
-        return ProcessHandle.current().pid();
+        return 29419;
     }
 
     @Test
@@ -137,12 +140,26 @@ public class PowerResourceTest {
     }
 
     @Test
-    public void testDBBackedEndpoint() {
+    public void testDBBackedEndpoint() throws ExecutionException, InterruptedException, TimeoutException {
         final var pid = getPid();
-        given()
-                .when().post("/power/start/powerresourcetest/" + pid)
-                .then()
-                .statusCode(204);
+        try (final var client = ClientBuilder.newClient();
+                final var eventSource = SseEventSource
+                        .target(client.target(uri)
+                                .path("power/start/PowerResourceTest/{pid}")
+                                .resolveTemplate("pid", pid))
+                        .build()) {
+            CompletableFuture<List<String>> res = new CompletableFuture<>();
+            List<String> collect = Collections.synchronizedList(new ArrayList<>());
+            eventSource.register(inboundSseEvent -> {
+                collect.add(inboundSseEvent.readData());
+                // stop after one event
+                eventSource.close();
+            },
+                    res::completeExceptionally,
+                    () -> res.complete(collect));
+            eventSource.open();
+            Assertions.assertThat(res.get(1, TimeUnit.SECONDS)).hasSize(1);
+        }
     }
 
 }
