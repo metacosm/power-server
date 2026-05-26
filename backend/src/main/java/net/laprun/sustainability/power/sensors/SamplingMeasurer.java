@@ -95,8 +95,8 @@ public class SamplingMeasurer {
                 Log.infof("%s sensor adjusted its sampling period to %dms", sensor.getClass().getSimpleName(), adjusted);
             }
 
-            // start sensor
-            sensor.start();
+            // start periodic power sampling, measuring sensor values over the sampling period
+            final var sensorSamplerMulti = sensor.start();
 
             // manage external CPU share sampling
             final var overSamplingFactor = 3;
@@ -104,7 +104,7 @@ public class SamplingMeasurer {
             final var cpuSharesTicks = Multi.createFrom().ticks()
                     // over sample but over a shorter period to ensure we have an average that covers most of the sampling period
                     .every(samplingPeriod.minus(50, ChronoUnit.MILLIS).dividedBy(overSamplingFactor))
-                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+                    .emitOn(Infrastructure.getDefaultWorkerPool());
             if (sensor.wantsCPUShareSamplingEnabled()) {
                 // if enabled, record a cpu share for each tick, group by the over sampling factor and average over these aggregates to produce one value for the power measure interval
                 cpuSharesMulti = cpuSharesTicks
@@ -131,15 +131,6 @@ public class SamplingMeasurer {
                 // otherwise, only emit an empty map to signify no external cpu share was recorded
                 cpuSharesMulti = cpuSharesTicks.map(unused -> Map.of());
             }
-
-            // manage periodic power sampling, measuring sensor values over the sampling period
-            final var sensorSamplerMulti = Multi.createFrom().ticks()
-                    .every(samplingPeriod)
-                    .map(sensor::update)
-                    .broadcast()
-                    .withCancellationAfterLastSubscriberDeparture()
-                    .toAtLeast(1)
-                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 
             // combine both multis
             periodicSensorCheck = Multi.createBy()

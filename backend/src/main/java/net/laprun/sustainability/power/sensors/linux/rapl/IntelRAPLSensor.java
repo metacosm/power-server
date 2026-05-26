@@ -4,10 +4,12 @@ import static net.laprun.sustainability.power.SensorUnit.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.BiConsumer;
 
 import io.quarkus.logging.Log;
+import io.smallrye.mutiny.Multi;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.measures.NoDurationSensorMeasure;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
@@ -16,11 +18,12 @@ import net.laprun.sustainability.power.sensors.Measures;
 /**
  * A sensor using Intel's RAPL accessed via Linux' powercap system.
  */
-public class IntelRAPLSensor extends AbstractPowerSensor {
+public class IntelRAPLSensor extends AbstractPowerSensor<Long> {
     private final RAPLFile[] raplFiles;
     private final int rawOffset;
     private SensorMetadata nativeMetadata;
     private final long[] lastMeasuredSensorValues;
+    private Duration samplingPeriod;
 
     /**
      * Initializes the RAPL sensor
@@ -101,9 +104,17 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
     }
 
     @Override
-    public void doStart() {
+    public long adjustSamplingPeriodIfNeeded(long requestedSamplingPeriodInMillis) {
+        samplingPeriod = Duration.ofMillis(requestedSamplingPeriodInMillis);
+        return super.adjustSamplingPeriodIfNeeded(requestedSamplingPeriodInMillis);
+    }
+
+    @Override
+    public Multi<Long> doStart() {
         // perform an initial measure to prime the data
         readAndRecordSensor(null, lastUpdateEpoch());
+        return Multi.createFrom().ticks()
+                .every(samplingPeriod);
     }
 
     /**
@@ -138,7 +149,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
+    protected void doUpdate(Long tick, Measures current, long lastUpdateEpoch, long newUpdateStartEpoch) {
         final var measure = new double[metadata().componentCardinality()];
         readAndRecordSensor((value, index) -> {
             measure[index] = computePowerInMilliWatts(index, value, newUpdateStartEpoch);
@@ -147,9 +158,7 @@ public class IntelRAPLSensor extends AbstractPowerSensor {
                 newUpdateStartEpoch);
 
         final var single = new NoDurationSensorMeasure(measure, lastUpdateEpoch, newUpdateStartEpoch);
-        registeredPIDs().forEach(pid -> measures.record(pid, single));
-
-        return measures;
+        registeredPIDs().forEach(pid -> current.record(pid, single));
     }
 
     protected void readAndRecordSensor(BiConsumer<Long, Integer> onReadingSensorValueAtIndex, long newUpdateStartEpoch) {
