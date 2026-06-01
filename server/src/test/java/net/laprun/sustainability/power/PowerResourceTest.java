@@ -158,7 +158,7 @@ public class PowerResourceTest {
                     res::completeExceptionally,
                     () -> res.complete(collect));
             eventSource.open();
-            Assertions.assertThat(res.get(5, TimeUnit.SECONDS)).hasSize(1);
+            Assertions.assertThat(res.get(5, TimeUnit.SECONDS)).isEqualTo(List.of("" + MockPersistence.ID));
         }
     }
 
