@@ -176,14 +176,6 @@
                             <printStderrOnFailure>true</printStderrOnFailure>
                             <printStderrOnSuccess>false</printStderrOnSuccess>
                             <theme>UNICODE</theme>
-                            <printStacktraceOnError>true</printStacktraceOnError>
-                            <printStacktraceOnFailure>true</printStacktraceOnFailure>
-                            <printStdoutOnError>true</printStdoutOnError>
-                            <printStdoutOnFailure>true</printStdoutOnFailure>
-                            <printStdoutOnSuccess>false</printStdoutOnSuccess>
-                            <printStderrOnError>true</printStderrOnError>
-                            <printStderrOnFailure>true</printStderrOnFailure>
-                            <printStderrOnSuccess>false</printStderrOnSuccess>
                         </statelessTestsetInfoReporter>
                         <systemPropertyVariables>
                             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
