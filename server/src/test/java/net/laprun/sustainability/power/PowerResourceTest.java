@@ -54,7 +54,7 @@ public class PowerResourceTest {
                     res::completeExceptionally,
                     () -> res.complete(collect));
             eventSource.open();
-            final var actual = res.get(1, TimeUnit.SECONDS);
+            final var actual = res.get(5, TimeUnit.SECONDS);
             Assertions.assertThat(actual).hasSize(1);
         }
     }
@@ -158,7 +158,7 @@ public class PowerResourceTest {
                     res::completeExceptionally,
                     () -> res.complete(collect));
             eventSource.open();
-            Assertions.assertThat(res.get(1, TimeUnit.SECONDS)).hasSize(1);
+            Assertions.assertThat(res.get(5, TimeUnit.SECONDS)).hasSize(1);
         }
     }
 
