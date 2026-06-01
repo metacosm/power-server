@@ -294,6 +294,14 @@
                         <version>${jreleaser.version}</version>
                         <configuration>
                             <jreleaser>
+                                <packagers>
+                                    <jbang>
+                                        <active>ALWAYS</active>
+                                        <repository>
+                                            <active>ALWAYS</active>
+                                        </repository>
+                                    </jbang>
+                                </packagers>
                                 <release>
                                     <github>
                                         <changelog>
@@ -340,7 +348,7 @@
                                             </artifact>
                                         </artifacts>
                                     </power-server>
-                                    <!--<power-server-cli>
+                                    <power>
                                         <name>power-server-cli</name>
                                         <stereotype>CLI</stereotype>
                                         <executable>
@@ -372,7 +380,7 @@
                                                 <platform>osx-aarch_64</platform>
                                             </artifact>
                                         </artifacts>
-                                    </power-server-cli>-->
+                                    </power>
                                 </distributions>
                             </jreleaser>
                         </configuration>
