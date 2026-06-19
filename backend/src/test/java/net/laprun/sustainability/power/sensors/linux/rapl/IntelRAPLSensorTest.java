@@ -100,6 +100,7 @@ public class IntelRAPLSensorTest {
     void wattComputationShouldWork() throws Exception {
         final var raplFile = new TestRAPLFile(10000L, 20000L, 30000L);
         final var sensor = new TestIntelRAPLSensor(new TreeMap<>(Map.of("sensor", raplFile)));
+        sensor.adjustSamplingPeriodIfNeeded(100);
         sensor.start();
         Thread.sleep(10); // ensure we get enough time between the measure performed during start and the first update
         final var pid = sensor.register(1234L);

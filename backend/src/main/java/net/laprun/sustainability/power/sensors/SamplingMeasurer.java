@@ -99,8 +99,8 @@ public class SamplingMeasurer {
                 Log.infof("%s sensor adjusted its sampling period to %dms", sensor.getClass().getSimpleName(), adjusted);
             }
 
-            // start sensor
-            sensor.start();
+            // start periodic power sampling, measuring sensor values over the sampling period
+            final var sensorSamplerMulti = sensor.start();
 
             // manage external CPU share sampling
             final var overSamplingFactor = 3;
@@ -135,15 +135,6 @@ public class SamplingMeasurer {
                 // otherwise, only emit an empty map to signify no external cpu share was recorded
                 cpuSharesMulti = cpuSharesTicks.map(unused -> Map.of());
             }
-
-            // manage periodic power sampling, measuring sensor values over the sampling period
-            final var sensorSamplerMulti = Multi.createFrom().ticks()
-                    .every(samplingPeriod)
-                    .map(sensor::update)
-                    .broadcast()
-                    .withCancellationAfterLastSubscriberDeparture()
-                    .toAtLeast(1)
-                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 
             // combine both multis
             periodicSensorCheck = Multi.createBy()

@@ -4,13 +4,14 @@ import static net.laprun.sustainability.power.SensorUnit.mW;
 
 import java.util.List;
 
+import io.smallrye.mutiny.Multi;
 import net.laprun.sustainability.power.SensorMetadata;
 import net.laprun.sustainability.power.measures.NoDurationSensorMeasure;
 import net.laprun.sustainability.power.sensors.AbstractPowerSensor;
 import net.laprun.sustainability.power.sensors.Measures;
 
 @SuppressWarnings("unused")
-public class TestPowerSensor extends AbstractPowerSensor {
+public class TestPowerSensor extends AbstractPowerSensor<Void> {
     public static final String CPU = "cpu";
     public static final SensorMetadata DEFAULT = new SensorMetadata(
             List.of(new SensorMetadata.ComponentMetadata(CPU, 0, "CPU", true, mW)),
@@ -31,14 +32,14 @@ public class TestPowerSensor extends AbstractPowerSensor {
     }
 
     @Override
-    public void doStart() {
+    public Multi<Void> doStart() {
         // nothing to do
+        return null;
     }
 
     @Override
-    protected Measures doUpdate(long lastUpdateEpoch, long newUpdateStartEpoch) {
-        registeredPIDs().forEach(pid -> measures.record(pid,
+    protected void doUpdate(Void tick, Measures current, long lastUpdateEpoch, long newUpdateStartEpoch) {
+        registeredPIDs().forEach(pid -> current.record(pid,
                 new NoDurationSensorMeasure(new double[] { Math.random() }, lastUpdateEpoch, newUpdateStartEpoch)));
-        return measures;
     }
 }
