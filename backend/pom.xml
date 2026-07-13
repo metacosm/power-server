@@ -12,7 +12,7 @@
   <description>Power consumption measuring backend</description>
 
   <properties>
-    <nuprocess.version>3.0.0</nuprocess.version>
+    <nuprocess.version>4.0.0</nuprocess.version>
   </properties>
 
   <dependencies>
