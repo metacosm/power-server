@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import io.smallrye.mutiny.Multi;
+
 /**
  * The aim of this sensor is to only perform one long measure and then read the power information from it once done,
  */
@@ -15,7 +17,11 @@ public class FileMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     }
 
     @Override
-    protected InputStream getInputStream() {
+    protected Multi<InputStream> getInputStream() {
+        return Multi.createFrom().item(fromFile());
+    }
+
+    private FileInputStream fromFile() {
         try {
             return new FileInputStream(file);
         } catch (Exception e) {
@@ -26,7 +32,7 @@ public class FileMacOSPowermetricsSensor extends MacOSPowermetricsSensor {
     @Override
     public void stop() {
         // need to defer reading metadata until we know the file has been populated
-        initMetadata(getInputStream());
+        initMetadata(fromFile());
         super.stop();
     }
 }

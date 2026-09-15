@@ -1,17 +1,16 @@
 package net.laprun.sustainability.power.sensors.macos.powermetrics;
 
 import java.io.InputStream;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 
+import io.quarkus.logging.Log;
 import net.laprun.sustainability.power.nuprocess.BaseProcessHandler;
 
-public class NuProcessWrapper implements ProcessWrapper {
-    private PowermetricsProcessHandler measureHandler;
-    private String periodInMilliSecondsAsString;
-
+public class NuProcessWrapper {
     @SuppressWarnings("UnusedReturnValue")
     public static NuProcess exec(BaseProcessHandler handler) {
         if (handler == null)
@@ -20,46 +19,30 @@ public class NuProcessWrapper implements ProcessWrapper {
     }
 
     public static InputStream metadataInputStream() {
-        final var metadataHandler = new PowermetricsProcessHandler(6500, "cpu_power", "-i", "10", "-n", "1");
-        exec(metadataHandler);
+        return waitForOutput(new PowermetricsProcessHandler(6500, "cpu_power", "-i", "10", "-n", "1"));
+    }
+
+    public static CompletableFuture<InputStream> asyncGetOutput(PowermetricsProcessHandler handler) {
+        exec(handler);
+        return handler.getInputStream();
+    }
+
+    public static InputStream waitForOutput(PowermetricsProcessHandler handler) {
         try {
-            return metadataHandler.getInputStream().get();
+            final var start = System.currentTimeMillis();
+            final var inputStream = asyncGetOutput(handler).get();
+            Log.infof("Waited for output: %dms", System.currentTimeMillis() - start);
+            return inputStream;
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
 
-    @Override
-    public void start(long periodInMilliSeconds) {
-        this.periodInMilliSecondsAsString = Long.toString(periodInMilliSeconds);
-    }
-
-    @Override
-    public void stop() {
-        if (measureHandler != null) {
-            measureHandler.stop();
-            measureHandler = null;
-        }
-    }
-
-    @Override
-    public boolean isRunning() {
-        return measureHandler != null && measureHandler.isRunning();
-    }
-
-    @Override
-    public InputStream streamForMeasure() {
-        if (!isRunning()) {
-            measureHandler = new PowermetricsProcessHandler(27000, "cpu_power,tasks",
-                    "--show-process-samp-norm", "--show-process-gpu", "-i",
-                    periodInMilliSecondsAsString, "-n", "1");
-            exec(measureHandler);
-            try {
-                return measureHandler.getInputStream().get();
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        throw new IllegalStateException("Measure is still running");
+    public static InputStream measureInputStream(String periodInMilliSecondsAsString) {
+        final var inputStream = waitForOutput(new PowermetricsProcessHandler(27000, "cpu_power,tasks",
+                "--show-process-samp-norm", "--show-process-gpu", "-i",
+                periodInMilliSecondsAsString, "-n", "1"));
+        Log.infof("powermetrics output: %s", inputStream);
+        return inputStream;
     }
 }

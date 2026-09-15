@@ -2,6 +2,7 @@ package net.laprun.sustainability.power.sensors;
 
 import java.util.Set;
 
+import io.smallrye.mutiny.Multi;
 import net.laprun.sustainability.power.SensorMetadata;
 
 /**
@@ -52,7 +53,7 @@ public interface PowerSensor {
      *
      * @throws Exception if the sensor couldn't be started for some reason
      */
-    void start() throws Exception;
+    Multi<Measures> start() throws Exception;
 
     /**
      * Registers the provided process identifier (pid) with the sensor in case it can provide per-process measures. For sensors
@@ -63,15 +64,6 @@ public interface PowerSensor {
      * @return a {@link RegisteredPID} recording the tracking of the specified pid by the sensor
      */
     RegisteredPID register(long pid);
-
-    /**
-     * Updates the ongoing {@link Measures} being recorded by this sensor for the given tick
-     *
-     * @param tick an ordinal value tracking the number of recorded measures being taken by the sensor since it started
-     *        measuring power consumption
-     * @return the {@link Measures} object recording the measures this sensor has taken since it started measuring
-     */
-    Measures update(long tick);
 
     /**
      * Unregisters the specified {@link RegisteredPID} with this sensor thus signaling that clients are not interested in
